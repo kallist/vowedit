@@ -1,0 +1,56 @@
+name: VowEdit Mock CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      VOWEDIT_PROVIDER: mock
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: pip
+          cache-dependency-path: requirements.lock
+      - name: Install locked dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r requirements.lock
+          .venv/bin/python -m pip install --no-deps -e .
+          npm ci
+      - name: Lint, typecheck and secret patterns
+        run: |
+          .venv/bin/python -m ruff check backend scripts
+          .venv/bin/python -m mypy backend --exclude backend/tests
+          .venv/bin/python scripts/check_secrets.py
+          npm run lint
+          npm run typecheck
+          npm audit --audit-level=high
+      - name: Unit and integration tests
+        run: |
+          .venv/bin/python -m pytest -q
+          npm test
+      - name: Build
+        run: npm run build -- --webpack
+      - name: Browser acceptance (Mock only)
+        run: |
+          npx playwright install --with-deps chromium
+          npm run e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-evidence
+          path: |
+            test-results/
+            docs/screenshots/
+          retention-days: 7

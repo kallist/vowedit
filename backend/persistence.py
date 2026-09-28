@@ -1,0 +1,179 @@
+import json
+import sqlite3
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+from backend.schemas import AppError, check_transition
+
+
+def now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+class Repository:
+    def __init__(self, path: Path):
+        self.path = path
+        with self.connection() as db:
+            db.execute("PRAGMA journal_mode=WAL")
+            db.executescript("""
+                CREATE TABLE IF NOT EXISTS assets (
+                    id TEXT PRIMARY KEY, kind TEXT NOT NULL, width INTEGER, height INTEGER
+                );
+                CREATE TABLE IF NOT EXISTS runs (
+                    id TEXT PRIMARY KEY, status TEXT NOT NULL, created_at TEXT NOT NULL,
+                    data TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS jobs (
+                    id TEXT PRIMARY KEY, run_id TEXT NOT NULL REFERENCES runs(id),
+                    request_key TEXT NOT NULL UNIQUE, payload_hash TEXT NOT NULL,
+                    kind TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL
+                );
+            """)
+
+    @contextmanager
+    def connection(self) -> Iterator[sqlite3.Connection]:
+        db = sqlite3.connect(self.path, timeout=5)
+        db.row_factory = sqlite3.Row
+        db.execute("PRAGMA foreign_keys=ON")
+        try:
+            with db:
+                yield db
+        finally:
+            db.close()
+
+    def add_asset(self, asset_id: str, kind: str, width: int, height: int) -> None:
+        with self.connection() as db:
+            db.execute("INSERT INTO assets VALUES (?, ?, ?, ?)", (asset_id, kind, width, height))
+
+    def asset(self, asset_id: str, kind: str | None = None) -> dict[str, Any]:
+        with self.connection() as db:
+            row = db.execute("SELECT * FROM assets WHERE id=?", (asset_id,)).fetchone()
+        if row is None or (kind and row["kind"] != kind):
+            raise AppError("ASSET_NOT_FOUND", "The requested image or mask was not found.", 404)
+        return dict(row)
+
+    def get(self, run_id: str) -> dict[str, Any]:
+        with self.connection() as db:
+            row = db.execute("SELECT data FROM runs WHERE id=?", (run_id,)).fetchone()
+        if row is None:
+            raise AppError("RUN_NOT_FOUND", "Edit not found.", 404)
+        return json.loads(row["data"])  # type: ignore[no-any-return]
+
+    def history(self) -> list[dict[str, Any]]:
+        with self.connection() as db:
+            rows = db.execute("SELECT data FROM runs ORDER BY created_at DESC LIMIT 50").fetchall()
+        return [json.loads(row["data"]) for row in rows]
+
+    def submit(self, run: dict[str, Any], job: dict[str, str], *, retry: bool = False) -> str:
+        with self.connection() as db:
+            db.execute("BEGIN IMMEDIATE")
+            existing = db.execute(
+                "SELECT * FROM jobs WHERE request_key=?", (job["request_key"],)
+            ).fetchone()
+            if existing:
+                if existing["payload_hash"] != job["payload_hash"]:
+                    raise AppError(
+                        "JOB_CONFLICT", "Request key was already used for another edit.", 409
+                    )
+                return str(existing["run_id"])
+            active = db.execute(
+                "SELECT COUNT(*) FROM jobs WHERE status IN ('queued','generating','evaluating')"
+            ).fetchone()[0]
+            if active >= 8:
+                raise AppError(
+                    "QUEUE_FULL", "The local queue is full. Wait for an edit to finish.", 429
+                )
+            if retry:
+                row = db.execute("SELECT data FROM runs WHERE id=?", (run["id"],)).fetchone()
+                current = json.loads(row["data"])
+                check_transition(current["status"], "queued")
+                if not current["candidates"] or (
+                    current["status"] == "partial"
+                    and not any(c.get("evaluation") is None for c in current["candidates"])
+                ):
+                    raise AppError("JOB_CONFLICT", "There are no failed evaluations to retry.", 409)
+                current.update(status="queued", job_id=job["id"], updated_at=now(), error=None)
+                run = current
+                db.execute(
+                    "UPDATE runs SET status=?, data=? WHERE id=?",
+                    ("queued", json.dumps(run), run["id"]),
+                )
+            else:
+                db.execute(
+                    "INSERT INTO runs VALUES (?, ?, ?, ?)",
+                    (run["id"], run["status"], run["created_at"], json.dumps(run)),
+                )
+            db.execute(
+                "INSERT INTO jobs VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    job["id"],
+                    run["id"],
+                    job["request_key"],
+                    job["payload_hash"],
+                    job["kind"],
+                    "queued",
+                    now(),
+                ),
+            )
+        return str(run["id"])
+
+    def mutate(
+        self,
+        run_id: str,
+        update: Callable[[dict[str, Any]], None],
+        *,
+        job_id: str | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
+        with self.connection() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT data FROM runs WHERE id=?", (run_id,)).fetchone()
+            if row is None:
+                raise AppError("RUN_NOT_FOUND", "Edit not found.", 404)
+            run = json.loads(row["data"])
+            if job_id and run["job_id"] != job_id:
+                raise AppError("JOB_CONFLICT", "A newer attempt owns this edit.", 409)
+            if status:
+                check_transition(run["status"], status)
+            update(run)
+            if status:
+                run["status"] = status
+                db.execute("UPDATE jobs SET status=? WHERE id=?", (status, run["job_id"]))
+            run["updated_at"] = now()
+            db.execute(
+                "UPDATE runs SET status=?, data=? WHERE id=?",
+                (run["status"], json.dumps(run), run_id),
+            )
+        return run  # type: ignore[no-any-return]
+
+    def next_job(self) -> dict[str, Any] | None:
+        with self.connection() as db:
+            row = db.execute(
+                "SELECT * FROM jobs WHERE status='queued' ORDER BY created_at LIMIT 1"
+            ).fetchone()
+        return dict(row) if row else None
+
+    def recover(self) -> None:
+        with self.connection() as db:
+            db.execute("BEGIN IMMEDIATE")
+            rows = db.execute(
+                "SELECT data FROM runs WHERE status IN ('generating','evaluating')"
+            ).fetchall()
+            for row in rows:
+                run = json.loads(row["data"])
+                # Outputs survive restart. Evaluation can be safely repeated, generation cannot.
+                run["status"] = "failed_evaluation" if run["candidates"] else "failed_generation"
+                run["error"] = {
+                    "code": "PROCESS_INTERRUPTED",
+                    "message": "The app stopped during this job. Saved candidates are preserved.",
+                }
+                run["generation_retry_safe"] = run["provider"] == "mock"
+                run["updated_at"] = now()
+                db.execute(
+                    "UPDATE runs SET status=?, data=? WHERE id=?",
+                    (run["status"], json.dumps(run), run["id"]),
+                )
+                db.execute("UPDATE jobs SET status=? WHERE id=?", (run["status"], run["job_id"]))

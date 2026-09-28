@@ -1,0 +1,9 @@
+{
+  "asset_origin": "project-owned deterministic fixtures; no model inference",
+  "human_review": "not_performed",
+  "cases": [
+    {"slot": "illustration", "source": "original.png", "change": "change.png", "keep": "keep.png", "instruction": "Change the jacket to cool blue.", "keep_label": "Face and hair"},
+    {"slot": "product", "source": "product.png", "change": "product-change.png", "keep": "product-keep.png", "instruction": "Change the background to dark blue.", "keep_label": "Bottle, lettering and color"},
+    {"slot": "portrait", "source": "portrait.png", "change": "portrait-change.png", "keep": "portrait-keep.png", "instruction": "Add round glasses.", "keep_label": "Skin and hair outside glasses area"}
+  ]
+}
