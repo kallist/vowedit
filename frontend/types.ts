@@ -10,6 +10,7 @@ export type Contract = {
   background_threshold: number | null;
 };
 export type Evaluation = {
+  metric_version: string;
   protected_similarity: number | null;
   background_preservation: number;
   change_difference: number;

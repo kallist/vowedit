@@ -29,11 +29,22 @@ export function renderMask(
   mode: Stroke["mode"],
   width: number,
   height: number,
+  seed?: HTMLImageElement,
 ) {
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext("2d")!;
   ctx.clearRect(0, 0, width, height);
+  if (seed) {
+    ctx.drawImage(seed, 0, 0, width, height);
+    const pixels = ctx.getImageData(0, 0, width, height);
+    for (let i = 0; i < pixels.data.length; i += 4) {
+      const value = pixels.data[i] >= 128 ? 255 : 0;
+      pixels.data[i] = pixels.data[i + 1] = pixels.data[i + 2] = 255;
+      pixels.data[i + 3] = value;
+    }
+    ctx.putImageData(pixels, 0, 0);
+  }
   for (const stroke of strokes.filter((s) => s.mode === mode)) {
     ctx.globalCompositeOperation = stroke.erase
       ? "destination-out"

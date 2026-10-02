@@ -575,6 +575,13 @@ function Receipt({
             {run.provider === "mock" ? "Mock simulation" : run.provider} ·{" "}
             {run.generation_seconds ?? "—"}s
           </p>
+          <p className="field-note">
+            CHANGE · {run.contract.change.mask.slice(0, 8)} · Evaluation{" "}
+            {selected?.evaluation?.metric_version ||
+              run.candidates.find((c) => c.evaluation)?.evaluation
+                ?.metric_version ||
+              "pending"}
+          </p>
         </div>
         <div>
           {selected ? (
@@ -589,6 +596,11 @@ function Receipt({
             Pixel preservation is not semantic correctness, identity
             preservation or subjective quality.
           </p>
+          {selected?.evaluation?.warnings.map((w) => (
+            <p className="field-note" key={w}>
+              {w}
+            </p>
+          ))}
         </div>
       </div>
       {selected && (

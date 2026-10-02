@@ -15,16 +15,64 @@ export type MaskValue = {
   changePixels: number;
   keepPixels: number;
   strokes: Stroke[];
+  seedMasks?: SeedMasks;
 };
+export type SeedMasks = Partial<Record<Stroke["mode"], string>>;
 export default function MaskEditor({
   asset,
   onContinue,
   initialStrokes = [],
+  initialMasks = {},
 }: {
   asset: Asset;
   onContinue: (value: MaskValue) => void;
   initialStrokes?: Stroke[];
+  initialMasks?: SeedMasks;
 }) {
+  const [seedMasks, setSeedMasks] = useState<SeedMasks>(initialMasks);
+  const [seedImages, setSeedImages] = useState<
+    Partial<Record<Stroke["mode"], HTMLImageElement>>
+  >({});
+  const [loadingSeeds, setLoadingSeeds] = useState(
+    Object.keys(initialMasks).length > 0,
+  );
+  useEffect(() => {
+    let live = true;
+    const modes = ["change", "keep"] as const;
+    Promise.all(
+      modes.map(async (mode) => {
+        const url = seedMasks[mode];
+        if (!url) return [mode, undefined] as const;
+        const image = new Image();
+        image.src = url;
+        await image.decode();
+        if (
+          image.naturalWidth !== asset.width ||
+          image.naturalHeight !== asset.height
+        ) {
+          throw new Error("Demo mask dimensions do not match the image.");
+        }
+        return [mode, image] as const;
+      }),
+    )
+      .then((entries) => {
+        if (live) {
+          setSeedImages(Object.fromEntries(entries));
+          setLoadingSeeds(false);
+        }
+      })
+      .catch(() => {
+        if (live) {
+          setError(
+            "Could not load demo masks. Reset both masks to paint your own.",
+          );
+          setLoadingSeeds(true);
+        }
+      });
+    return () => {
+      live = false;
+    };
+  }, [seedMasks, asset.width, asset.height]);
   const [mode, setMode] = useState<Stroke["mode"]>("change"),
     [erase, setErase] = useState(false),
     [size, setSize] = useState(50);
@@ -43,8 +91,22 @@ export default function MaskEditor({
   const redraw = useCallback(() => {
     if (!changeRef.current || !keepRef.current || !surfaceRef.current) return;
     const all = drawing ? [...strokes, drawing] : strokes;
-    renderMask(changeRef.current, all, "change", asset.width, asset.height);
-    renderMask(keepRef.current, all, "keep", asset.width, asset.height);
+    renderMask(
+      changeRef.current,
+      all,
+      "change",
+      asset.width,
+      asset.height,
+      seedImages.change,
+    );
+    renderMask(
+      keepRef.current,
+      all,
+      "keep",
+      asset.width,
+      asset.height,
+      seedImages.keep,
+    );
     const change = changeRef.current
       .getContext("2d")!
       .getImageData(0, 0, asset.width, asset.height);
@@ -71,7 +133,7 @@ export default function MaskEditor({
       }
     }
     ctx.putImageData(change, 0, 0);
-  }, [asset, strokes, drawing]);
+  }, [asset, strokes, drawing, seedImages]);
   useEffect(() => {
     redraw();
   }, [redraw]);
@@ -95,6 +157,7 @@ export default function MaskEditor({
         keep: stats.keepPixels ? await maskBlob(keepRef.current!) : null,
         ...stats,
         strokes,
+        seedMasks,
       });
     } catch {
       setError("Could not prepare masks. Please try again.");
@@ -149,16 +212,21 @@ export default function MaskEditor({
           <button
             type="button"
             aria-label="Clear current mask"
-            onClick={() =>
-              setStrokes((s) => s.filter((stroke) => stroke.mode !== mode))
-            }
+            onClick={() => {
+              setStrokes((s) => s.filter((stroke) => stroke.mode !== mode));
+              setSeedMasks((s) => ({ ...s, [mode]: undefined }));
+            }}
           >
             <Trash2 size={18} />
           </button>
           <button
             type="button"
             aria-label="Reset both masks"
-            onClick={() => setStrokes([])}
+            onClick={() => {
+              setStrokes([]);
+              setSeedMasks({});
+              setError("");
+            }}
           >
             <RotateCcw size={18} />
           </button>
@@ -307,7 +375,12 @@ export default function MaskEditor({
           {error || "CHANGE and KEEP overlap. Erase the overlap."}
         </p>
       )}
-      <button type="button" className="button primary wide" onClick={proceed}>
+      <button
+        type="button"
+        className="button primary wide"
+        disabled={loadingSeeds}
+        onClick={proceed}
+      >
         Review edit contract <span aria-hidden>→</span>
       </button>
     </div>
