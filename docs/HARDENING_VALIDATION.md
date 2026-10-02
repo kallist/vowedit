@@ -47,6 +47,27 @@ were opened and inspected: hierarchy, warnings, receipt, drift legend and contro
 Important explanatory text was increased to 12px, key mode/view controls to 44px targets, mobile form
 text to 16px. This is viewport evidence, not physical-device or screen-reader certification.
 
+## Separate interactive production check
+
+After the suite, an independently started production API (`backend.api:create_app`) and production
+frontend were inspected step by step in installed Chrome. This was a tool-driven interactive check,
+not a human reviewer verdict. Landing → Demo → contract → Generate → B suggested/A inspected → Ghost
+→ selected-B receipt → refresh → history worked. A separate original upload and actual pointer
+CHANGE/KEEP drawing (4,437 / 4,441 pixels) proceeded through confirmation to three evaluated candidates.
+All commands were issued from observed page controls, outside the acceptance suite/fault API.
+
+Tab focus reached Keyboard painting with a visible 3px blue outline. Existing labels, button names,
+text-based warnings and reduced-motion CSS were checked. Ink/muted/orange/blue against paper have
+computed contrast ratios 14.01/4.97/5.02/6.19; this checks these tokens only, not full WCAG conformance.
+Screen readers and physical mobile devices remain NOT TESTED. The Computer Use runtime was unavailable
+(trusted-service configuration error), so installed Chrome/Playwright provided this separate check.
+
+Local responsiveness smoke: 640×704 editor navigation load 238ms; a 12-step pointer sequence took 258ms
+for CHANGE and 246ms for KEEP. A project-fixture resize to the maximum 1536×1536 upload size was accepted;
+its 12-step pointer sequence took 939ms and completed. These include driver/input overhead and are single
+local observations, not frame-rate measurements, benchmarks or real-model latency claims. No performance
+budget or new optimization is inferred. Temporary runtime data/driver captures remain ignored.
+
 ## Evidence limits
 
 Hosted CI must be independently checked against the pushed head in
