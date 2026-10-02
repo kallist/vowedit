@@ -1675,3 +1675,32 @@ summary {
   width: min(480px, 100%);
   flex-shrink: 1;
 }
+
+/* Essential explanations and controls must remain readable at every viewport. */
+.field-note,
+.score-card small,
+.warnings p,
+.receipt-disclaimer,
+.candidate-card p,
+.slider-label,
+.mask-legend,
+.ghost-legend,
+.caption {
+  font-size: 12px;
+}
+.view-tabs button,
+.mode-buttons button,
+.coordinate-controls button {
+  min-height: 44px;
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  .contract-panel input,
+  .contract-panel textarea,
+  .contract-panel select,
+  .human-review input,
+  .human-review textarea,
+  .human-review select {
+    font-size: 16px;
+  }
+}

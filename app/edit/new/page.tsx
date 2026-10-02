@@ -2,7 +2,10 @@
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Upload, ShieldCheck } from "lucide-react";
-import MaskEditor, { type MaskValue } from "@/frontend/MaskEditor";
+import MaskEditor, {
+  type MaskValue,
+  type SeedMasks,
+} from "@/frontend/MaskEditor";
 import { api, ApiError, jsonPost, upload } from "@/frontend/api";
 import type { Stroke } from "@/frontend/masks";
 import { assetUrl, type Asset, type Run } from "@/frontend/types";
@@ -13,6 +16,8 @@ export default function NewEdit() {
   const [asset, setAsset] = useState<Asset | null>(null),
     [masks, setMasks] = useState<MaskValue | null>(null);
   const [draftStrokes, setDraftStrokes] = useState<Stroke[]>([]);
+  const demoSelected = useRef(false);
+  const [draftMasks, setDraftMasks] = useState<SeedMasks>({});
   const [recoveringSubmission, setRecoveringSubmission] = useState(false);
   const [instruction, setInstruction] = useState(""),
     [keepLabel, setKeepLabel] = useState("Face & hair");
@@ -61,19 +66,21 @@ export default function NewEdit() {
     api<{ providers: string[]; default_provider: string }>("/config")
       .then((c) => {
         setProviders(c.providers);
-        setProvider(c.default_provider);
+        if (!demoSelected.current) setProvider(c.default_provider);
       })
       .catch(() => setError("Start the local API to upload and generate."));
   }, []);
   async function choose(file: File) {
     if (pending.current) return;
     pending.current = true;
+    demoSelected.current = false;
     setBusy(true);
     setError("");
     try {
       setAsset(await upload(file, "original"));
       setMasks(null);
       setDraftStrokes([]);
+      setDraftMasks({});
       setPrepared(null);
     } catch (e) {
       setError((e as Error).message);
@@ -83,11 +90,39 @@ export default function NewEdit() {
     }
   }
   async function fixture() {
-    const response = await fetch("/fixtures/original.png");
-    await choose(
-      new File([await response.blob()], "original.png", { type: "image/png" }),
-    );
-    setInstruction("Change the terracotta jacket to a cool blue jacket.");
+    if (pending.current) return;
+    pending.current = true;
+    demoSelected.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/fixtures/original.png");
+      if (!response.ok) throw new Error("Demo image unavailable.");
+      const source = await upload(
+        new File([await response.blob()], "original.png", {
+          type: "image/png",
+        }),
+        "original",
+      );
+      setAsset(source);
+      setMasks(null);
+      setPrepared(null);
+      setDraftStrokes([]);
+      setDraftMasks({
+        change: "/fixtures/change.png",
+        keep: "/fixtures/keep.png",
+      });
+      setInstruction("Change the terracotta jacket to a cool blue jacket.");
+      setKeepLabel("Face & hair");
+      setProvider("mock");
+      setThreshold(98);
+      setBackground(true);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      pending.current = false;
+      setBusy(false);
+    }
   }
   async function generate() {
     if (!asset || !masks || pending.current) return;
@@ -195,7 +230,7 @@ export default function NewEdit() {
           <textarea
             id="instruction"
             value={instruction}
-            disabled={summary}
+            disabled={summary || busy}
             maxLength={1500}
             placeholder="Change the jacket to white. Keep the character."
             onChange={(e) => setInstruction(e.target.value)}
@@ -209,7 +244,7 @@ export default function NewEdit() {
           <input
             id="keep-label"
             value={keepLabel}
-            disabled={summary}
+            disabled={summary || busy}
             maxLength={60}
             onChange={(e) => setKeepLabel(e.target.value)}
           />
@@ -223,14 +258,14 @@ export default function NewEdit() {
             max="100"
             step="0.5"
             value={threshold}
-            disabled={summary}
+            disabled={summary || busy}
             onChange={(e) => setThreshold(+e.target.value)}
           />
           <label className="checkbox">
             <input
               type="checkbox"
               checked={background}
-              disabled={summary}
+              disabled={summary || busy}
               onChange={(e) => setBackground(e.target.checked)}
             />
             Protect everything outside CHANGE
@@ -244,7 +279,7 @@ export default function NewEdit() {
           <select
             id="provider"
             value={provider}
-            disabled={summary}
+            disabled={summary || busy}
             onChange={(e) => setProvider(e.target.value)}
           >
             {providers.map((p) => (
@@ -317,7 +352,7 @@ export default function NewEdit() {
                 disabled={busy}
                 onClick={() => void fixture()}
               >
-                Or start with our illustrated fixture
+                Use Demo — image, instruction & masks
               </button>
             </div>
           ) : summary ? (
@@ -399,6 +434,7 @@ export default function NewEdit() {
                 key={asset.id}
                 asset={asset}
                 initialStrokes={draftStrokes}
+                initialMasks={draftMasks}
                 onContinue={(value) => {
                   if (instruction.trim().length < 3) {
                     setError(
@@ -412,6 +448,7 @@ export default function NewEdit() {
                   }
                   setError("");
                   setDraftStrokes(value.strokes);
+                  setDraftMasks(value.seedMasks || {});
                   setMasks(value);
                 }}
               />
