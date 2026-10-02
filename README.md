@@ -15,8 +15,9 @@ and explains the outcome in an Edit Receipt. The model is replaceable; the contr
 
 ## Demo
 
-Open the studio, upload an image (or use the illustrated fixture), enter an instruction, paint CHANGE
-and KEEP, review the contract and Generate. Compare A/B/C, move the Before / After slider, inspect
+Open the studio and choose **Use Demo — image, instruction & masks** to load the project-owned original,
+instruction and editable CHANGE/KEEP masks together. Review the contract and Generate. Alternatively,
+upload an authorized image and paint your boundaries. Compare A/B/C, move the Before / After slider, inspect
 Ghost View and export the receipt. Use the human-review field to judge prompt adherence.
 
 **Mock mode is a deterministic pixel simulation, not AI inference.** It deliberately includes drift
@@ -30,10 +31,10 @@ protected, and where you should look more closely.” No pixel metric proves sub
 
 Captured from the running local Mock app, using project-owned fixtures:
 
-![VowEdit landing](docs/screenshots/1440/landing.png)
-![Ghost View exposes accidental changes](docs/screenshots/1440/ghost-view.png)
+![VowEdit landing](docs/screenshots/final/1440/landing.png)
+![Ghost View exposes accidental changes](docs/screenshots/final/1440/ghost-view.png)
 
-The [screenshot directory](docs/screenshots) includes 1440, 768 and 390 pixel views of the landing,
+The [current screenshot directory](docs/screenshots/final) includes 1440, 1024, 768, 430 and 390 pixel views of the landing,
 mask editor, contract summary, processing, result, candidate comparison, Ghost View, receipt and failure.
 
 ## Quick Start
@@ -120,16 +121,23 @@ E2E starts an isolated test API with deterministic provider faults and a product
 stop other services on 3000/8000 first. It writes required screenshots to `docs/screenshots` and ignored
 temporary runtime data under `.local/`. Optionally set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to an installed
 Chrome executable. In restricted environments use `pytest --basetemp=.local/pytest-run` for writable
-temporary storage. Test results and remaining checks are in [VALIDATION.md](docs/VALIDATION.md).
+temporary storage. Current test results and remaining checks are in [HARDENING_VALIDATION.md](docs/HARDENING_VALIDATION.md).
+The earlier [VALIDATION.md](docs/VALIDATION.md) is the dated initial-delivery record.
 
-The GPU-free GitHub workflow runs lint, types, tests, build and browser acceptance. No remote existed
-at delivery initialization; local success does not establish hosted CI success.
+The public [repository](https://github.com/kallist/vowedit) uses `feat/vowedit-v0.1` as its existing default
+branch. The GPU-free [GitHub workflow](https://github.com/kallist/vowedit/actions/workflows/ci.yml) runs
+lint, types, tests, build and browser acceptance. Its initial browser failure and hardening are recorded
+in [HARDENING_AUDIT.md](docs/HARDENING_AUDIT.md). Hosted status must be checked against the actual PR head;
+local success does not establish hosted CI success.
 
 ## Limitations
 
 Single-user local process, no auth. PNG/JPEG only, 10 MB, each side 32–1536 pixels. One painted KEEP
 region in the UI (multiple regions supported in the API). Mean pixel similarity can dilute small
 important edits and penalize harmless shifts. The default 98 threshold and 2% change gate are heuristics.
+Real RunningHub/ComfyUI generation and the three mandatory human-reviewed creative cases remain
+**NOT TESTED**. Portfolio readiness is withheld until that evidence exists; see
+[real-provider validation](docs/REAL_PROVIDER_VALIDATION.md) and [pending cases](docs/DEMO_CASES.md).
 No automatic cloud task reconciliation; unknown provider states require console inspection. Latest
 50 edits shown, but assets persist until the owner removes their local data; automatic cleanup/deletion
 UI is not implemented. Receipt PNG export and real human-reviewed creative examples are not implemented.

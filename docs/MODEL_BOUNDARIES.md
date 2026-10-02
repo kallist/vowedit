@@ -3,6 +3,10 @@
 Real ComfyUI experiments: **NOT TESTED**.
 Real RunningHub experiments: **NOT TESTED**.
 
+Hardening recheck, 2026-10-02: required server configuration is still absent and an actual loopback
+ComfyUI connection still fails. No real generation request was submitted. Current discovery and exact
+remaining validation steps are in [REAL_PROVIDER_VALIDATION.md](REAL_PROVIDER_VALIDATION.md).
+
 On 2026-09-28 the default local ComfyUI system-stats endpoint failed to connect. Bounded installation
 discovery found learning notes, not a verified installation or checkpoint. No RunningHub credential,
 account workflow or model was available in the inspected configuration. No model was downloaded.

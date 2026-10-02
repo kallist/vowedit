@@ -89,3 +89,25 @@ These are experiments to run, not results already obtained.
 
 Temporal consistency could extend KEEP across frames. Video is outside V0.1: no video model calls,
 timeline, MiniMax H3, GPU deployment or implementation promise. First validate the image-editing loop.
+
+## 15. Hardening evidence and reproducible demo
+
+The initial hosted run failed while the app was still evaluating saved images: a terminal-result assertion
+used the default five-second locator timeout. Browser acceptance now waits for durable job completion
+before checking every original no-good-candidate assertion. A new evaluation-retry browser case also
+revealed an actual race: editing while Demo was loading let its defaults overwrite the user's instruction.
+The form now locks while preparing the source. See [audit](HARDENING_AUDIT.md) and
+[current validation](HARDENING_VALIDATION.md) for evidence, counts and environment boundaries.
+
+For a 3–5 minute demonstration: (0:00) explain the jacket/face problem on the landing page;
+(0:30) open studio and Use Demo; (1:00) show CHANGE/KEEP and the explicit contract;
+(1:30) Generate once and explain the visibly labeled Mock simulation;
+(2:00) compare suggested B with rejected A/C; (2:30) inspect A in Ghost View;
+(3:00) open the receipt, explain the rgb-mae-v1 formula and manual-review boundary;
+(3:30) export JSON and refresh/history to show persistence. Say clearly that inverted pixels do not
+establish a semantically correct blue jacket, face identity or real-model performance.
+
+Real creative demonstrations are [NOT TESTED](DEMO_CASES.md). No supplied authorized originals or
+human reviewer verdicts are available. No actual provider/model/workflow was verified. Portfolio-ready
+is therefore withheld even when engineering and Mock CI gates pass. Receipt PNG export remains optional
+and unimplemented; there is no added V0.2 scope.

@@ -14,10 +14,14 @@ The explicit fixture declaration also appears in the landing page and Mock UI.
 These slots are prepared and exercised with Mock. They are not three completed real/human-reviewed
 demonstrations. Replace only with explicitly supplied/consented project assets. Do not collect images
 from private directories. Identity preservation in the portrait case remains a human claim to assess;
-pixel similarity cannot prove it. The API and the UI support painting/loading assets from the local
-fixture directory; fixture mask files are used by automated API tests, while the UI uses its brush.
+pixel similarity cannot prove it. The one-click studio Demo loads the illustration source, instruction
+and fixture masks together; those boundaries remain editable with brush, erase, clear and reset.
+The other two slots remain API-tested deterministic contracts, not one-click UI presets.
 
 Use `manifest.json` to reproduce the three contracts. Human reviewers should record semantic
 adherence, unexpected changes, acceptable deviations, artifact observations, preferred candidate,
 reviewer/date and reasons for rejecting candidates. Keep negative cases. Do not populate reviewer
 names or observations without an actual human review.
+
+Use [HUMAN_REVIEW_TEMPLATE.md](HUMAN_REVIEW_TEMPLATE.md) for the actual case record. All three real
+creative cases are currently pending; the [case register](../docs/DEMO_CASES.md) preserves that boundary.
