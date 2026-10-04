@@ -42,12 +42,12 @@ def create_app(service: ImageEditService | None = None) -> FastAPI:
         )
     if service is None and all(
         os.getenv(key)
-        for key in ("RUNNINGHUB_API_KEY", "RUNNINGHUB_WORKFLOW_ID", "RUNNINGHUB_CHECKPOINT")
+        for key in ("RUNNINGHUB_API_KEY", "RUNNINGHUB_WORKFLOW_ID")
     ):
         app.state.service.providers["runninghub"] = RunningHubImageEditProvider(
             os.environ["RUNNINGHUB_API_KEY"],
             os.environ["RUNNINGHUB_WORKFLOW_ID"],
-            os.environ["RUNNINGHUB_CHECKPOINT"],
+            api_origin=os.getenv("RUNNINGHUB_API_ORIGIN", "https://www.runninghub.cn"),
             stop=app.state.service.stop,
             timeout=float(os.getenv("RUNNINGHUB_TIMEOUT_SECONDS", "180")),
         )

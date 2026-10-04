@@ -1,41 +1,52 @@
-# Real provider validation — 2026-10-02
+# Real provider validation — 2026-10-05
 
-RunningHub adapter: **IMPLEMENTED / NOT TESTED against real generation**.
-Local ComfyUI adapter: **IMPLEMENTED / NOT TESTED against real generation**.
-Offline transport cases are separate evidence and do not establish account/model compatibility.
+| Evidence | Status |
+| --- | --- |
+| Manual RunningHub web workflow | **TESTED**, user-reported, not replayed here |
+| Supplied Z-Image API graph | **VALIDATED**, fixed fingerprint and mapping |
+| RunningHub adapter | **IMPLEMENTED / REAL API TESTED / DOWNLOAD FAILED** |
+| Real CN upload → create → poll → generated node 11 | **PASS** |
+| Complete one-candidate smoke | **FAIL** at download allowlist |
+| Three-candidate real product run | **NOT TESTED**, gated on smoke |
+| Real evaluation / Ghost View / product receipt | **NOT TESTED**, no real image persisted |
+| Creative human review | **NOT TESTED** |
+| Mock product | **TESTED**; offline/browser evidence |
+| Local ComfyUI real generation | **NOT TESTED** |
 
-## Discovery performed
+## Executed task
 
-The project contains `.env.example` only; `.env` and `.env.local` are absent. Current process environment
-has none of RUNNINGHUB_API_KEY, RUNNINGHUB_WORKFLOW_ID, RUNNINGHUB_CHECKPOINT, COMFYUI_BASE_URL or
-COMFYUI_CHECKPOINT. Existing workflow/setup documentation was inspected. An actual loopback connection
-to ComfyUI `/system_stats` failed. No sensitive values were printed, persisted or requested in chat.
-This bounded audit does not establish that no installation exists anywhere on the machine.
+Workflow ID: 2106824243966201857. Requested stack: UNET z_image_turbo_bf16.safetensors,
+CLIP qwen_3_4b.safetensors (qwen_image), VAE ae.safetensors. Origin: https://www.runninghub.cn.
+Credentials came from ignored server .env; user corrected configuration before the first request.
+No earlier paid API attempt occurred in this session. Checkpoint override is no longer required.
 
-Supplemental filename/directory discovery covered the workspace and siblings, common AI workspace,
-home top-level entries, Downloads, Desktop and Documents, excluding dependency/Git trees. No matching
-ComfyUI installation, entrypoint or model checkpoint was identified. Unrelated files were not read or
-copied, and no private images were collected. No existing installation or model was modified.
+Authorized deterministic source: public/fixtures/original.png; CHANGE change.png; KEEP keep.png.
+Instruction: **Change the jacket to cool blue.** Seed: **671807066932685**.
+Exactly **one** create was sent. Upload/create returned HTTP 200/code 0; polls returned 804 then 0.
+Task: **2106831486408949762**. Started: **2026-10-04T19:38:58.082949Z**, ended:
+**2026-10-04T19:39:32.077081Z** (2026-10-05 local). Attempt duration: **34.000 seconds**.
 
-No real provider request was submitted. Workflow ID: **unknown**. Actual real model: **unknown**.
-Candidate count, request timestamp, duration, successful outputs and provider errors: **not applicable**
-because no real request occurred. An unavailable connection is not a tested generation failure.
+Results were ordered **17 (original), 11 (generated)**, both PNG, both from
+**rh-images-tos.xiaoyaoyou.com**. Adapter chose 11 and discarded 17. Download failed safely with
+PROVIDER_RESPONSE_INVALID. Result dimensions, visual quality, local persistence and real metrics are
+not yet established. Remote task completion is not complete adapter PASS.
 
-## Exact remaining verification
+## Current boundary
 
-1. Obtain an actual compatible saved workflow ID and model name, and configure server-only settings
-   from `.env.example`. Follow [RunningHub setup](RUNNINGHUB_INTEGRATION.md) or [local workflow setup](../workflows/README.md).
-   Recheck current official provider documentation before making the first real call.
-2. Use only an authorized project image and matching CHANGE mask. Keep KEEP masks, human notes and
-   evaluation results local. Confirm the UI disclosure before choosing cloud execution.
-3. First validate one candidate by calling the configured adapter's `generate(GenerationRequest(...))`
-   from a local Python session if needed to control cost. This is adapter evidence only; the product
-   API deliberately accepts exactly three candidates. Record that distinction.
-4. Perform one explicitly confirmed three-candidate studio run. Preserve all outputs, including failures.
-   Record actual provider, workflow/model identifiers, timestamp, duration, candidate count, safe error
-   categories, source/mask provenance and receipt. Do not publish credentials or signed download URLs.
-5. Have a human evaluate semantic adherence, protected damage, artifacts and whether ranking was
-   reasonable. Complete the three [case slots](../demo-assets/README.md) without cherry-picking.
+[CN outputs](https://www.runninghub.cn/runninghub-api-doc-cn/api-425749004) and the
+[integration example](https://www.runninghub.cn/runninghub-api-doc-cn/doc-8287339) still name the old
+rh-images.xiaoyaoyou.com. Reviewed official sources did not confirm the exact -tos host. Authenticated
+API output establishes the observed host, not a documented CDN contract. An exact-host exception is
+awaiting user approval under the requested unfamiliar-CDN boundary.
 
-An ambiguous accepted provider job must be checked in its task console before another submission.
-Polling timeouts do not cancel cloud work. CI remains GPU-free and Mock-only.
+The task and safe evidence are retained locally. Query that **same task** after resolving the host;
+never create another smoke job. Only after complete smoke success run one normal three-candidate
+product API request with seeds 4100/4101/4102 and unchanged evaluation/ranking/Ghost/receipt logic.
+Retain all candidates and failures. Human verdicts remain pending; do not tune or cherry-pick.
+
+No key, signed URL or raw provider body is included. Manual web success is not API success.
+Blank-area creation, actual mask application and subjective image quality are unverified here.
+The three full creative demo cases remain outside this task.
+
+See [audit](Z_IMAGE_VALIDATION_AUDIT.md), [setup](RUNNINGHUB_INTEGRATION.md)
+and [model observations](MODEL_BOUNDARIES.md).

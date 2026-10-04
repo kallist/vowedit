@@ -1,27 +1,36 @@
-# Model boundaries — experiment log
+# Model boundaries — observed experiment log
 
-Real ComfyUI experiments: **NOT TESTED**.
-Real RunningHub experiments: **NOT TESTED**.
+## RunningHub CN, 2026-10-05
 
-Hardening recheck, 2026-10-02: required server configuration is still absent and an actual loopback
-ComfyUI connection still fails. No real generation request was submitted. Current discovery and exact
-remaining validation steps are in [REAL_PROVIDER_VALIDATION.md](REAL_PROVIDER_VALIDATION.md).
+Real API transport/inference attempt: **TESTED**. Complete image download: **FAILED**.
+Manual web success: **TESTED**, user-reported. Local ComfyUI real generation: **NOT TESTED**.
 
-On 2026-09-28 the default local ComfyUI system-stats endpoint failed to connect. Bounded installation
-discovery found learning notes, not a verified installation or checkpoint. No RunningHub credential,
-account workflow or model was available in the inspected configuration. No model was downloaded.
+Graph overrides: image 16, instruction 8, seed 4 only. Stack: z_image_turbo_bf16.safetensors,
+qwen_3_4b.safetensors, ae.safetensors. Workflow: 2106824243966201857.
+Seed: 671807066932685; task: 2106831486408949762. Input: authorized geometric illustration,
+jacket CHANGE and face/hair KEEP. Instruction: Change the jacket to cool blue.
+Requested candidates: **1**. Create calls: **1**. Remote outputs: original 17/generated 11, both PNG.
+Attempt: **34.000 seconds**.
 
-Consequently there are **no observed real-model findings** about identity drift, edge artifacts,
-composition, denoise tradeoffs, seed variance or prompt alignment. Those would be plausible topics to
-test, not facts established here. HTTP transport simulations do not supply that evidence.
+Observed boundary: generated output used rh-images-tos.xiaoyaoyou.com, rejected by the strict
+download allowlist. No image reached evaluation. There are therefore **no actual visual/pixel
+findings** about adherence, protected damage, drift, artifacts, seed variance or ranking yet.
+Inverse-alpha conversion has deterministic and official-source evidence; its application to actual
+output pixels remains unverified.
 
-The deterministic Mock intentionally changes pixels outside CHANGE for two candidates. This validates
-evaluation, ranking, warnings and Ghost View. It cannot validate model quality or instruction following.
+The user's manually tested workflow note says the redraw setup expects existing content in the
+edited region. This request used existing jacket content and did **not** compare blank-area creation.
+That limitation is unverified and cannot become a universal Z-Image claim.
 
-## Record the first real experiment here
+[Execution evidence](REAL_PROVIDER_VALIDATION.md) retains the safe failure. No automatic paid retry.
+The existing task can be retrieved after an exact-host decision without another inference charge.
+Human reviewer, preferred candidate, ranking judgment and artifact review remain **pending**.
 
-Required fields: date; provider; actual workflow ID/template revision; exact model; consented input
-asset; contract masks/thresholds; seed/settings; requested and completed candidate counts; task IDs;
-duration; provider errors; candidate images; measured scores; human observations and reviewer identity.
-Keep secrets and private filesystem paths out of this document. Preserve failure evidence as well as
-successful images. Mark the existing NOT TESTED status changed only after executing the experiment.
+## Earlier evidence
+
+September/October 2 discovery lacked cloud configuration and an available local ComfyUI service.
+Those historical NOT TESTED records describe that environment then. This session received the actual
+server configuration and API export.
+
+Mock intentionally drifts outside CHANGE in two candidates. It proves evaluator/ranking/warnings/
+Ghost behavior; it cannot establish model quality, instruction adherence or identity.
