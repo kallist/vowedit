@@ -180,8 +180,8 @@
     "rank": 1,
     "error": null,
     "manual_review": {
-      "verdict": "pending",
-      "notes": ""
+      "verdict": "pass",
+      "notes": "Actual user final Boundary Lock review: A/B/C 均 PASS，偏好 A"
     },
     "generation_metadata": {
       "provider": "imported",
@@ -259,8 +259,8 @@
       "rank": 1,
       "error": null,
       "manual_review": {
-        "verdict": "pending",
-        "notes": ""
+        "verdict": "pass",
+        "notes": "Actual user final Boundary Lock review: A/B/C 均 PASS，偏好 A"
       },
       "generation_metadata": {
         "provider": "imported",
@@ -337,8 +337,8 @@
       "rank": 2,
       "error": null,
       "manual_review": {
-        "verdict": "pending",
-        "notes": ""
+        "verdict": "pass",
+        "notes": "Actual user final Boundary Lock review: A/B/C 均 PASS，偏好 A"
       },
       "generation_metadata": {
         "provider": "imported",
@@ -415,8 +415,8 @@
       "rank": 3,
       "error": null,
       "manual_review": {
-        "verdict": "pending",
-        "notes": ""
+        "verdict": "pass",
+        "notes": "Actual user final Boundary Lock review: A/B/C 均 PASS，偏好 A"
       },
       "generation_metadata": {
         "provider": "imported",

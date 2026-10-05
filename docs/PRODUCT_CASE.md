@@ -155,8 +155,10 @@ the tie; the algorithm did not choose a semantic favorite. A is suggested.
 
 Agent inspection finds all three clearly navy with closed jacket structure, original surroundings
 and no major boundary artifacts. The raw user review was PASS, preferred A. Locked review is a new
-decision and remains **PENDING**. The evaluated constraint-enforced case is complete; human-approved
-final success/portfolio showcase is withheld until an actual locked-candidate verdict. No inference
+decision: after inspecting the new locked results in VowEdit, the user replied **“A/B/C 均 PASS，偏好 A”**.
+All three new reviews are saved through the existing review API, without changing ranking. The evaluated
+constraint-enforced case and human-approved final success are complete; portfolio/interview-ready **YES**
+for this one controlled, explicitly attributed example. No inference
 seeds/model versions are invented, no new cloud task, no scoring changes or V0.2 features.
 
 Product insight: measuring preservation exposes failures, but an explicit spatial enforcement layer

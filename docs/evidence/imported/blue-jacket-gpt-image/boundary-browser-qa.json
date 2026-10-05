@@ -26,6 +26,7 @@
   "new_generation_calls": 0,
   "new_run_created_in_ui_qa": false,
   "locked_human_review": "PENDING",
+  "review_phase": "Captured before the final user reply; subsequent actual locked reviews are in locked-human-review.json and receipt.json",
   "overflow": false,
   "page_errors": [],
   "failed_api_responses": [],

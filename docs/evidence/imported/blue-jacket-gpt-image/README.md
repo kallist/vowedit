@@ -13,15 +13,19 @@ null, model/version unavailable. Unchanged rgb-mae-v1: KEEP/outside 100%, drift 
 A 27.600803%, B 29.078432%, C 28.000647%, score 100 each. All eligible. Rank A → B → C, suggested A;
 original index breaks the tie. Agent inspection finds all clearly navy with closed jacket, preserved
 surroundings and no major boundary artifacts. Raw user approval/preference A remains historical;
-locked human review **PENDING**, candidate verdicts remain pending. Controlled constraint-enforced
-success YES; human-approved final PENDING; portfolio NO.
+the user separately reviewed the new locked results and replied **“A/B/C 均 PASS，偏好 A”**.
+All three candidate verdicts are now persisted as PASS through the existing review API, with ranking
+unchanged. Controlled constraint-enforced success YES; human-approved final YES; portfolio/interview
+YES for this one explicitly attributed example. [Actual new human review](locked-human-review.json).
 
 New evidence: [normalization](normalization.json), [API preparation/provenance](boundary-lock.json),
 [evaluated run](evaluation.json), [receipt](receipt.json), [derived hashes](boundary-image-manifest.json),
 [before/after](before-after.png), [raw vs locked](raw-vs-locked.png).
 Locked [A](locked-a.png), [B](locked-b.png), [C](locked-c.png); Ghosts
 [A](ghost-a.png), [B](ghost-b.png), [C](ghost-c.png). Transparent Ghosts accurately reflect zero drift,
-not disabled evaluation. Product screenshots are recorded in the Boundary Lock validation.
+not disabled evaluation. Product screenshots are recorded in the Boundary Lock validation. Initial
+browser QA captured pending review before the user's reply; the separate reviewed-receipt screenshot
+shows final persisted PASS. Raw reviews and rejection artifacts remain unchanged.
 
 ## Historical raw generation and refusal
 

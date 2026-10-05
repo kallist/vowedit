@@ -53,9 +53,11 @@ Agent inspected all actual locked outputs: clearly navy, no primarily orange/bro
 structure/flat design retained, original face/hair/skin/pants/pose/background, no major boundary
 artifact. Slight generated jacket texture remains; binary locking cannot repair arbitrary defects
 inside CHANGE. Agent review is separate from user acceptance.
-Raw user review: A/B/C PASS, preferred A. Locked user review **PENDING**; no copied verdicts.
-Controlled constraint-enforced success **YES**. Human-approved final **PENDING**. Portfolio-ready and
-complete human-approved success-case interview-ready **NO**, pending the new review.
+Raw user review: A/B/C PASS, preferred A. Locked review is separate: after final VowEdit UI display,
+the user replied **“A/B/C 均 PASS，偏好 A”**. All three new verdicts were saved through the existing
+review API and read back in the receipt; images, metrics, ranks and suggestion unchanged. No new run
+or generation. Controlled constraint-enforced success **YES**, human-approved final **YES**;
+portfolio-ready and interview-ready **YES** for this one explicitly attributed controlled example.
 
 ## Validation record
 
@@ -85,8 +87,12 @@ Docker: NOT TESTED / not applicable. Real ComfyUI: NOT TESTED. Direct OpenAI API
 NOT TESTED. RunningHub failures: retained unchanged; no new cloud task. Secret scan is a pattern
 hygiene check, not a complete security audit. Public evidence contains no keys or private paths.
 
-Hosted acceptance must be observed on the pushed exact PR head; prior d48 checks do not prove this
-change. The final report and PR carry the final observed run URL and commit. No CI gate changed.
+Implementation commit `13bac7e229c3b3822b52685d8aa74b873ffe803d` Hosted CI **PASS**, both
+[push 37350068663](https://github.com/kallist/vowedit/actions/runs/37350068663) and
+[PR 37350074911](https://github.com/kallist/vowedit/actions/runs/37350074911); logs verified 153 pytest,
+8 Vitest, 21 Chromium. The later user-review/docs-only commit is verified independently at its exact
+final head; final report/PR carry that run URL. No CI gate changed. Initial log read hit Windows CLI
+cache permissions; approved cache access retrieved logs, without changing source or CI.
 
 ## Evidence and review
 
@@ -100,6 +106,12 @@ without baseURL; harness corrected and rerun PASS, with no generation or extra r
 served the exact case masks to static demo mask URLs; product default fixtures are unchanged.
 Offline screenshots live under
 `docs/screenshots/boundary`; they are clearly deterministic fixtures, not model results.
+
+After the actual user reply, final human-reviewed UI readback PASS at 1440/390: all three saved PASS
+verdicts/notes displayed, receipt export and refresh verified, no writes/generation during readback,
+no page errors/overflow. `human-reviewed-browser-qa.json` and reviewed-receipt screenshots preserve
+this separate final phase. No source code changes followed implementation CI; only actual review,
+receipt/evaluation snapshots, UI evidence and factual documentation were updated.
 
 Read-only self review checks security/immutability/provenance, failure and retry boundaries, existing
 behavior and unchanged scoring. No delegated independent agent review is claimed. Final findings

@@ -109,7 +109,8 @@ minimal center crop, Lanczos resize, then generated pixels inside CHANGE and ori
 All three locked candidates completed real import/evaluation/ranking/Ghost/receipt with unchanged
 rgb-mae-v1. KEEP/outside preservation 100%, outside drift 0%; rank A → B → C, suggested A.
 This preservation comes from VowEdit's composite, not the external model alone. Raw files and the
-previous rejection remain intact. Locked human review **PENDING**; raw approval is not transferred.
+previous rejection remain intact. After separately viewing the locked results in VowEdit, the user
+confirmed **A/B/C PASS, preferred A**; all three new verdicts are persisted in the reviewed receipt.
 See [Boundary Lock evidence and checks](docs/BOUNDARY_LOCK_VALIDATION.md). No direct OpenAI integration.
 
 See [RunningHub setup and official API references](docs/RUNNINGHUB_INTEGRATION.md),
@@ -180,12 +181,13 @@ Single-user local process, no auth. PNG/JPEG only, 10 MB, each side 32–1536 pi
 region in the UI (multiple regions supported in the API). Mean pixel similarity can dilute small
 important edits and penalize harmless shifts. The default 98 threshold and 2% change gate are heuristics.
 Real RunningHub generation is **TESTED** with retained semantic failures. Local ComfyUI generation
-and the three broader creative demo slots remain **NOT TESTED**. Portfolio readiness is withheld
-pending final human review of the constraint-enforced external case; see
+and the three broader creative demo slots remain **NOT TESTED**. Portfolio-ready **YES** for the one
+controlled, human-approved external Boundary Lock case; broader validation remains pending. See
 [real-provider validation](docs/REAL_PROVIDER_VALIDATION.md) and [pending cases](docs/DEMO_CASES.md).
 No automatic cloud task reconciliation; unknown provider states require console inspection. Latest
 50 edits shown, but assets persist until the owner removes their local data; automatic cleanup/deletion
-UI is not implemented. Receipt PNG export and real human-reviewed creative examples are not implemented.
+UI is not implemented. Receipt PNG export is not implemented. This one controlled, human-reviewed
+external jacket case does not establish success on the three broader creative demo slots.
 
 ## Roadmap
 

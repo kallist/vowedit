@@ -12,9 +12,11 @@ Generation: Codex built-in imagegen; model/version unavailable, seed null. Enfor
 Boundary Lock. Evaluation: VowEdit rgb-mae-v1. Preservation measures the composite, not the raw model.
 
 Raw user semantic approval remains PASS, preferred A. Agent inspection finds all locked candidates
-clearly navy with preserved surroundings and no major boundary artifacts. Locked human review
-**PENDING**; raw approval is not copied. Controlled constraint-enforced success **YES**, human-approved
-final **PENDING**, portfolio-ready **NO** pending review. No direct OpenAI integration, new RunningHub
+clearly navy with preserved surroundings and no major boundary artifacts. The user subsequently reviewed
+the new locked results in VowEdit and replied **“A/B/C 均 PASS，偏好 A”**. All three verdicts were saved
+through the existing review API, with scores/ranking unchanged. Controlled constraint-enforced success
+**YES**, human-approved final **YES**, portfolio-ready **YES** for this clearly attributed controlled case.
+No direct OpenAI integration, new RunningHub
 tasks or reclassified failures. [Evidence](evidence/imported/blue-jacket-gpt-image).
 
 ## External candidate attempt — 2026-10-06
