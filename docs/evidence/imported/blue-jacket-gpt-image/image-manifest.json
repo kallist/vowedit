@@ -1,0 +1,47 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "candidate-a.png": {
+      "sha256": "23a376f0316c4d93b160016be6913eae926a23551b1fed895b9d92fc1abe9134",
+      "dimensions": [
+        1195,
+        1316
+      ]
+    },
+    "candidate-b.png": {
+      "sha256": "63773d79e676c336906fee75b631f20a49161a2291a301ae79991a0648d4992a",
+      "dimensions": [
+        1195,
+        1316
+      ]
+    },
+    "candidate-c.png": {
+      "sha256": "0cbfcd47a9f2bdc06cccbfc8796f6d9427060bf11bb4898e425949be0fa6f182",
+      "dimensions": [
+        1195,
+        1316
+      ]
+    },
+    "change-mask.png": {
+      "sha256": "81c78d1aa3716440385acc6ca9e2c71177274a39a7cdc3d2dd498ee791030c19",
+      "dimensions": [
+        640,
+        704
+      ]
+    },
+    "keep-mask.png": {
+      "sha256": "2ce4b1e4c32038d63a58bb042753042950007cdf6773776bd1144d747d3be212",
+      "dimensions": [
+        640,
+        704
+      ]
+    },
+    "original.png": {
+      "sha256": "7efc7b005d8989d21561a87a9dba5a8e8058eebc7a8b7c1870a68cd8936ccef2",
+      "dimensions": [
+        640,
+        704
+      ]
+    }
+  }
+}

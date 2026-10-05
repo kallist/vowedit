@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "case_status": "REJECTED_SIZE_MISMATCH",
+  "viewports": [
+    1440,
+    768,
+    390
+  ],
+  "actual_external_outputs": true,
+  "static_masks": "exact existing corrected Blue Jacket masks served to Demo",
+  "generating_disabled": true,
+  "run_created": false,
+  "evaluation": "NOT TESTED",
+  "ranking": "NOT TESTED",
+  "ghost": "NOT TESTED",
+  "receipt": "NOT TESTED",
+  "overflow": false,
+  "page_errors": []
+}

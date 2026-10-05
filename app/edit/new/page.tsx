@@ -8,6 +8,7 @@ import MaskEditor, {
 } from "@/frontend/MaskEditor";
 import { api, ApiError, jsonPost, upload } from "@/frontend/api";
 import type { Stroke } from "@/frontend/masks";
+import { importReady, submissionPath } from "@/frontend/imports";
 import { assetUrl, type Asset, type Run } from "@/frontend/types";
 export default function NewEdit() {
   const router = useRouter(),
@@ -25,6 +26,13 @@ export default function NewEdit() {
     [background, setBackground] = useState(true);
   const [provider, setProvider] = useState("mock"),
     [providers, setProviders] = useState(["mock"]);
+  const [mode, setMode] = useState<"generate" | "import">("generate");
+  const [candidates, setCandidates] = useState<(Asset | null)[]>([
+    null,
+    null,
+    null,
+  ]);
+  const [sourceLabel, setSourceLabel] = useState("GPT Image via Codex");
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [drag, setDrag] = useState(false);
@@ -39,7 +47,7 @@ export default function NewEdit() {
     setRecoveringSubmission(true);
     pending.current = true;
     setBusy(true);
-    api<Run>("/runs", {
+    api<Run>(submissionPath(JSON.parse(saved)), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: saved,
@@ -82,6 +90,7 @@ export default function NewEdit() {
       setDraftStrokes([]);
       setDraftMasks({});
       setPrepared(null);
+      setCandidates([null, null, null]);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -105,6 +114,7 @@ export default function NewEdit() {
         "original",
       );
       setAsset(source);
+      setCandidates([null, null, null]);
       setMasks(null);
       setPrepared(null);
       setDraftStrokes([]);
@@ -126,6 +136,11 @@ export default function NewEdit() {
   }
   async function generate() {
     if (!asset || !masks || pending.current) return;
+    if (
+      mode === "import" &&
+      (!masks.keep || !importReady(candidates, sourceLabel))
+    )
+      return;
     pending.current = true;
     setBusy(true);
     setError("");
@@ -142,8 +157,12 @@ export default function NewEdit() {
       const request = {
         source_image: asset.id,
         request_key: saved.key,
-        provider,
-        candidate_count: 3,
+        ...(mode === "import"
+          ? {
+              candidate_images: candidates.map((c) => c!.id),
+              source_label: sourceLabel.trim(),
+            }
+          : { provider, candidate_count: 3 }),
         contract: {
           change: { instruction, mask: saved.change.id },
           keep: saved.keep
@@ -163,7 +182,7 @@ export default function NewEdit() {
         "vowedit.pending-submission",
         JSON.stringify(request),
       );
-      const run = await api<Run>("/runs", jsonPost(request));
+      const run = await api<Run>(submissionPath(request), jsonPost(request));
       sessionStorage.removeItem("vowedit.pending-submission");
       router.push(`/edit/${run.id}`);
     } catch (e) {
@@ -175,6 +194,30 @@ export default function NewEdit() {
     } finally {
       setBusy(false);
       pending.current = false;
+    }
+  }
+  async function chooseCandidate(index: number, file: File) {
+    if (!asset || pending.current || prepared) return;
+    pending.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      const candidate = await upload(file, "candidate");
+      if (
+        candidate.width !== asset.width ||
+        candidate.height !== asset.height
+      ) {
+        throw new Error(
+          `CANDIDATE_SIZE_MISMATCH: Candidate ${String.fromCharCode(65 + index)} must be ${asset.width} × ${asset.height} px. No resizing is performed.`,
+        );
+      }
+      setCandidates((old) => old.map((c, i) => (i === index ? candidate : c)));
+    } catch (e) {
+      setCandidates((old) => old.map((c, i) => (i === index ? null : c)));
+      setError((e as Error).message);
+    } finally {
+      pending.current = false;
+      setBusy(false);
     }
   }
   const summary = !!masks;
@@ -218,9 +261,11 @@ export default function NewEdit() {
           </h1>
         </div>
         <span className="pill">
-          {provider === "mock"
-            ? "MOCK · pixel simulation"
-            : "Configured provider"}
+          {mode === "import"
+            ? "IMPORTED · external generation"
+            : provider === "mock"
+              ? "MOCK · pixel simulation"
+              : "Configured provider"}
         </span>
       </div>
       <div className="workspace-grid">
@@ -275,24 +320,28 @@ export default function NewEdit() {
             scene segmentation.
           </p>
           <hr />
-          <label htmlFor="provider">Generation source</label>
-          <select
-            id="provider"
-            value={provider}
-            disabled={summary || busy}
-            onChange={(e) => setProvider(e.target.value)}
-          >
-            {providers.map((p) => (
-              <option key={p} value={p}>
-                {p === "mock" ? "Mock — deterministic demo" : p}
-              </option>
-            ))}
-          </select>
-          <p className="field-note">
-            {provider === "mock"
-              ? "No model call. Controlled edits and deliberate drift let you explore the entire product."
-              : "Your image, CHANGE mask and instruction leave this app for the configured provider."}
-          </p>
+          {mode === "generate" && (
+            <>
+              <label htmlFor="provider">Generation source</label>
+              <select
+                id="provider"
+                value={provider}
+                disabled={summary || busy}
+                onChange={(e) => setProvider(e.target.value)}
+              >
+                {providers.map((p) => (
+                  <option key={p} value={p}>
+                    {p === "mock" ? "Mock — deterministic demo" : p}
+                  </option>
+                ))}
+              </select>
+              <p className="field-note">
+                {provider === "mock"
+                  ? "No model call. Controlled edits and deliberate drift let you explore the entire product."
+                  : "Your image, CHANGE mask and instruction leave this app for the configured provider."}
+              </p>
+            </>
+          )}
           <div className="quiet-note">
             <ShieldCheck size={20} aria-hidden />
             <p>
@@ -384,12 +433,97 @@ export default function NewEdit() {
                   <p>{masks.keepPixels.toLocaleString()} protected pixels</p>
                 </div>
               </div>
+              <fieldset className="import-source" disabled={busy || !!prepared}>
+                <legend>Choose candidate source</legend>
+                <label className="checkbox">
+                  <input
+                    type="radio"
+                    name="candidate-source"
+                    checked={mode === "generate"}
+                    onChange={() => setMode("generate")}
+                  />
+                  Generate with configured provider
+                </label>
+                <label className="checkbox">
+                  <input
+                    type="radio"
+                    name="candidate-source"
+                    checked={mode === "import"}
+                    onChange={() => setMode("import")}
+                  />
+                  Import 3 candidates
+                </label>
+                {mode === "import" && (
+                  <>
+                    <p className="field-note">
+                      Generation happened externally. VowEdit imports and
+                      evaluates your images. Each must match the original:{" "}
+                      {asset.width} × {asset.height} px.
+                    </p>
+                    <div className="import-slots">
+                      {candidates.map((candidate, index) => (
+                        <div className="import-slot" key={index}>
+                          <label htmlFor={`candidate-${index}`}>
+                            Candidate {String.fromCharCode(65 + index)}
+                          </label>
+                          <input
+                            id={`candidate-${index}`}
+                            type="file"
+                            accept="image/png,image/jpeg"
+                            aria-label={`Upload Candidate ${String.fromCharCode(65 + index)}`}
+                            onChange={(e) => {
+                              if (e.target.files?.[0])
+                                void chooseCandidate(index, e.target.files[0]);
+                            }}
+                          />
+                          {candidate && (
+                            <>
+                              <img
+                                src={assetUrl(candidate.id)}
+                                alt={`Uploaded Candidate ${String.fromCharCode(65 + index)}`}
+                              />
+                              <p className="field-note">
+                                Uploaded · {candidate.width} ×{" "}
+                                {candidate.height} px
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <label htmlFor="source-label">Source label</label>
+                    <input
+                      id="source-label"
+                      value={sourceLabel}
+                      maxLength={80}
+                      onChange={(e) => setSourceLabel(e.target.value)}
+                    />
+                    {!sourceLabel.trim() && (
+                      <p className="error">
+                        Enter a source label (1–80 characters).
+                      </p>
+                    )}
+                    <p className="field-note">
+                      Descriptive attribution supplied by you; this does not
+                      verify a direct API integration.
+                    </p>
+                    {!masks.keep && (
+                      <p className="error">
+                        Import requires a painted KEEP region. Edit the contract
+                        to add one.
+                      </p>
+                    )}
+                  </>
+                )}
+              </fieldset>
               <div className="summary-footer">
                 <p>
                   <strong>3 candidates</strong> ·{" "}
-                  {provider === "mock"
-                    ? "Mock simulation, no AI inference"
-                    : "Configured generation provider"}
+                  {mode === "import"
+                    ? `Imported · ${sourceLabel.trim() || "External candidates"}`
+                    : provider === "mock"
+                      ? "Mock simulation, no AI inference"
+                      : "Configured generation provider"}
                   <br />
                   <span className="muted">
                     We check preservation. You judge the edit.
@@ -397,10 +531,18 @@ export default function NewEdit() {
                 </p>
                 <button
                   className="button primary"
-                  disabled={busy}
+                  disabled={
+                    busy ||
+                    (mode === "import" &&
+                      (!masks.keep || !importReady(candidates, sourceLabel)))
+                  }
                   onClick={() => void generate()}
                 >
-                  {busy ? "Submitting…" : "Generate 3 candidates"}
+                  {busy
+                    ? "Submitting…"
+                    : mode === "import"
+                      ? "Evaluate imported candidates"
+                      : "Generate 3 candidates"}
                   <ArrowRight size={18} aria-hidden />
                 </button>
               </div>

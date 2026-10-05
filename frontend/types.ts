@@ -31,7 +31,7 @@ export type Candidate = {
   evaluation: Evaluation | null;
   error: { code: string; message: string } | null;
   rank: number | null;
-  seed: number;
+  seed: number | null;
   manual_review: { verdict: "pending" | "pass" | "fail"; notes: string };
 };
 export type Run = {
@@ -40,6 +40,7 @@ export type Run = {
   source_image: string;
   status: string;
   provider: string;
+  source_label?: string | null;
   contract: Contract;
   candidates: Candidate[];
   selected_candidate_id: string | null;
@@ -51,6 +52,12 @@ export type Run = {
   generation_seconds?: number;
 };
 export const assetUrl = (id: string) => `/api/assets/${id}`;
+export const sourceBadge = (run: Pick<Run, "provider" | "source_label">) =>
+  run.provider === "imported"
+    ? `IMPORTED · ${run.source_label || "External candidates"}`
+    : run.provider === "mock"
+      ? "MOCK · pixel simulation"
+      : run.provider;
 export const label = (index: number) => String.fromCharCode(65 + index);
 export const terminal = (state: string) =>
   ["completed", "partial", "failed_generation", "failed_evaluation"].includes(

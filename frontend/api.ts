@@ -25,7 +25,7 @@ export const jsonPost = (body: unknown): RequestInit => ({
 });
 export async function upload(
   file: File | Blob,
-  kind: "original" | "mask",
+  kind: "original" | "mask" | "candidate",
   name = "mask.png",
 ) {
   const form = new FormData();

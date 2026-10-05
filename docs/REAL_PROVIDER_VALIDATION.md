@@ -1,5 +1,20 @@
 # Real provider validation — 2026-10-05
 
+## External candidate attempt — 2026-10-06
+
+Codex's built-in `image_gen.imagegen` produced three separate untouched navy-jacket edits from the
+same original. Actual label: **Codex built-in imagegen**; tool model/version and seeds are not exposed.
+This is **NOT a direct OpenAI API integration inside VowEdit**. User explicitly reviewed A/B/C as
+visually satisfying the intent and preferred A. All three raw outputs are retained, without selection
+or post-editing. Source 640×704; generated outputs 1195×1316. All safe candidate uploads/readbacks PASS;
+`POST /api/imported-runs` correctly rejects `CANDIDATE_SIZE_MISMATCH`, creates no run and makes no
+provider calls. Actual external evaluation/ranking/Ghost/Receipt: **NOT TESTED**. The full offline
+import flow is tested independently. [Evidence](evidence/imported/blue-jacket-gpt-image).
+
+Controlled external visual success: **YES**. Human-approved visual result: **YES**, preferred A.
+Controlled external imported/evaluated success case: **NO**. Portfolio-ready: **NO**.
+Prior real RunningHub failures below remain unchanged; external images do not overwrite their verdicts.
+
 ## Object Replacement Proof: one-round failed semantic result
 
 **SUCCESS CASE 02 FAILED.** After repository asset audit, the user supplied a white porcelain teapot

@@ -15,7 +15,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from backend.body_limit import BodyLimitMiddleware
 from backend.providers import LocalComfyUIImageEditProvider
 from backend.runninghub import RunningHubImageEditProvider
-from backend.schemas import AppError, CreateRun, Retry, Review
+from backend.schemas import AppError, CreateImportedRun, CreateRun, Retry, Review
 from backend.services import ImageEditService
 from backend.storage import MAX_BYTES
 
@@ -129,7 +129,8 @@ def create_app(service: ImageEditService | None = None) -> FastAPI:
 
     @app.post("/api/assets", status_code=201)
     def upload(
-        file: Annotated[UploadFile, File()], kind: Literal["original", "mask"] = "original"
+        file: Annotated[UploadFile, File()],
+        kind: Literal["original", "mask", "candidate"] = "original",
     ) -> dict[str, Any]:
         data = file.file.read(MAX_BYTES + 1)
         asset_id, width, height = svc().assets.upload(
@@ -150,6 +151,10 @@ def create_app(service: ImageEditService | None = None) -> FastAPI:
     def create(request: CreateRun) -> dict[str, Any]:
         return svc().create(request)
 
+    @app.post("/api/imported-runs", status_code=202)
+    def create_imported(request: CreateImportedRun) -> dict[str, Any]:
+        return svc().create_imported(request)
+
     @app.get("/api/runs")
     def history() -> list[dict[str, Any]]:
         return [
@@ -157,6 +162,7 @@ def create_app(service: ImageEditService | None = None) -> FastAPI:
                 key: run[key]
                 for key in ("id", "status", "created_at", "source_image", "contract", "provider")
             }
+            | {"source_label": run.get("source_label")}
             for run in svc().repo.history()
         ]
 

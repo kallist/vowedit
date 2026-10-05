@@ -460,7 +460,9 @@ label span {
   float: right;
 }
 textarea,
-input:not([type="checkbox"]):not([type="range"]):not([type="file"]),
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(
+    [type="file"]
+  ),
 select {
   width: 100%;
   background: #fff;
@@ -847,6 +849,68 @@ summary {
   max-width: 100%;
   width: 480px;
   overflow: hidden;
+}
+
+.import-source {
+  border: 1px solid var(--line, #ddd);
+  padding: 20px;
+  margin: 20px 0;
+  min-width: 0;
+}
+.import-source legend {
+  font-weight: 600;
+}
+.import-source .checkbox {
+  justify-content: flex-start;
+  min-height: 44px;
+  gap: 12px;
+}
+.import-source .checkbox input {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  flex: none;
+}
+.import-slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+.import-slot {
+  min-width: 0;
+}
+.import-slot input {
+  max-width: 100%;
+  width: 100%;
+  min-height: 44px;
+}
+.import-slot img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  margin-top: 12px;
+}
+.import-source > input {
+  width: 100%;
+}
+.pill {
+  overflow-wrap: anywhere;
+  white-space: normal;
+  max-width: 100%;
+}
+.summary-footer p,
+.receipt-grid p,
+.history-item h2 {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .import-slots {
+    grid-template-columns: 1fr;
+  }
+  .import-source input {
+    font-size: 16px;
+  }
 }
 .compare-image > img:first-child {
   width: 100%;

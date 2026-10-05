@@ -1,5 +1,17 @@
 # Model boundaries — actual RunningHub experiment
 
+## Imported candidates — separate source boundary
+
+The imported path does not execute a model: it evaluates uploaded local assets with null seeds,
+`provider=imported`, descriptive source label and `generation_source=external-import`. No provider
+key is required. Simulation=false denotes absence of the Mock provider path, not proof of model
+identity or a direct API call. Offline fixtures remain explicitly labelled as deterministic fixtures.
+
+The actual Codex built-in imagegen A/B/C edits received user visual PASS, preferred A. The tool did
+not expose its model/version or seed and returned 1195×1316 against a 640×704 source. Import correctly
+rejects them without resize; evaluation/Ghost/receipt of those real external candidates is NOT TESTED.
+No direct OpenAI provider was added; no RunningHub failure was reclassified. [Actual record](evidence/imported/blue-jacket-gpt-image).
+
 ## What was tested on 2026-10-05
 
 RunningHub CN API: **TESTED / PASS** for generation, safe download, persistence and evaluation.

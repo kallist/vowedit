@@ -118,3 +118,23 @@ All three object candidates are human FAIL despite passing pixel checks; system 
 There is no successful real case. Portfolio-ready remains NO. VowEdit does not hide failed generations;
 pixel evaluation and human semantic review are complementary. Receipt PNG export remains optional
 and unimplemented; there is no added V0.2 scope.
+
+## 16. Cross-source evaluation
+
+The generation model is replaceable. The editing contract is the product. `POST /api/imported-runs`
+accepts three existing candidate asset UUIDs and a descriptive source label, with the same original,
+CHANGE and KEEP contract. It queues evaluation directly, skipping generation. Both paths use the
+unchanged evaluator, ranking, Ghosts and v1 receipt. Seeds are null, provider jobs empty, and receipts
+say external-import; VowEdit never claims to have generated those candidates. No DB migration.
+
+Case A remains the real RunningHub integration PASS with semantic FAIL. Its six Blue Jacket outputs
+and human FAIL reviews are untouched. Case B has actual external generation using Codex's built-in
+imagegen: A/B/C navy edits received explicit user visual PASS, preferred A. However all raw outputs
+are 1195×1316 rather than 640×704. The strict import boundary rejects them without resizing or hiding
+drift. Thus **external visual success is demonstrated, but an evaluated external success case is
+not yet complete**. No GPT Image direct provider integration. Portfolio-ready remains NO.
+
+Offline deterministic fixtures separately prove cross-source import/evaluation/ranking/Ghost/receipt
+and per-candidate human-review storage. Those fixtures and automated test verdicts are not model
+outputs or human acceptance evidence. See [import architecture and validation](IMPORTED_CANDIDATES.md)
+and [actual external outputs and rejection](evidence/imported/blue-jacket-gpt-image).

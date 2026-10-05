@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-06",
+  "source_label": "Codex built-in imagegen",
+  "actual_tool": "image_gen.imagegen",
+  "generation_mode": "external to VowEdit",
+  "actual_external_generation_calls": 3,
+  "seeds": [
+    null,
+    null,
+    null
+  ],
+  "automatic_resize": false,
+  "post_generation_image_edits": false,
+  "dimensions": {
+    "original": [
+      640,
+      704
+    ],
+    "change-mask": [
+      640,
+      704
+    ],
+    "keep-mask": [
+      640,
+      704
+    ],
+    "candidate-a": [
+      1195,
+      1316
+    ],
+    "candidate-b": [
+      1195,
+      1316
+    ],
+    "candidate-c": [
+      1195,
+      1316
+    ]
+  },
+  "uploads": {
+    "original": "d1b4e863-4731-4571-b9aa-7f4e2f21e962",
+    "change-mask": "f495216a-6a1e-4a83-8c28-a7f7a09804d8",
+    "keep-mask": "867b2f0a-37c1-4a8e-ab63-b07b80c43d5c",
+    "candidate-a": "ba757e48-1ffb-48ae-b63f-8d55e5e9ea16",
+    "candidate-b": "70844d93-e4e4-471d-a6b4-4b9cf359ce84",
+    "candidate-c": "4216a72b-9b6e-4b17-b864-852b65366b8a"
+  },
+  "upload_decode_metadata_stripping_readback": "PASS",
+  "import_request": {
+    "source_image": "d1b4e863-4731-4571-b9aa-7f4e2f21e962",
+    "request_key": "b3d95c32-abe7-4048-9046-7268d8033b2b",
+    "source_label": "Codex built-in imagegen",
+    "candidate_images": [
+      "ba757e48-1ffb-48ae-b63f-8d55e5e9ea16",
+      "70844d93-e4e4-471d-a6b4-4b9cf359ce84",
+      "4216a72b-9b6e-4b17-b864-852b65366b8a"
+    ],
+    "contract": {
+      "change": {
+        "instruction": "Replace the entire orange-brown jacket with a solid dark cool navy blue color. Preserve face, hair, pants, pose, background, flat illustration and jacket structure.",
+        "mask": "f495216a-6a1e-4a83-8c28-a7f7a09804d8"
+      },
+      "keep": [
+        {
+          "type": "manual_region",
+          "label": "Outside jacket: face, hair, skin, pants, background",
+          "mask": "867b2f0a-37c1-4a8e-ab63-b07b80c43d5c",
+          "threshold": 98
+        }
+      ],
+      "background_threshold": 98
+    }
+  },
+  "http_status": 400,
+  "response": {
+    "error": {
+      "code": "CANDIDATE_SIZE_MISMATCH",
+      "message": "Candidate dimensions must match the original. No resizing is performed."
+    }
+  },
+  "provider_generation_calls": 0,
+  "run_created": false,
+  "evaluation": "NOT TESTED",
+  "ranking": "NOT TESTED",
+  "ghost": "NOT TESTED",
+  "receipt": "NOT TESTED",
+  "human_visual_review": {
+    "A": "PASS",
+    "B": "PASS",
+    "C": "PASS",
+    "preferred": "A",
+    "exact_user_reply": "A/B/C 视觉均满足，偏好 A"
+  },
+  "controlled_external_visual_success": true,
+  "controlled_external_imported_success": false
+}
