@@ -1,0 +1,341 @@
+{
+  "round": 1,
+  "started_at": "2026-10-05T05:29:28.383097+00:00",
+  "status": "FAIL",
+  "prompt": "Replace the entire orange-brown jacket with a solid cool navy blue color. Keep the jacket shape, sleeves, seams, fasteners, face, hair, pants, body pose, and background unchanged. Remove all orange and brown tones from the jacket. Preserve the original flat illustration style.",
+  "seeds": [
+    5100,
+    5101,
+    5102
+  ],
+  "workflow_id": "2106824243966201857",
+  "api_origin": "https://www.runninghub.cn",
+  "http_evidence": [
+    {
+      "path": "/task/openapi/upload",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "path": "/task/openapi/create",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 0,
+      "outputs": [
+        {
+          "node_id": "17",
+          "type": "png",
+          "host": "rh-images-tos.xiaoyaoyou.com"
+        },
+        {
+          "node_id": "11",
+          "type": "png",
+          "host": "rh-images-tos.xiaoyaoyou.com"
+        }
+      ]
+    },
+    {
+      "path": "/task/openapi/upload",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "path": "/task/openapi/create",
+      "status": 200,
+      "code": 0
+    }
+  ],
+  "attempts": [
+    {
+      "index": 0,
+      "seed": 5100,
+      "status": "persisted",
+      "started_at": "2026-10-05T05:29:28.701976+00:00",
+      "task_id": "2106980091358834690",
+      "finished_at": "2026-10-05T05:30:06.649138+00:00"
+    },
+    {
+      "index": 1,
+      "seed": 5101,
+      "status": "FAIL",
+      "started_at": "2026-10-05T05:30:06.650135+00:00",
+      "task_id": "2106980249148547073",
+      "error_code": "PROVIDER_STATE_UNKNOWN",
+      "finished_at": "2026-10-05T05:30:17.242949+00:00"
+    }
+  ],
+  "human_review": "NOT TESTED",
+  "execution": "Case harness supplies explicit seeds; unchanged provider, AssetStore, Repository, service evaluation/ranking/receipt. Not a public seed API.",
+  "run_id": "8f136243-4dc3-48b5-8378-5574bfef90d6",
+  "run": {
+    "source_image": "ebf74d2f-d21f-4dc1-9c4a-390b05a6ffa3",
+    "contract": {
+      "change": {
+        "instruction": "Replace the entire orange-brown jacket with a solid cool navy blue color. Keep the jacket shape, sleeves, seams, fasteners, face, hair, pants, body pose, and background unchanged. Remove all orange and brown tones from the jacket. Preserve the original flat illustration style.",
+        "mask": "99cec172-1505-49c5-9af3-b195ffc71431"
+      },
+      "keep": [
+        {
+          "type": "manual_region",
+          "label": "Face hair skin pants background shadow outside jacket",
+          "mask": "77081925-7d69-412e-912e-fcb73d14d4eb",
+          "threshold": 98.0
+        }
+      ],
+      "background_threshold": 98.0
+    },
+    "request_key": "14244412-a4a2-4732-bb73-caf6ceadee7e",
+    "provider": "runninghub",
+    "candidate_count": 3,
+    "id": "8f136243-4dc3-48b5-8378-5574bfef90d6",
+    "job_id": "f7382974-23b9-4f12-a433-46050732adc5",
+    "status": "partial",
+    "created_at": "2026-10-05T05:29:28.674024+00:00",
+    "updated_at": "2026-10-05T05:30:17.402965+00:00",
+    "candidates": [
+      {
+        "id": "301261cd-58ad-41fc-be94-47b4fb24e3f7",
+        "index": 0,
+        "image": "5edf4d1c-9279-49f2-aeaf-b446a5ee82bc",
+        "seed": 5100,
+        "evaluation": {
+          "metric_version": "rgb-mae-v1",
+          "protected_similarity": 99.11561542749405,
+          "background_preservation": 99.11561542749405,
+          "change_difference": 3.754601001739502,
+          "unexpected_drift": 0.8843845725059509,
+          "overall_score": 99.11561542749405,
+          "weights": {
+            "protected": 0.6,
+            "background": 0.4
+          },
+          "minimum_change": 2.0,
+          "meaningful_change": true,
+          "violations": [],
+          "eligible": true,
+          "regions": [
+            {
+              "label": "Face hair skin pants background shadow outside jacket",
+              "type": "manual_region",
+              "threshold": 98.0,
+              "score": 99.11561542749405
+            }
+          ],
+          "warnings": [
+            "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+            "Prompt adherence and visual quality need manual review."
+          ],
+          "edit_adherence": "manual_review"
+        },
+        "ghost": "ae7d7b4c-7950-4013-bac0-4efbd77908a8",
+        "rank": 1,
+        "error": null,
+        "manual_review": {
+          "verdict": "pending",
+          "notes": ""
+        },
+        "generation_metadata": {
+          "provider": "runninghub",
+          "simulation": false
+        }
+      }
+    ],
+    "provider_jobs": [
+      {
+        "index": 0,
+        "id": "2106980091358834690"
+      },
+      {
+        "index": 1,
+        "id": "2106980249148547073"
+      }
+    ],
+    "failures": [
+      {
+        "index": 1,
+        "code": "PROVIDER_STATE_UNKNOWN",
+        "message": "Case generation failed; saved outputs retained."
+      }
+    ],
+    "error": null,
+    "selected_candidate_id": "301261cd-58ad-41fc-be94-47b4fb24e3f7",
+    "no_good_candidate": false,
+    "generation_retry_safe": false,
+    "parent_run_id": null,
+    "generation_seconds": 48.703
+  },
+  "receipt": {
+    "receipt_version": "v1",
+    "run_id": "8f136243-4dc3-48b5-8378-5574bfef90d6",
+    "provider": "runninghub",
+    "simulation": false,
+    "contract": {
+      "change": {
+        "instruction": "Replace the entire orange-brown jacket with a solid cool navy blue color. Keep the jacket shape, sleeves, seams, fasteners, face, hair, pants, body pose, and background unchanged. Remove all orange and brown tones from the jacket. Preserve the original flat illustration style.",
+        "mask": "99cec172-1505-49c5-9af3-b195ffc71431"
+      },
+      "keep": [
+        {
+          "type": "manual_region",
+          "label": "Face hair skin pants background shadow outside jacket",
+          "mask": "77081925-7d69-412e-912e-fcb73d14d4eb",
+          "threshold": 98.0
+        }
+      ],
+      "background_threshold": 98.0
+    },
+    "source_image": "ebf74d2f-d21f-4dc1-9c4a-390b05a6ffa3",
+    "generated": 1,
+    "requested": 3,
+    "selected": {
+      "id": "301261cd-58ad-41fc-be94-47b4fb24e3f7",
+      "index": 0,
+      "image": "5edf4d1c-9279-49f2-aeaf-b446a5ee82bc",
+      "seed": 5100,
+      "evaluation": {
+        "metric_version": "rgb-mae-v1",
+        "protected_similarity": 99.11561542749405,
+        "background_preservation": 99.11561542749405,
+        "change_difference": 3.754601001739502,
+        "unexpected_drift": 0.8843845725059509,
+        "overall_score": 99.11561542749405,
+        "weights": {
+          "protected": 0.6,
+          "background": 0.4
+        },
+        "minimum_change": 2.0,
+        "meaningful_change": true,
+        "violations": [],
+        "eligible": true,
+        "regions": [
+          {
+            "label": "Face hair skin pants background shadow outside jacket",
+            "type": "manual_region",
+            "threshold": 98.0,
+            "score": 99.11561542749405
+          }
+        ],
+        "warnings": [
+          "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+          "Prompt adherence and visual quality need manual review."
+        ],
+        "edit_adherence": "manual_review"
+      },
+      "ghost": "ae7d7b4c-7950-4013-bac0-4efbd77908a8",
+      "rank": 1,
+      "error": null,
+      "manual_review": {
+        "verdict": "pending",
+        "notes": ""
+      },
+      "generation_metadata": {
+        "provider": "runninghub",
+        "simulation": false
+      }
+    },
+    "candidates": [
+      {
+        "id": "301261cd-58ad-41fc-be94-47b4fb24e3f7",
+        "index": 0,
+        "image": "5edf4d1c-9279-49f2-aeaf-b446a5ee82bc",
+        "seed": 5100,
+        "evaluation": {
+          "metric_version": "rgb-mae-v1",
+          "protected_similarity": 99.11561542749405,
+          "background_preservation": 99.11561542749405,
+          "change_difference": 3.754601001739502,
+          "unexpected_drift": 0.8843845725059509,
+          "overall_score": 99.11561542749405,
+          "weights": {
+            "protected": 0.6,
+            "background": 0.4
+          },
+          "minimum_change": 2.0,
+          "meaningful_change": true,
+          "violations": [],
+          "eligible": true,
+          "regions": [
+            {
+              "label": "Face hair skin pants background shadow outside jacket",
+              "type": "manual_region",
+              "threshold": 98.0,
+              "score": 99.11561542749405
+            }
+          ],
+          "warnings": [
+            "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+            "Prompt adherence and visual quality need manual review."
+          ],
+          "edit_adherence": "manual_review"
+        },
+        "ghost": "ae7d7b4c-7950-4013-bac0-4efbd77908a8",
+        "rank": 1,
+        "error": null,
+        "manual_review": {
+          "verdict": "pending",
+          "notes": ""
+        },
+        "generation_metadata": {
+          "provider": "runninghub",
+          "simulation": false
+        }
+      }
+    ],
+    "no_good_candidate": false,
+    "failures": [
+      {
+        "index": 1,
+        "code": "PROVIDER_STATE_UNKNOWN",
+        "message": "Case generation failed; saved outputs retained."
+      }
+    ],
+    "generation_seconds": 48.703,
+    "created_at": "2026-10-05T05:29:28.674024+00:00",
+    "disclaimer": "Pixel similarity is not prompt adherence, identity or image quality. Semantic adherence and artifacts require human review."
+  },
+  "evaluation": "PASS",
+  "ghost": "PASS",
+  "receipt_check": "PASS",
+  "persistence": "PASS",
+  "finished_at": "2026-10-05T05:30:17.435303+00:00",
+  "duration_seconds": 48.875
+}

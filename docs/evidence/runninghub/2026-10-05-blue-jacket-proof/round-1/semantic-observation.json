@@ -1,0 +1,7 @@
+{
+  "source": "Agent visual inspection of all real outputs; not human review",
+  "verdicts": {"A": "fail", "B": "fail", "C": "fail"},
+  "reason": "All three jackets remain predominantly orange-brown, not cool navy or dark navy. Changes affect collars, seams, pockets and fasteners; they do not meet the required color goal.",
+  "human_review": "Recorded separately in human-review.json: all FAIL",
+  "round_2_condition": "All three first-round outputs visibly fail the required navy jacket criterion. Only the pre-authorized second prompt and seeds may be used."
+}

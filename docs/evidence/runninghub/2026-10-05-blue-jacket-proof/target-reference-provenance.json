@@ -1,0 +1,9 @@
+{
+  "kind": "MASK_VISUALIZATION_NOT_MODEL_OUTPUT",
+  "construction": "Original composited with RGB #21a1ff over CHANGE at alpha 100/255; no provider involved",
+  "pixel_sha256": "ad4a1a0cc9306a2b6eee6c2b61707ec9c0b6fd39cc5cf60263c3958e047c04c7",
+  "user_reply": "这张图是对的",
+  "user_attachment_pixel_identical": true,
+  "meaning": "User approves visual reference; not proof of real inference success",
+  "real_output": false
+}

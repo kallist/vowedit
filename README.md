@@ -94,7 +94,13 @@ The supplied Z-Image API graph is bundled with a fixed UNET/CLIP/VAE stack; no m
 No model downloads or automatic paid retries. [Real execution record](docs/REAL_PROVIDER_VALIDATION.md)
 preserves failures and distinguishes API, Mock and manual web evidence. The exact -tos CDN was added
 only after explicit authorization; no wildcard. [All real A/B/C and reviewed receipt](docs/evidence/runninghub/2026-10-05)
-are retained without cherry-picking. Portfolio readiness remains withheld for this unsuccessful edit.
+are retained without cherry-picking. The follow-up
+[Blue Jacket Proof](docs/evidence/runninghub/2026-10-05-blue-jacket-proof) completed two bounded real
+case rounds with corrected full-jacket masks and seeds 5100–5102 / 5200–5202. All six candidates
+received explicit human **FAIL** for navy-color adherence. Real provider execution is verified;
+semantic success still requires human review. **No successful real showcase was obtained;
+portfolio readiness remains NO.** The user-approved mask preview is labelled as a visual reference,
+never as model output.
 
 ## Evaluation
 

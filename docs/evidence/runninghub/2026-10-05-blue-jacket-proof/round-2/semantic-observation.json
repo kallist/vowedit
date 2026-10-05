@@ -1,0 +1,11 @@
+{
+  "source": "Agent visual inspection of all real outputs; not human review",
+  "verdicts": {"A": "fail", "B": "fail", "C": "fail"},
+  "reasons": {
+    "A": "Orange-brown jacket, with dark spots and changed fasteners; no navy recolor.",
+    "B": "Brown jacket, changed into an open front with pale and dark undershirt sections; jacket itself is not navy.",
+    "C": "Orange-brown jacket with changed lapels, pockets and buttons; no navy recolor."
+  },
+  "human_review": "Recorded separately in human-review.json: all FAIL",
+  "no_further_generation": true
+}

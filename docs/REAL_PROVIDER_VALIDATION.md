@@ -1,5 +1,30 @@
 # Real provider validation — 2026-10-05
 
+## Follow-up: Blue Jacket Proof
+
+**SUCCESS CASE 01 FAILED.** Two authorized three-candidate real case rounds completed with
+corrected full-jacket CHANGE and complementary KEEP masks, fixed existing workflow and exact prompts.
+Seeds **5100/5101/5102** then **5200/5201/5202**; exactly **six creates**, no new smoke/replacements/third
+round. Round 2 followed the user's explicit round-1 all-fail review. Both rounds' submission,
+download/decode, 640×704 metadata-stripped persistence, unchanged evaluation/ranking/Ghost/receipt
+and complete product API readback **PASS**. Human semantic review: **all six FAIL**.
+System ranks **A → C → B** then **C → B → A**; no human-selected successful showcase.
+Portfolio-ready **NO**; the previous failure is preserved.
+
+The case harness passed explicit seeds to the existing provider and persisted them accurately;
+the public API's fixed seeds were not changed. Round-1 B polling was interrupted after acceptance,
+then recovered by querying the same task; C was submitted only once afterward. Original interruption
+evidence remains. Both completed cases and all reviews were read back through existing product routes.
+Two viewport browser checks used saved real images, without a registered paid provider.
+
+The user-approved blue/gray image is pixel-identical to the CHANGE mask visualization, **not**
+cloud inference. It is a labelled appearance reference; it does not establish a real successful case.
+See [all inputs, prompts, six outputs, metrics, reviewed receipts and provenance](evidence/runninghub/2026-10-05-blue-jacket-proof).
+Pixel preservation >99% coexists with semantic failure; even 10.23% CHANGE difference does not prove
+navy recoloring. The model's cause was not isolated. V0.1 still needs human review.
+
+## Previous API validation and failure case
+
 | Evidence | Status |
 | --- | --- |
 | Manual RunningHub web workflow | **TESTED**, user-reported, separate from API execution |
