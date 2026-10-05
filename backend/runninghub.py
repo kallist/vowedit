@@ -18,7 +18,7 @@ from backend.storage import MAX_BYTES, decode_image
 
 API_ORIGIN = "https://www.runninghub.cn"
 API_ORIGINS = {API_ORIGIN, "https://www.runninghub.ai"}
-OUTPUT_HOST = "rh-images.xiaoyaoyou.com"
+OUTPUT_HOSTS = frozenset({"rh-images.xiaoyaoyou.com", "rh-images-tos.xiaoyaoyou.com"})
 WORKFLOW_PATH = Path(__file__).resolve().parent.parent / "workflows" / "z-image-inpaint-api.json"
 # Semantic JSON hash of the supplied export; only node 16's saved input reference is sanitized.
 WORKFLOW_SHA256 = "6dd44944a664e6c6ae97e83562bc50bc66dcaa9465b45dd274da034fcb074e69"
@@ -242,11 +242,11 @@ class RunningHubImageEditProvider:
         parsed = urlparse(url)
         if (
             parsed.scheme != "https"
-            or parsed.hostname != OUTPUT_HOST
+            or parsed.hostname not in OUTPUT_HOSTS
             or parsed.port not in {None, 443}
-            or parsed.username
-            or parsed.password
-            or parsed.fragment
+            or parsed.username is not None
+            or parsed.password is not None
+            or "#" in url
         ):
             raise AppError(
                 "PROVIDER_RESPONSE_INVALID", "Output URL is outside the approved image host."

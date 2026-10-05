@@ -1,58 +1,60 @@
-# Z-Image compatibility review and local gates — 2026-10-05
+# Z-Image compatibility review and gates — 2026-10-05
 
-This is a separate read-only pass by the implementing agent, not external reviewer approval,
-independent-agent review or creative human acceptance.
+Separate read-only pass by the implementing agent. This is not external or independent-agent review.
+Actual human semantic feedback is recorded separately with its negative outcome.
 
 ## Review
 
-- Architecture: UI, public API schema, database schema, service, evaluator and ranking unchanged.
-  RunningHub alone uses the supplied Z-Image export; local ComfyUI keeps its existing checkpoint graph.
-- Fixed graph: semantic fingerprint covers models, nodes, edges, settings and SaveImage outputs.
-  Validation happens before upload. Only image 16/text 8/seed 4 change at runtime. Tests compare the
-  complete submitted graph after reverting those three fields, and reject model/edge/setting tampering.
-- Mask: preserved RGB plus inverse alpha; tests inspect actual multipart PNG bytes and opaque padding.
-  No UI mask polarity or score threshold changes. Actual generated-pixel confirmation is still pending.
-- Output: select node 11 even when node 17 is first; preview-only/malformed outputs never download.
-- Security: exact HTTPS API origins, strict CDN host, separate unauthenticated download client,
-  no redirect following, byte/decode/dimension limits, metadata-stripped storage unchanged.
-  Actual CN host mismatch safely failed; no premature allowlist expansion or new paid submission.
-- Persistence/concurrency/retries: existing single worker, unique request keys and guarded transactions
-  unchanged. Accepted task retained. Same-task retrieval is the pending continuation, not generation retry.
-- Secrets: ignored server .env only. Sanitized validation transport recorded path/status/code/node/host;
-  no request body, key/header, raw response body or signed URL. Actual configured key scan over repository
-  files and production client assets found no matches. No real API calls are imported into tests/CI.
-- Evidence: manual web success, real inference attempt/download failure and Mock validation stay separate.
-  No image/identity/artifact claim or fabricated human review. The original user export is preserved.
+- Scope: only RunningHub exact-host boundary, deterministic tests and required evidence/docs changed
+  after f08d30a. UI/service/provider protocol/evaluator/public API/DB schema/dependencies unchanged.
+- Graph and mask: fingerprint and only image16/text8/seed4 overrides retained. Real outputs concentrate
+  changes in painted jacket, with inside mean differences higher than outside; this is consistent with
+  inverse-alpha direction, not a guarantee of no outside drift.
+- Download: frozen exact set rh-images.xiaoyaoyou.com / rh-images-tos.xiaoyaoyou.com, explicit user
+  approval for the second. No wildcard, HTTPS/default or 443 only, redirects forbidden. API credentials
+  never sent to CDN. Existing byte/decode/dimension checks and atomic metadata-stripped storage retained.
+- Review tightened two URL edge cases: empty userinfo and an empty fragment delimiter are now rejected.
+  Both have deterministic rejection coverage alongside HTTP, other subdomains, credentials and ports.
+- Task safety: original smoke task retrieved via fresh outputs; no smoke resubmission. One normal
+  product API request generated exactly three distinct seeds. Four creates total including prior smoke.
+  No retry, additional creative run, tuning or cherry-picking. All failures and A/B/C retained.
+- Real persistence: candidate/Ghost fetch/decode, normal receipt export, independent SQLite reopening,
+  existing human review PUT and updated receipt verified. UI QA used completed real data with no paid
+  provider registered, so its controls could not cause another cloud task.
+- Evaluation: existing pixel formula and A→C→B rank unchanged; selected A remains selected despite its
+  recorded human semantic fail. No automatic semantic/identity/artifact claims or human feedback invented.
+- Secrets: server-only ignored .env. Exported evidence contains safe task IDs, paths/status/codes/hosts,
+  no auth headers, keys, raw response bodies or signed URLs. Actual-key source/client/evidence checks
+  and repository pattern gate executed before commit.
+- Evidence: pipeline PASS is distinct from semantic FAIL. User preferred A and said it was not cool blue;
+  saved review is fail. Full creative case acceptance, B/C human semantics, identity and specialized
+  artifacts are not established. Portfolio-ready NO.
 
-Remaining code BLOCKING: **0**. Remaining code IMPORTANT: **0** within the fixed-workflow boundary.
-Required real acceptance remains incomplete: unfamiliar-CDN decision, successful same-task download,
-real metrics/visual polarity confirmation, gated three-candidate run and creative human review.
+Remaining code BLOCKING: **0**. Remaining code IMPORTANT: **0** within fixed-workflow scope.
+The observed semantic failure is a documented model result, not a reason to change scoring or tune
+the supplied workflow in this task. No merge/tag/release/deployment.
 
-## Local gates actually executed
+## Local gates
 
-| Gate | Result |
+| Gate | Actual result |
 | --- | --- |
 | Ruff, backend/scripts | PASS |
-| mypy, 10 backend source files | PASS |
-| pytest | **92 PASS**, including 37 RunningHub cases; 1 existing Starlette deprecation warning |
-| Frontend ESLint | PASS |
-| Frontend typecheck | PASS |
+| mypy, 10 source files | PASS |
+| pytest | **106 PASS**, including 51 RunningHub cases; existing Starlette deprecation warning |
+| Frontend ESLint/typecheck | PASS |
 | Vitest | **5 PASS** |
 | Production webpack build | PASS |
-| Playwright Mock product suite | **11 PASS**, 1440/1024/768/430/390 and failure/recovery paths |
-| Secret-pattern scan | PASS |
-| Actual server key scan, source/client bundle | PASS, no values printed |
+| Mock Playwright E2E | **11 PASS**, including five widths and failure/recovery behavior |
+| Real saved-data UI QA | PASS, A/B/C/Ghost/reviewed receipt at 1440/390, no page errors/overflow |
+| Secret-pattern + actual configured key scan | PASS |
 | git diff --check | PASS |
-| Docker | NOT TESTED; not introduced or changed |
+| Docker | NOT TESTED, not added or changed |
 
-Initial pytest attempts encountered the Windows default temporary-directory permissions boundary;
-rerunning with a repository-local isolated basetemp passed. Initial Vitest/build attempts hit sandbox
-spawn EPERM; authorized execution outside the sandbox passed unchanged checks. No gates were weakened.
+Fresh real screenshot inspection confirmed distinct candidate images, provider label, pixel-only
+warnings, actual Ghost overlay and persisted human fail verdict. No creative quality acceptance is
+inferred from UI QA. Generated replacement Mock screenshots were restored to avoid unrelated churn.
+All new real artifacts are required evidence, scoped under docs/evidence/runninghub/2026-10-05.
 
-Fresh Mock screenshot QA inspected desktop comparison and narrow mobile Ghost/receipt states:
-controls, ranked cards, disclosures and selected-versus-inspected result remained readable. This is
-agent visual QA of Mock, not real-model human review. Test-generated replacement screenshots were
-restored to avoid unrelated evidence churn; two local QA samples remain outside Git.
-
-Hosted verification will be checked separately against the actual pushed commit. Previous HEAD's CI
-success is not used as proof for this diff. PR #1 must remain Draft, with no merge/tag/release.
+Windows tests use a repository-local isolated basetemp. Node/browser gates ran with authorized helper
+process permissions, without weakening assertions. Current hosted CI must be verified against the
+actual pushed head; prior f08d30a green runs do not prove this new exact-host change.

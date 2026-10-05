@@ -22,9 +22,11 @@ Ghost View and export the receipt. Use the human-review field to judge prompt ad
 
 **Mock mode is a deterministic pixel simulation, not AI inference.** It deliberately includes drift
 and an incomplete edit. It works offline with no GPU or account. The code includes RunningHub and
-local ComfyUI adapters. **RunningHub CN upload/create/poll produced a real generated output, but
-the new CDN was safely rejected; complete real image validation is pending.** Local ComfyUI real
-generation remains NOT TESTED. Manual RunningHub web success is separate user-reported evidence.
+local ComfyUI adapters. **RunningHub CN's real generation, download, persistence, evaluation, Ghost
+and receipt path is TESTED**, including one smoke and one complete three-candidate run. The user
+preferred A but confirmed it did not make the jacket cool blue: this is pipeline validation with a
+negative semantic result, not a successful creative demo. Local ComfyUI real generation remains
+NOT TESTED. Manual RunningHub web success is separate user-reported evidence.
 
 Why this matters: the result is not only “here is your image,” but “here is what changed, what stayed
 protected, and where you should look more closely.” No pixel metric proves subjective quality.
@@ -83,14 +85,16 @@ and the interviewer-oriented [Product Case](docs/PRODUCT_CASE.md).
 | Provider | Code | Verification |
 | --- | --- | --- |
 | Mock | Implemented; default | Local unit, integration and real-browser tests |
-| RunningHub | Implemented, supplied fixed Z-Image graph, opt-in | Offline HTTP tests; real CN inference attempted, download failed strict CDN check; complete flow pending |
+| RunningHub | Implemented, supplied fixed Z-Image graph, opt-in | Real same-task smoke and three-candidate API flow PASS; human-selected A failed color adherence |
 | Local ComfyUI | Implemented, loopback-only | Offline HTTP transport tests; real generation NOT TESTED |
 
 See [RunningHub setup and official API references](docs/RUNNINGHUB_INTEGRATION.md),
 [workflow requirements](workflows/README.md) and [model experiment boundary](docs/MODEL_BOUNDARIES.md).
 The supplied Z-Image API graph is bundled with a fixed UNET/CLIP/VAE stack; no model weights are bundled.
 No model downloads or automatic paid retries. [Real execution record](docs/REAL_PROVIDER_VALIDATION.md)
-preserves failures and distinguishes API, Mock and manual web evidence.
+preserves failures and distinguishes API, Mock and manual web evidence. The exact -tos CDN was added
+only after explicit authorization; no wildcard. [All real A/B/C and reviewed receipt](docs/evidence/runninghub/2026-10-05)
+are retained without cherry-picking. Portfolio readiness remains withheld for this unsuccessful edit.
 
 ## Evaluation
 

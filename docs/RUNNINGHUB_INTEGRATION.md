@@ -1,8 +1,10 @@
 # RunningHub integration — fixed Z-Image API export
 
 Adapter: **IMPLEMENTED**. Offline HTTP tests: **TESTED WITH MOCK TRANSPORT**.
-Real CN upload/create/poll: **TESTED**. First generated-result download: **FAILED** at the CDN boundary.
-Full real product flow is pending; see [execution evidence](REAL_PROVIDER_VALIDATION.md).
+Real CN generation/download/persistence/evaluation: **PASS / TESTED WITH REAL RUNNINGHUB**.
+Same-task smoke retrieval and one normal three-candidate product run passed. The initial CDN failure
+remains recorded. Human review preferred A but rejected its color adherence; pipeline PASS is not
+edit-quality PASS. See [execution evidence](REAL_PROVIDER_VALIDATION.md).
 Manual web success is user-reported and separate from API acceptance.
 
 ## Fixed workflow
@@ -56,14 +58,17 @@ KEEP masks, local paths, scores and human notes are not sent.
 
 ## Download and retry boundary
 
-Downloads accept only HTTPS rh-images.xiaoyaoyou.com, without redirects, userinfo, fragments or
+Downloads accept only HTTPS **rh-images.xiaoyaoyou.com** and **rh-images-tos.xiaoyaoyou.com**,
+without redirects, userinfo (even empty), fragments or
 non-443 ports. A separate unauthenticated client sends no key, ignores proxy environment, bounds
 bytes to 10 MB and decodes before local metadata-stripped persistence.
 
-The first CN result used **rh-images-tos.xiaoyaoyou.com** and was safely rejected. Reviewed official
-documentation did not confirm that exact host. An exact-host exception is awaiting user approval;
-no wildcard or automatic trust expansion. Query/download the retained task after resolving that
-boundary rather than submitting another generation.
+The first CN result used the -tos host and was safely rejected. Reviewed official documentation did
+not confirm it; the project user explicitly authorized this exact hostname after observing the real
+API response. It is an approved exception, not a claim of published CDN documentation. No wildcard
+or other xiaoyaoyou.com subdomain is allowed. Same-task outputs refresh/download succeeded with no
+additional smoke generation. Tests cover both exact hosts, default/443 ports, hostile subdomains,
+HTTP, credentials, fragments, redirects, byte bounds, decode and dimension validation.
 
 Task IDs persist on acceptance. No provider idempotency/cancellation guarantee is assumed. Unknown
 submit/poll states and restarts cannot authorize automatic generation retry. Safe errors omit raw

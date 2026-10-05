@@ -73,6 +73,8 @@ header, raw response body or credential is included here. This is a real inferen
 failed download boundary; it is not an end-to-end PASS.
 
 The reviewed official CN documentation and official public client files did not confirm this exact
-host. The authenticated CN API response is evidence of the returned host, but is not a published CDN
-contract. Approval for an exact-host exception was requested; no wildcard is proposed. The accepted
-task is retained so downloading it later requires only querying the same task, never generating again.
+host. The authenticated response proves the observed host, not a published CDN contract. The user
+subsequently explicitly approved this exact host on 2026-10-05. The same task was retrieved, decoded,
+saved and evaluated without another smoke create, then one authorized three-candidate API run passed.
+This section preserves the initial rejection; [the current record](REAL_PROVIDER_VALIDATION.md) gives
+actual successful retrieval times, all metrics, task IDs and the negative human semantic verdict.

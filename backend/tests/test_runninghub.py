@@ -105,6 +105,15 @@ def test_cloud_contract_and_key_never_reaches_image_host(images):
         "https://key@rh-images.xiaoyaoyou.com/x",
         "https://rh-images.xiaoyaoyou.com:444/x",
         "https://rh-images.xiaoyaoyou.com/x#fragment",
+        "https://other.xiaoyaoyou.com/x",
+        "http://rh-images-tos.xiaoyaoyou.com/x",
+        "https://rh-images-tos.xiaoyaoyou.com.evil.example/x",
+        "https://key@rh-images-tos.xiaoyaoyou.com/x",
+        "https://user:password@rh-images-tos.xiaoyaoyou.com/x",
+        "https://@rh-images-tos.xiaoyaoyou.com/x",
+        "https://rh-images-tos.xiaoyaoyou.com:444/x",
+        "https://rh-images-tos.xiaoyaoyou.com/x#fragment",
+        "https://rh-images-tos.xiaoyaoyou.com/x#",
     ],
 )
 def test_cloud_output_url_rejected_before_network(url):
@@ -266,7 +275,8 @@ def test_preview_only_or_malformed_outputs_never_download(images, outputs, expec
         provider.generate(GenerationRequest(images[0], images[1], "edit", 0, 1))
 
 
-def test_download_does_not_follow_redirect():
+@pytest.mark.parametrize("host", ["rh-images.xiaoyaoyou.com", "rh-images-tos.xiaoyaoyou.com"])
+def test_download_does_not_follow_redirect(host):
     calls = []
 
     def handler(request):
@@ -275,8 +285,22 @@ def test_download_does_not_follow_redirect():
 
     provider = RunningHubImageEditProvider(TEST_KEY, "123", transport=httpx.MockTransport(handler))
     with pytest.raises(httpx.HTTPStatusError):
-        provider._download("https://rh-images.xiaoyaoyou.com/x")
+        provider._download(f"https://{host}/x")
     assert len(calls) == 1
+
+
+@pytest.mark.parametrize("host", ["rh-images.xiaoyaoyou.com", "rh-images-tos.xiaoyaoyou.com"])
+@pytest.mark.parametrize("port", ["", ":443"])
+def test_exact_download_hosts_allowed_without_credentials(images, host, port):
+    def handler(request):
+        assert request.url.host == host
+        assert request.url.scheme == "https"
+        assert "authorization" not in request.headers
+        assert TEST_KEY not in str(request.url) and TEST_KEY.encode() not in request.content
+        return httpx.Response(200, content=png(images[0]))
+
+    provider = RunningHubImageEditProvider(TEST_KEY, "123", transport=httpx.MockTransport(handler))
+    assert provider._download(f"https://{host}{port}/x").tobytes() == images[0].tobytes()
 
 
 def test_download_size_bound_before_decode(monkeypatch):

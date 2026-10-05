@@ -1,0 +1,267 @@
+{
+  "date": "2026-10-05",
+  "provenance": "original project-owned deterministic fixture; actual RunningHub API outputs",
+  "source": "public/fixtures/original.png",
+  "change": "public/fixtures/change.png",
+  "keep": "public/fixtures/keep.png",
+  "manual_web": "TESTED, user-reported",
+  "human_review": {
+    "recording": "PASS",
+    "preferred_candidate": "A",
+    "reviewed_candidate": "A",
+    "semantic_verdict": "fail",
+    "requested_cool_blue": "not_completed",
+    "reviewer": "project user, explicit in-chat responses",
+    "other_semantic_candidates": "NOT TESTED",
+    "identity_and_artifact_human_review": "NOT TESTED"
+  },
+  "workflow_id": "2106824243966201857",
+  "model": "z_image_turbo_bf16.safetensors",
+  "clip": "qwen_3_4b.safetensors",
+  "vae": "ae.safetensors",
+  "instruction": "Change the jacket to cool blue.",
+  "generated_node": "11",
+  "discarded_preview_node": "17",
+  "mask_path": [
+    "16",
+    "13",
+    "7"
+  ],
+  "smoke": {
+    "seed": 671807066932685,
+    "status": "PASS",
+    "provider_jobs": [
+      {
+        "id": "2106831486408949762"
+      }
+    ],
+    "result_size": [
+      640,
+      704
+    ],
+    "resume_started_at": "2026-10-05T03:42:12.794662+00:00",
+    "duration_seconds": 1.484,
+    "evaluation": {
+      "metric_version": "rgb-mae-v1",
+      "protected_similarity": 99.06060326099396,
+      "background_preservation": 99.1515741944313,
+      "change_difference": 2.3287174701690674,
+      "unexpected_drift": 0.8484258055686951,
+      "overall_score": 99.09699163436889,
+      "weights": {
+        "protected": 0.6,
+        "background": 0.4
+      },
+      "minimum_change": 2.0,
+      "meaningful_change": true,
+      "violations": [],
+      "eligible": true,
+      "regions": [
+        {
+          "label": "Face and hair",
+          "type": "manual_region",
+          "threshold": 98,
+          "score": 99.06060326099396
+        }
+      ],
+      "warnings": [
+        "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+        "Prompt adherence and visual quality need manual review."
+      ],
+      "edit_adherence": "manual_review"
+    }
+  },
+  "initial_smoke_duration_seconds": 34.0,
+  "trio": {
+    "status": "PASS",
+    "run_id": "33031921-27bc-4d2b-ba16-3572ab9bf130",
+    "started_at": "2026-10-05T03:42:32.346116+00:00",
+    "finished_at": "2026-10-05T03:43:31.902184+00:00",
+    "duration_seconds": 59.562,
+    "provider_jobs": [
+      {
+        "index": 0,
+        "id": "2106953180922478593"
+      },
+      {
+        "index": 1,
+        "id": "2106953323830796290"
+      },
+      {
+        "index": 2,
+        "id": "2106953372212097025"
+      }
+    ]
+  },
+  "generation_seconds": 58.015,
+  "safe_http_evidence": [
+    {
+      "path": "/task/openapi/upload",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "path": "/task/openapi/create",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 0,
+      "outputs": [
+        {
+          "node_id": "17",
+          "type": "png",
+          "host": "rh-images-tos.xiaoyaoyou.com"
+        },
+        {
+          "node_id": "11",
+          "type": "png",
+          "host": "rh-images-tos.xiaoyaoyou.com"
+        }
+      ]
+    },
+    {
+      "path": "/task/openapi/upload",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "path": "/task/openapi/create",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 0,
+      "outputs": [
+        {
+          "node_id": "17",
+          "type": "png",
+          "host": "rh-images-tos.xiaoyaoyou.com"
+        },
+        {
+          "node_id": "11",
+          "type": "png",
+          "host": "rh-images-tos.xiaoyaoyou.com"
+        }
+      ]
+    },
+    {
+      "path": "/task/openapi/upload",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "path": "/task/openapi/create",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 0,
+      "outputs": [
+        {
+          "node_id": "17",
+          "type": "png",
+          "host": "rh-images-tos.xiaoyaoyou.com"
+        },
+        {
+          "node_id": "11",
+          "type": "png",
+          "host": "rh-images-tos.xiaoyaoyou.com"
+        }
+      ]
+    }
+  ],
+  "image_sha256": {
+    "smoke.png": "df761b931c8c34ec40723583a8b1288517266a1eef6ddba43fe058864c91b683",
+    "smoke-ghost.png": "b4c42411ad2707b929652b72dd3e8dfa54e60468d42df9ad6009808e9b98c14a",
+    "candidate-A.png": "e600fb9fe2827415b4110ba945335ce486ce332f355190878ae5a7fecadc479b",
+    "candidate-A-ghost.png": "8012067f3bc3ddd8f993ad94d972fd3a272d74e39856d7181b1618b29c73b6e7",
+    "candidate-B.png": "834f858ce3855aac6789877d07bac9a81873f05fde26cd4782590440b496a452",
+    "candidate-B-ghost.png": "09536529f34b509211544883877e27619dce427a54c701d512e8e4c06c89b083",
+    "candidate-C.png": "affd373dac92328fc0af9e39b40e3996b037c924c5073567581707769708c9f3",
+    "candidate-C-ghost.png": "308e69d424d16f1ac5d164661b56db99d903339d00669395dbfe19af043f7d2d",
+    "ui-1440-ghost-receipt.png": "a799f02b7cd159adf688083a966eb880a535accddf62343e367cde4a7ffaf3f8",
+    "ui-1440-result.png": "877459f3ec3a19893a6e3cd9efcacc8d99b14d8edb21caa1cae930e6d5c59a68",
+    "ui-390-ghost-receipt.png": "50f9512eaf111c333e09b67c9a520d8cf321fa67a7b082199045b1a7e7189229",
+    "ui-390-result.png": "e4b381112f5ad4dd0937b9bf8fa7fe711023bd5d032f9189d3cbbf2ea6553a4a"
+  },
+  "selected_candidate": "A",
+  "pixel_rank": [
+    "A",
+    "C",
+    "B"
+  ],
+  "agent_visual_observation": "No clear cool-blue jacket in smoke/A/B/C. A has blotchy jacket decorations, C has unusual light fastener details. Agent observation is not human review.",
+  "receipt_kind": {
+    "smoke": "adapter-smoke-v1, one candidate; not the public 3-candidate API receipt",
+    "trio": "real product API receipt v1, 3 requested/3 generated"
+  },
+  "portfolio_ready": false,
+  "real_ui_qa": {
+    "status": "PASS",
+    "viewports": [
+      1440,
+      390
+    ],
+    "new_cloud_creates": 0,
+    "human_review_persisted": "fail",
+    "page_errors": 0,
+    "horizontal_overflow": false
+  }
+}
