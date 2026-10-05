@@ -102,6 +102,12 @@ semantic success still requires human review. **No successful real showcase was 
 portfolio readiness remains NO.** The user-approved mask preview is labelled as a visual reference,
 never as model output.
 
+[Object Replacement Proof](docs/evidence/runninghub/2026-10-05-object-replacement-proof) then used
+the user's supplied teapot image and confirmed target, red ceramic mug. One real round at seeds
+6100/6101/6102 completed the engineering loop; all three received human **FAIL** because the teapot
+remained and no clear mug replaced it. System rank B → C → A is preserved. Both real failed cases
+remain visible; no successful showcase or portfolio-ready claim is made.
+
 ## Evaluation
 
 `rgb-mae-v1` compares normalized mean absolute RGB differences in aligned images. Protected similarity

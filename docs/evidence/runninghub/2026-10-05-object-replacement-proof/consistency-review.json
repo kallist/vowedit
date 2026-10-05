@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "review_type": "Self-review and evidence consistency; no independent engineering reviewer",
+  "source_pixels_preserved": true,
+  "accepted_tasks": 3,
+  "create_requests": 3,
+  "extra_paid_retry": false,
+  "authorized_seeds": [
+    6100,
+    6101,
+    6102
+  ],
+  "public_candidates_match_persisted_assets": true,
+  "metrics_ghosts_ranking_match_unchanged_product": true,
+  "product_api_receipt_review_consistent": true,
+  "product_source_workflow_blue_jacket_unchanged": true
+}

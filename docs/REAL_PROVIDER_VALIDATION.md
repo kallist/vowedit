@@ -1,5 +1,22 @@
 # Real provider validation — 2026-10-05
 
+## Object Replacement Proof: one-round failed semantic result
+
+**SUCCESS CASE 02 FAILED.** After repository asset audit, the user supplied a white porcelain teapot
+image and explicitly chose the target **red ceramic mug**. The original mug-to-teapot case therefore
+changed with user clarification; prompt scene-preservation wording was retained. Workflow/model/settings
+and pixel evaluation/ranking unchanged. Seeds **6100/6101/6102**, exactly **three creates**, no extra
+round or paid retry. Run **6152efdd-2342-4384-affa-731be6beed6c**, all three persisted completed.
+Submission/download/decode/378×378 persistence/evaluation/ranking/Ghost/receipt and product API readback
+**PASS**. System ranks **B → C → A**, suggested **B**. Human semantic review: **A/B/C all FAIL**;
+original teapot not replaced, no clear mug, KEEP basically preserved, added/overlaid artifacts.
+No successful showcase. **Portfolio-ready NO**. Blue Jacket failure evidence remains unchanged.
+
+At 98.87% preservation and 14.87% CHANGE difference, B still fails object replacement. Pixel metrics
+do not classify the target object or prove removal of the old object. All user verdicts are persisted
+through existing review routes and included in the receipt. Production saved-result UI QA at 1440/390
+used no paid provider. [Full source, masks, prompt, A/B/C, Ghosts, reviewed receipt and evidence](evidence/runninghub/2026-10-05-object-replacement-proof).
+
 ## Follow-up: Blue Jacket Proof
 
 **SUCCESS CASE 01 FAILED.** Two authorized three-candidate real case rounds completed with

@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "viewports": [
+    1440,
+    390
+  ],
+  "real_saved_assets": true,
+  "paid_creates": 0,
+  "checks": [
+    "A/B/C selection",
+    "ranking",
+    "Before/After",
+    "378x378 Ghost",
+    "product Receipt",
+    "persisted human verdict and notes",
+    "no overflow or page errors"
+  ]
+}

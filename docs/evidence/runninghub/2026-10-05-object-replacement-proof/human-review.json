@@ -1,0 +1,40 @@
+{
+  "source": "Explicit project user review after all three real outputs were displayed",
+  "reply": "A/B/C 全部 FAIL：茶壶均未替换，均无明确马克杯；KEEP 基本保持；有新增或叠加伪影；无成功展示候选",
+  "system_suggested_candidate": "B",
+  "human_preferred_candidate": null,
+  "human_preference_detail": "No preference was stated; no successful showcase candidate was chosen",
+  "successful_showcase_candidate": null,
+  "candidates": {
+    "A": {
+      "requested_object_replaced": "NO",
+      "new_object_recognizable": "NO",
+      "keep_preserved": "YES",
+      "unexpected_drift": "User reports KEEP basically preserved; no further outside-drift detail provided. Numerical drift remains separately recorded by the pixel evaluator.",
+      "artifacts": "User reports added or overlaid artifacts",
+      "semantic_verdict": "fail",
+      "notes": "User review: FAIL. Original teapot not replaced; no clear red ceramic mug. KEEP basically preserved; added/overlaid artifacts; no successful showcase."
+    },
+    "B": {
+      "requested_object_replaced": "NO",
+      "new_object_recognizable": "NO",
+      "keep_preserved": "YES",
+      "unexpected_drift": "User reports KEEP basically preserved; no further outside-drift detail provided. Numerical drift remains separately recorded by the pixel evaluator.",
+      "artifacts": "User reports added or overlaid artifacts",
+      "semantic_verdict": "fail",
+      "notes": "User review: FAIL. Original teapot not replaced; no clear red ceramic mug. KEEP basically preserved; added/overlaid artifacts; no successful showcase."
+    },
+    "C": {
+      "requested_object_replaced": "NO",
+      "new_object_recognizable": "NO",
+      "keep_preserved": "YES",
+      "unexpected_drift": "User reports KEEP basically preserved; no further outside-drift detail provided. Numerical drift remains separately recorded by the pixel evaluator.",
+      "artifacts": "User reports added or overlaid artifacts",
+      "semantic_verdict": "fail",
+      "notes": "User review: FAIL. Original teapot not replaced; no clear red ceramic mug. KEEP basically preserved; added/overlaid artifacts; no successful showcase."
+    }
+  },
+  "real_success_case": false,
+  "portfolio_ready": false,
+  "stop_rule": "All FAIL; no second round, new seeds, prompt tuning or workflow/model change"
+}

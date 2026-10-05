@@ -1,0 +1,21 @@
+{
+  "source": "User-supplied image; user explicitly said to use this image",
+  "original_object": "white porcelain teapot, not mug",
+  "original_size": [
+    378,
+    378
+  ],
+  "original_pixel_sha256": "03bffaf5ebc96564f743be2e8d9d93b693f21f56b616cc9ae1b465cb54d7bac2",
+  "source_pixels_preserved": true,
+  "metadata_stripped": true,
+  "change": "Manual silhouette of original teapot body, lid, knob, spout and handle; handle opening excluded",
+  "keep": "Complement: table, background, lighting, composition, ground shadow and original upper-left lettering",
+  "change_pixels": 27756,
+  "keep_pixels": 115128,
+  "overlap_pixels": 0,
+  "mask_preview_is_not_model_output": true,
+  "target": "red ceramic mug",
+  "user_target_reply": "红色陶瓷马克杯",
+  "prompt_change": "Original/target nouns adjusted for user-confirmed teapot to red ceramic mug; scene-preservation wording retained",
+  "paid_creates_at_input_preparation": 0
+}

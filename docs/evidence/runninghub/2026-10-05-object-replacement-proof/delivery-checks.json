@@ -1,0 +1,36 @@
+{
+  "branch": "feat/vowedit-v0.1-hardening",
+  "previous_sha": "04ef1f747b7005d825913171b58eee47e9660af1",
+  "local_checks": {
+    "ruff_backend_scripts": "PASS",
+    "mypy_backend": "PASS: 10 source files",
+    "pytest": "PASS: 106 tests",
+    "frontend_lint": "PASS",
+    "frontend_typecheck": "PASS",
+    "vitest": "PASS: 5 tests",
+    "production_build_webpack": "PASS",
+    "mock_playwright": "PASS: 11 tests",
+    "secret_pattern_scan": "PASS",
+    "actual_runtime_key_repository_and_browser_bundle_scan": "PASS: value withheld",
+    "git_diff_check": "PASS"
+  },
+  "real_checks": {
+    "accepted_generation_tasks": 3,
+    "extra_create_or_retry": false,
+    "download_decode_dimension_validation": "PASS: padded 384x384, retained 378x378",
+    "persistence_evaluation_ranking_ghost_receipt": "PASS",
+    "product_api_readback": "PASS",
+    "production_browser_qa": "PASS: 1440/390, no paid provider registered",
+    "human_review_recording": "PASS: explicit user review persisted for all A/B/C",
+    "human_semantic_result": "FAIL: all three",
+    "real_success_case": "NO",
+    "portfolio_ready": "NO"
+  },
+  "self_review": "PASS: persisted outputs, recomputed metrics/Ghosts/ranks, receipt consistency, exact seeds/create count and scope; no blocking or important implementation finding",
+  "independent_engineering_review": "NOT TESTED in this case",
+  "hosted_ci_at_local_evidence_snapshot": "Previous HEAD PASS; new evidence commit must be verified separately through Draft PR #1 after push",
+  "pr": "https://github.com/kallist/vowedit/pull/1",
+  "docker": "NOT TESTED",
+  "real_local_comfyui": "NOT TESTED",
+  "known_warnings": ["Existing TestClient httpx deprecation", "Existing Vitest future config-loader warning"]
+}

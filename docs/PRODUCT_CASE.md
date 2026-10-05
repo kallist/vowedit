@@ -72,7 +72,9 @@ Retry Generation creates a linked run without redrawing. These are controlled te
 
 ## 12. Limitations
 
-No real model experiment or human creative review is complete. No identity model, semantic adherence
+Real RunningHub execution and human semantic review are tested; no successful real showcase has
+been obtained. Blue Jacket and Object Replacement both retain explicit human FAIL results.
+No identity model, semantic adherence
 model, artifact detector or statistical confidence. One painted KEEP region in the UI; API supports
 multiple named masks. Single local worker, no auth, 1536-pixel maximum side, latest 50 edits displayed,
 no automatic asset cleanup. Cloud execution needs account-specific workflow/model validation.
@@ -107,7 +109,12 @@ For a 3–5 minute demonstration: (0:00) explain the jacket/face problem on the 
 (3:30) export JSON and refresh/history to show persistence. Say clearly that inverted pixels do not
 establish a semantically correct blue jacket, face identity or real-model performance.
 
-Real creative demonstrations are [NOT TESTED](DEMO_CASES.md). No supplied authorized originals or
-human reviewer verdicts are available. No actual provider/model/workflow was verified. Portfolio-ready
-is therefore withheld even when engineering and Mock CI gates pass. Receipt PNG export remains optional
+The three broader creative demo slots remain [NOT TESTED](DEMO_CASES.md). Separately, the fixed real
+RunningHub workflow and user reviews are documented in [real validation](REAL_PROVIDER_VALIDATION.md):
+[Blue Jacket](evidence/runninghub/2026-10-05-blue-jacket-proof) preserved surroundings but failed recolor;
+[Object Replacement](evidence/runninghub/2026-10-05-object-replacement-proof) used the user's authorized
+teapot input and confirmed red-mug target, but added/overlaid structures instead of replacing the teapot.
+All three object candidates are human FAIL despite passing pixel checks; system B → C → A remains intact.
+There is no successful real case. Portfolio-ready remains NO. VowEdit does not hide failed generations;
+pixel evaluation and human semantic review are complementary. Receipt PNG export remains optional
 and unimplemented; there is no added V0.2 scope.
