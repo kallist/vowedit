@@ -72,8 +72,8 @@ Retry Generation creates a linked run without redrawing. These are controlled te
 
 ## 12. Limitations
 
-Real RunningHub execution and human semantic review are tested; no successful real showcase has
-been obtained. Blue Jacket and Object Replacement both retain explicit human FAIL results.
+Real RunningHub execution and human semantic review are tested; no successful RunningHub showcase
+has been obtained. Blue Jacket and Object Replacement both retain explicit human FAIL results.
 No identity model, semantic adherence
 model, artifact detector or statistical confidence. One painted KEEP region in the UI; API supports
 multiple named masks. Single local worker, no auth, 1536-pixel maximum side, latest 50 edits displayed,
@@ -115,7 +115,7 @@ RunningHub workflow and user reviews are documented in [real validation](REAL_PR
 [Object Replacement](evidence/runninghub/2026-10-05-object-replacement-proof) used the user's authorized
 teapot input and confirmed red-mug target, but added/overlaid structures instead of replacing the teapot.
 All three object candidates are human FAIL despite passing pixel checks; system B → C → A remains intact.
-There is no successful real case. Portfolio-ready remains NO. VowEdit does not hide failed generations;
+There was no successful real case at this experiment stage. VowEdit does not hide failed generations;
 pixel evaluation and human semantic review are complementary. Receipt PNG export remains optional
 and unimplemented; there is no added V0.2 scope.
 
@@ -138,3 +138,28 @@ Offline deterministic fixtures separately prove cross-source import/evaluation/r
 and per-candidate human-review storage. Those fixtures and automated test verdicts are not model
 outputs or human acceptance evidence. See [import architecture and validation](IMPORTED_CANDIDATES.md)
 and [actual external outputs and rejection](evidence/imported/blue-jacket-gpt-image).
+
+## 17. Measure the contract, enforce the spatial boundary
+
+The subsequent explicit Boundary Lock experiment separates three responsibilities: external imagegen
+creates the navy jacket; VowEdit's opt-in preparation enforces the spatial CHANGE boundary; the
+unchanged evaluator measures the prepared result. Raw assets and their rejected direct-import attempt
+are preserved alongside the locked outputs. Preservation of a composite is not a model capability claim.
+
+All raw A/B/C were 1195×1316. Center crop `[0,0.75,1195,1315.25]` removes only 1.5 vertical source
+pixels in total, then Lanczos maps the isotropic crop to 640×704. Original and masks are unchanged.
+Binary CHANGE admits generated pixels; every other pixel is exactly original. All three new assets
+entered one real imported run. KEEP/outside preservation 100%, drift 0%, CHANGE difference
+27.600803/29.078432/28.000647%, unchanged rank A → B → C. Scores tie at 100 and original index breaks
+the tie; the algorithm did not choose a semantic favorite. A is suggested.
+
+Agent inspection finds all three clearly navy with closed jacket structure, original surroundings
+and no major boundary artifacts. The raw user review was PASS, preferred A. Locked review is a new
+decision and remains **PENDING**. The evaluated constraint-enforced case is complete; human-approved
+final success/portfolio showcase is withheld until an actual locked-candidate verdict. No inference
+seeds/model versions are invented, no new cloud task, no scoring changes or V0.2 features.
+
+Product insight: measuring preservation exposes failures, but an explicit spatial enforcement layer
+can make a successful external edit fit the creator's contract. Provenance must show where preservation
+came from. It cannot rescue a semantically failed target inside CHANGE; the retained RunningHub navy
+and mug failures still demonstrate why manual review is necessary.

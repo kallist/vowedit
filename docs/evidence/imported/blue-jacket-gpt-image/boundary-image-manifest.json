@@ -1,0 +1,61 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "locked-a.png": {
+      "sha256": "cbf42da7f46a14592b566952756f2f434d649c20bec5c2529619baae885c5c5a",
+      "dimensions": [
+        640,
+        704
+      ]
+    },
+    "locked-b.png": {
+      "sha256": "41d156678d26b8af86e71358874db5eb10ecab4e30fa968a9220bb927cde9cc3",
+      "dimensions": [
+        640,
+        704
+      ]
+    },
+    "locked-c.png": {
+      "sha256": "e2449a10087837c4239ea981cb59a382e19173ea9408c406cc6d3e97e988ec70",
+      "dimensions": [
+        640,
+        704
+      ]
+    },
+    "ghost-a.png": {
+      "sha256": "7a52706649c0a82a822c5a1914c844f9d8739763b82b3de44b30f5cec8f576db",
+      "dimensions": [
+        640,
+        704
+      ]
+    },
+    "ghost-b.png": {
+      "sha256": "7a52706649c0a82a822c5a1914c844f9d8739763b82b3de44b30f5cec8f576db",
+      "dimensions": [
+        640,
+        704
+      ]
+    },
+    "ghost-c.png": {
+      "sha256": "7a52706649c0a82a822c5a1914c844f9d8739763b82b3de44b30f5cec8f576db",
+      "dimensions": [
+        640,
+        704
+      ]
+    },
+    "before-after.png": {
+      "sha256": "789e3ee3571c4a5e298313bc0704b752bcd0824eb7f0e028a3805e46843f00ca",
+      "dimensions": [
+        2560,
+        754
+      ]
+    },
+    "raw-vs-locked.png": {
+      "sha256": "70caa8e955ca3a5a3649368eb8c866eb74b72327c6f9e349606ea3f59928a191",
+      "dimensions": [
+        3840,
+        754
+      ]
+    }
+  }
+}

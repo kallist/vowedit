@@ -1,0 +1,465 @@
+{
+  "receipt_version": "v1",
+  "run_id": "e5f59ad7-066d-4138-aa55-5fa9ba97b32f",
+  "provider": "imported",
+  "simulation": false,
+  "contract": {
+    "change": {
+      "instruction": "Replace the entire orange-brown jacket with a solid dark cool navy blue color. Preserve face, hair, pants, pose, background, flat illustration and jacket structure.",
+      "mask": "a81ef846-ba98-4308-9f8f-f4bb98d2297e"
+    },
+    "keep": [
+      {
+        "type": "manual_region",
+        "label": "Outside jacket: face, hair, skin, pants, background",
+        "mask": "69830151-9e16-4d71-98ec-6b2664c221d9",
+        "threshold": 98.0
+      }
+    ],
+    "background_threshold": 98.0
+  },
+  "source_image": "60df6155-f48c-4320-a655-cac41b80245f",
+  "generated": 0,
+  "imported": 3,
+  "generation_source": "external-import",
+  "source_label": "Codex built-in imagegen",
+  "generation_notice": "Candidates were generated externally and imported into VowEdit for evaluation.",
+  "constraint_enforcement": [
+    {
+      "candidate_id": "862d2297-63e0-4075-8d4e-67e89e0f02fb",
+      "provider": "imported",
+      "source": "external",
+      "source_label": "Codex built-in imagegen",
+      "simulation": false,
+      "generation_source": "external",
+      "generation_source_label": "Codex built-in imagegen",
+      "preparation": {
+        "boundary": "binary-change-only",
+        "change_mask": "a81ef846-ba98-4308-9f8f-f4bb98d2297e",
+        "feather_pixels": 0,
+        "normalization": {
+          "crop_box": [
+            0.0,
+            0.75,
+            1195.0,
+            1315.25
+          ],
+          "method": "aspect-preserving-center-crop-lanczos",
+          "resampling": "LANCZOS",
+          "source_aspect_ratio": 0.9080547112462006,
+          "target_aspect_ratio": 0.9090909090909091
+        },
+        "source_size": [
+          1195,
+          1316
+        ],
+        "target_size": [
+          640,
+          704
+        ],
+        "type": "boundary-lock-v1"
+      },
+      "prepared_candidate_asset": "b34aedef-46ef-4eb1-be47-6c8a8eda1bb7",
+      "raw_candidate_asset": "3b6054af-b3d8-4cb1-8b83-3adcfca4821d",
+      "source_image": "60df6155-f48c-4320-a655-cac41b80245f"
+    },
+    {
+      "candidate_id": "6f2517ec-ca35-4f4d-ab50-ba0732405cd3",
+      "provider": "imported",
+      "source": "external",
+      "source_label": "Codex built-in imagegen",
+      "simulation": false,
+      "generation_source": "external",
+      "generation_source_label": "Codex built-in imagegen",
+      "preparation": {
+        "boundary": "binary-change-only",
+        "change_mask": "a81ef846-ba98-4308-9f8f-f4bb98d2297e",
+        "feather_pixels": 0,
+        "normalization": {
+          "crop_box": [
+            0.0,
+            0.75,
+            1195.0,
+            1315.25
+          ],
+          "method": "aspect-preserving-center-crop-lanczos",
+          "resampling": "LANCZOS",
+          "source_aspect_ratio": 0.9080547112462006,
+          "target_aspect_ratio": 0.9090909090909091
+        },
+        "source_size": [
+          1195,
+          1316
+        ],
+        "target_size": [
+          640,
+          704
+        ],
+        "type": "boundary-lock-v1"
+      },
+      "prepared_candidate_asset": "2badd09f-ce59-416d-a7eb-1db8229c5796",
+      "raw_candidate_asset": "a33f6ffe-b6b0-489c-8357-2f4872b7123f",
+      "source_image": "60df6155-f48c-4320-a655-cac41b80245f"
+    },
+    {
+      "candidate_id": "be9b61c5-1f52-491d-8aab-0d8ea5d21883",
+      "provider": "imported",
+      "source": "external",
+      "source_label": "Codex built-in imagegen",
+      "simulation": false,
+      "generation_source": "external",
+      "generation_source_label": "Codex built-in imagegen",
+      "preparation": {
+        "boundary": "binary-change-only",
+        "change_mask": "a81ef846-ba98-4308-9f8f-f4bb98d2297e",
+        "feather_pixels": 0,
+        "normalization": {
+          "crop_box": [
+            0.0,
+            0.75,
+            1195.0,
+            1315.25
+          ],
+          "method": "aspect-preserving-center-crop-lanczos",
+          "resampling": "LANCZOS",
+          "source_aspect_ratio": 0.9080547112462006,
+          "target_aspect_ratio": 0.9090909090909091
+        },
+        "source_size": [
+          1195,
+          1316
+        ],
+        "target_size": [
+          640,
+          704
+        ],
+        "type": "boundary-lock-v1"
+      },
+      "prepared_candidate_asset": "afb7e040-47d2-45ec-b0bf-ff2ff2765d5b",
+      "raw_candidate_asset": "1cbfe4c0-a5f6-49b5-a139-2c3f11b15ca5",
+      "source_image": "60df6155-f48c-4320-a655-cac41b80245f"
+    }
+  ],
+  "preparation_notice": "The external candidate was normalized to the source canvas. Only pixels permitted by the CHANGE mask were admitted into the evaluated result. Pixels outside CHANGE were preserved from the original image.",
+  "evaluation_source": "VowEdit rgb-mae-v1",
+  "requested": 3,
+  "selected": {
+    "id": "862d2297-63e0-4075-8d4e-67e89e0f02fb",
+    "index": 0,
+    "image": "b34aedef-46ef-4eb1-be47-6c8a8eda1bb7",
+    "seed": null,
+    "evaluation": {
+      "metric_version": "rgb-mae-v1",
+      "protected_similarity": 100.0,
+      "background_preservation": 100.0,
+      "change_difference": 27.60080337524414,
+      "unexpected_drift": 0.0,
+      "overall_score": 100.0,
+      "weights": {
+        "protected": 0.6,
+        "background": 0.4
+      },
+      "minimum_change": 2.0,
+      "meaningful_change": true,
+      "violations": [],
+      "eligible": true,
+      "regions": [
+        {
+          "label": "Outside jacket: face, hair, skin, pants, background",
+          "type": "manual_region",
+          "threshold": 98.0,
+          "score": 100.0
+        }
+      ],
+      "warnings": [
+        "Prompt adherence and visual quality need manual review."
+      ],
+      "edit_adherence": "manual_review"
+    },
+    "ghost": "1a100c1e-e892-4157-bcd2-d3bde43ef3b3",
+    "rank": 1,
+    "error": null,
+    "manual_review": {
+      "verdict": "pending",
+      "notes": ""
+    },
+    "generation_metadata": {
+      "provider": "imported",
+      "source": "external",
+      "source_label": "Codex built-in imagegen",
+      "simulation": false,
+      "generation_source": "external",
+      "generation_source_label": "Codex built-in imagegen",
+      "preparation": {
+        "boundary": "binary-change-only",
+        "change_mask": "a81ef846-ba98-4308-9f8f-f4bb98d2297e",
+        "feather_pixels": 0,
+        "normalization": {
+          "crop_box": [
+            0.0,
+            0.75,
+            1195.0,
+            1315.25
+          ],
+          "method": "aspect-preserving-center-crop-lanczos",
+          "resampling": "LANCZOS",
+          "source_aspect_ratio": 0.9080547112462006,
+          "target_aspect_ratio": 0.9090909090909091
+        },
+        "source_size": [
+          1195,
+          1316
+        ],
+        "target_size": [
+          640,
+          704
+        ],
+        "type": "boundary-lock-v1"
+      },
+      "prepared_candidate_asset": "b34aedef-46ef-4eb1-be47-6c8a8eda1bb7",
+      "raw_candidate_asset": "3b6054af-b3d8-4cb1-8b83-3adcfca4821d",
+      "source_image": "60df6155-f48c-4320-a655-cac41b80245f"
+    }
+  },
+  "candidates": [
+    {
+      "id": "862d2297-63e0-4075-8d4e-67e89e0f02fb",
+      "index": 0,
+      "image": "b34aedef-46ef-4eb1-be47-6c8a8eda1bb7",
+      "seed": null,
+      "evaluation": {
+        "metric_version": "rgb-mae-v1",
+        "protected_similarity": 100.0,
+        "background_preservation": 100.0,
+        "change_difference": 27.60080337524414,
+        "unexpected_drift": 0.0,
+        "overall_score": 100.0,
+        "weights": {
+          "protected": 0.6,
+          "background": 0.4
+        },
+        "minimum_change": 2.0,
+        "meaningful_change": true,
+        "violations": [],
+        "eligible": true,
+        "regions": [
+          {
+            "label": "Outside jacket: face, hair, skin, pants, background",
+            "type": "manual_region",
+            "threshold": 98.0,
+            "score": 100.0
+          }
+        ],
+        "warnings": [
+          "Prompt adherence and visual quality need manual review."
+        ],
+        "edit_adherence": "manual_review"
+      },
+      "ghost": "1a100c1e-e892-4157-bcd2-d3bde43ef3b3",
+      "rank": 1,
+      "error": null,
+      "manual_review": {
+        "verdict": "pending",
+        "notes": ""
+      },
+      "generation_metadata": {
+        "provider": "imported",
+        "source": "external",
+        "source_label": "Codex built-in imagegen",
+        "simulation": false,
+        "generation_source": "external",
+        "generation_source_label": "Codex built-in imagegen",
+        "preparation": {
+          "boundary": "binary-change-only",
+          "change_mask": "a81ef846-ba98-4308-9f8f-f4bb98d2297e",
+          "feather_pixels": 0,
+          "normalization": {
+            "crop_box": [
+              0.0,
+              0.75,
+              1195.0,
+              1315.25
+            ],
+            "method": "aspect-preserving-center-crop-lanczos",
+            "resampling": "LANCZOS",
+            "source_aspect_ratio": 0.9080547112462006,
+            "target_aspect_ratio": 0.9090909090909091
+          },
+          "source_size": [
+            1195,
+            1316
+          ],
+          "target_size": [
+            640,
+            704
+          ],
+          "type": "boundary-lock-v1"
+        },
+        "prepared_candidate_asset": "b34aedef-46ef-4eb1-be47-6c8a8eda1bb7",
+        "raw_candidate_asset": "3b6054af-b3d8-4cb1-8b83-3adcfca4821d",
+        "source_image": "60df6155-f48c-4320-a655-cac41b80245f"
+      }
+    },
+    {
+      "id": "6f2517ec-ca35-4f4d-ab50-ba0732405cd3",
+      "index": 1,
+      "image": "2badd09f-ce59-416d-a7eb-1db8229c5796",
+      "seed": null,
+      "evaluation": {
+        "metric_version": "rgb-mae-v1",
+        "protected_similarity": 100.0,
+        "background_preservation": 100.0,
+        "change_difference": 29.078432083129883,
+        "unexpected_drift": 0.0,
+        "overall_score": 100.0,
+        "weights": {
+          "protected": 0.6,
+          "background": 0.4
+        },
+        "minimum_change": 2.0,
+        "meaningful_change": true,
+        "violations": [],
+        "eligible": true,
+        "regions": [
+          {
+            "label": "Outside jacket: face, hair, skin, pants, background",
+            "type": "manual_region",
+            "threshold": 98.0,
+            "score": 100.0
+          }
+        ],
+        "warnings": [
+          "Prompt adherence and visual quality need manual review."
+        ],
+        "edit_adherence": "manual_review"
+      },
+      "ghost": "248e5dcf-a02f-4556-ae11-a85c90b06678",
+      "rank": 2,
+      "error": null,
+      "manual_review": {
+        "verdict": "pending",
+        "notes": ""
+      },
+      "generation_metadata": {
+        "provider": "imported",
+        "source": "external",
+        "source_label": "Codex built-in imagegen",
+        "simulation": false,
+        "generation_source": "external",
+        "generation_source_label": "Codex built-in imagegen",
+        "preparation": {
+          "boundary": "binary-change-only",
+          "change_mask": "a81ef846-ba98-4308-9f8f-f4bb98d2297e",
+          "feather_pixels": 0,
+          "normalization": {
+            "crop_box": [
+              0.0,
+              0.75,
+              1195.0,
+              1315.25
+            ],
+            "method": "aspect-preserving-center-crop-lanczos",
+            "resampling": "LANCZOS",
+            "source_aspect_ratio": 0.9080547112462006,
+            "target_aspect_ratio": 0.9090909090909091
+          },
+          "source_size": [
+            1195,
+            1316
+          ],
+          "target_size": [
+            640,
+            704
+          ],
+          "type": "boundary-lock-v1"
+        },
+        "prepared_candidate_asset": "2badd09f-ce59-416d-a7eb-1db8229c5796",
+        "raw_candidate_asset": "a33f6ffe-b6b0-489c-8357-2f4872b7123f",
+        "source_image": "60df6155-f48c-4320-a655-cac41b80245f"
+      }
+    },
+    {
+      "id": "be9b61c5-1f52-491d-8aab-0d8ea5d21883",
+      "index": 2,
+      "image": "afb7e040-47d2-45ec-b0bf-ff2ff2765d5b",
+      "seed": null,
+      "evaluation": {
+        "metric_version": "rgb-mae-v1",
+        "protected_similarity": 100.0,
+        "background_preservation": 100.0,
+        "change_difference": 28.000646591186523,
+        "unexpected_drift": 0.0,
+        "overall_score": 100.0,
+        "weights": {
+          "protected": 0.6,
+          "background": 0.4
+        },
+        "minimum_change": 2.0,
+        "meaningful_change": true,
+        "violations": [],
+        "eligible": true,
+        "regions": [
+          {
+            "label": "Outside jacket: face, hair, skin, pants, background",
+            "type": "manual_region",
+            "threshold": 98.0,
+            "score": 100.0
+          }
+        ],
+        "warnings": [
+          "Prompt adherence and visual quality need manual review."
+        ],
+        "edit_adherence": "manual_review"
+      },
+      "ghost": "6c314eca-a998-4ae0-8d0e-1905fe5792a3",
+      "rank": 3,
+      "error": null,
+      "manual_review": {
+        "verdict": "pending",
+        "notes": ""
+      },
+      "generation_metadata": {
+        "provider": "imported",
+        "source": "external",
+        "source_label": "Codex built-in imagegen",
+        "simulation": false,
+        "generation_source": "external",
+        "generation_source_label": "Codex built-in imagegen",
+        "preparation": {
+          "boundary": "binary-change-only",
+          "change_mask": "a81ef846-ba98-4308-9f8f-f4bb98d2297e",
+          "feather_pixels": 0,
+          "normalization": {
+            "crop_box": [
+              0.0,
+              0.75,
+              1195.0,
+              1315.25
+            ],
+            "method": "aspect-preserving-center-crop-lanczos",
+            "resampling": "LANCZOS",
+            "source_aspect_ratio": 0.9080547112462006,
+            "target_aspect_ratio": 0.9090909090909091
+          },
+          "source_size": [
+            1195,
+            1316
+          ],
+          "target_size": [
+            640,
+            704
+          ],
+          "type": "boundary-lock-v1"
+        },
+        "prepared_candidate_asset": "afb7e040-47d2-45ec-b0bf-ff2ff2765d5b",
+        "raw_candidate_asset": "1cbfe4c0-a5f6-49b5-a139-2c3f11b15ca5",
+        "source_image": "60df6155-f48c-4320-a655-cac41b80245f"
+      }
+    }
+  ],
+  "no_good_candidate": false,
+  "failures": [],
+  "generation_seconds": null,
+  "created_at": "2026-10-05T17:19:04.844905+00:00",
+  "disclaimer": "Pixel similarity is not prompt adherence, identity or image quality. Semantic adherence and artifacts require human review."
+}

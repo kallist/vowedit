@@ -1,7 +1,9 @@
 import io
+import json
 import os
 import warnings
 from pathlib import Path
+from typing import Any
 from uuid import UUID, uuid4
 
 from PIL import Image, ImageOps, UnidentifiedImageError
@@ -81,6 +83,32 @@ class AssetStore:
         except (OSError, ValueError) as exc:
             raise AppError(
                 "ASSET_NOT_FOUND", "A saved image is missing or unreadable.", 404
+            ) from exc
+
+    def save_preparation(self, asset_id: str, record: dict[str, Any]) -> None:
+        """Write provenance before registering the prepared asset in SQLite."""
+        target = self.path(asset_id).with_suffix(".preparation.json")
+        temporary = target.with_suffix(".tmp")
+        try:
+            with temporary.open("w", encoding="utf-8") as handle:
+                json.dump(record, handle, sort_keys=True)
+                handle.flush()
+                os.fsync(handle.fileno())
+            temporary.replace(target)
+        finally:
+            temporary.unlink(missing_ok=True)
+
+    def preparation(self, asset_id: str) -> dict[str, Any]:
+        try:
+            data = json.loads(
+                self.path(asset_id).with_suffix(".preparation.json").read_text(encoding="utf-8")
+            )
+            if not isinstance(data, dict) or data.get("prepared_candidate_asset") != asset_id:
+                raise ValueError("Invalid provenance")
+            return data
+        except (OSError, ValueError) as exc:
+            raise AppError(
+                "PREPARATION_UNAVAILABLE", "Prepared asset provenance is unavailable.", 409
             ) from exc
 
     def upload(self, data: bytes, filename: str, mime: str, kind: str) -> tuple[str, int, int]:

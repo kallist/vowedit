@@ -1768,3 +1768,13 @@ summary {
     font-size: 16px;
   }
 }
+.boundary-disclosure {
+  border: 1px solid var(--line);
+  padding: 16px;
+  margin: 16px 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.boundary-disclosure p {
+  margin: 8px 0;
+}

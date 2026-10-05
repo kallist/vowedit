@@ -9,7 +9,10 @@ identity or a direct API call. Offline fixtures remain explicitly labelled as de
 
 The actual Codex built-in imagegen A/B/C edits received user visual PASS, preferred A. The tool did
 not expose its model/version or seed and returned 1195×1316 against a 640×704 source. Import correctly
-rejects them without resize; evaluation/Ghost/receipt of those real external candidates is NOT TESTED.
+rejects them without resize. The subsequent explicitly authorized Boundary Lock creates separate
+derived assets and admits normalized CHANGE pixels while preserving original pixels outside CHANGE.
+All three derived assets completed evaluation/ranking/Ghost/receipt; 100% preservation and zero drift
+describe VowEdit's enforcement, not raw-model preservation. Locked human review PENDING.
 No direct OpenAI provider was added; no RunningHub failure was reclassified. [Actual record](evidence/imported/blue-jacket-gpt-image).
 
 ## What was tested on 2026-10-05

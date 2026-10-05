@@ -1,4 +1,29 @@
-# External Blue Jacket edits — genuine generation, rejected import
+# External Blue Jacket edits — raw rejection and explicit Boundary Lock
+
+## Boundary Lock follow-up — 2026-10-06
+
+The raw generation/refusal below remain historical evidence. The user subsequently authorized explicit
+deterministic preparation. All raw A/B/C are unchanged; `locked-a/b/c.png` are separate new outputs.
+Every pixel outside the 67,406-pixel CHANGE mask is exactly original; original and masks are not resized.
+Center crop `[0,0.75,1195,1315.25]`, Lanczos 640×704, binary composite, no feather. Preservation comes
+from VowEdit's spatial enforcement, not the external model independently preserving these pixels.
+
+One run `e5f59ad7-066d-4138-aa55-5fa9ba97b32f`. All A/B/C evaluated/persisted; provider calls 0, seeds
+null, model/version unavailable. Unchanged rgb-mae-v1: KEEP/outside 100%, drift 0%, CHANGE differences
+A 27.600803%, B 29.078432%, C 28.000647%, score 100 each. All eligible. Rank A → B → C, suggested A;
+original index breaks the tie. Agent inspection finds all clearly navy with closed jacket, preserved
+surroundings and no major boundary artifacts. Raw user approval/preference A remains historical;
+locked human review **PENDING**, candidate verdicts remain pending. Controlled constraint-enforced
+success YES; human-approved final PENDING; portfolio NO.
+
+New evidence: [normalization](normalization.json), [API preparation/provenance](boundary-lock.json),
+[evaluated run](evaluation.json), [receipt](receipt.json), [derived hashes](boundary-image-manifest.json),
+[before/after](before-after.png), [raw vs locked](raw-vs-locked.png).
+Locked [A](locked-a.png), [B](locked-b.png), [C](locked-c.png); Ghosts
+[A](ghost-a.png), [B](ghost-b.png), [C](ghost-c.png). Transparent Ghosts accurately reflect zero drift,
+not disabled evaluation. Product screenshots are recorded in the Boundary Lock validation.
+
+## Historical raw generation and refusal
 
 Generation source: **Codex built-in imagegen** (`image_gen.imagegen`). Model/version not exposed.
 Generation mode: **External to VowEdit**. Three separate calls, same project-owned orange-brown-jacket
@@ -26,9 +51,9 @@ Public directory naming follows the requested case name, not a claim about the t
 
 Original and masks are **640×704**. Every untouched generated image is **1195×1316**. VowEdit correctly
 rejects the mismatch, without automatically resizing either original, masks or candidate images.
-No score, selected candidate, receipt or Ghost is invented for this rejected case. The required
-ghost-a/b/c.png, receipt.json, result-page.png, ghost-view.png and candidate-comparison.png therefore
-do not exist for these external outputs. A rejection screenshot is stored instead. Complete successful
+No score, selected candidate, receipt or Ghost is invented for the rejected raw case. Later Ghosts and
+receipt belong to separately prepared locked outputs, never direct evaluation of raw candidates.
+The raw rejection screenshots remain unchanged. Complete successful
 offline import UI QA lives in `docs/screenshots/imported/`; those are deterministic fixtures, not
 these imagegen candidates. Their automated test verdicts are not the user's reviews.
 

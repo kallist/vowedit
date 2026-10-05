@@ -175,7 +175,13 @@ test("import mode rejects mismatched candidate without silently resizing", async
   await expect(page.locator('p.error[role="alert"]')).toContainText(
     "CANDIDATE_SIZE_MISMATCH",
   );
-  await expect(page.getByAltText("Uploaded Candidate A")).toHaveCount(0);
+  await expect(page.getByAltText("Uploaded Candidate A")).toBeVisible();
+  await expect(
+    page.getByText("Direct import blocked: size mismatch"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Apply VowEdit Boundary Lock" }),
+  ).toBeDisabled();
   await expect(
     page.getByRole("button", { name: "Evaluate imported candidates" }),
   ).toBeDisabled();

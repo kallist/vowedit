@@ -15,7 +15,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from backend.body_limit import BodyLimitMiddleware
 from backend.providers import LocalComfyUIImageEditProvider
 from backend.runninghub import RunningHubImageEditProvider
-from backend.schemas import AppError, CreateImportedRun, CreateRun, Retry, Review
+from backend.schemas import AppError, CreateImportedRun, CreateRun, PrepareCandidate, Retry, Review
 from backend.services import ImageEditService
 from backend.storage import MAX_BYTES
 
@@ -41,8 +41,7 @@ def create_app(service: ImageEditService | None = None) -> FastAPI:
             stop=app.state.service.stop,
         )
     if service is None and all(
-        os.getenv(key)
-        for key in ("RUNNINGHUB_API_KEY", "RUNNINGHUB_WORKFLOW_ID")
+        os.getenv(key) for key in ("RUNNINGHUB_API_KEY", "RUNNINGHUB_WORKFLOW_ID")
     ):
         app.state.service.providers["runninghub"] = RunningHubImageEditProvider(
             os.environ["RUNNINGHUB_API_KEY"],
@@ -154,6 +153,10 @@ def create_app(service: ImageEditService | None = None) -> FastAPI:
     @app.post("/api/imported-runs", status_code=202)
     def create_imported(request: CreateImportedRun) -> dict[str, Any]:
         return svc().create_imported(request)
+
+    @app.post("/api/prepared-candidates", status_code=201)
+    def prepare_candidate(request: PrepareCandidate) -> dict[str, Any]:
+        return svc().prepare_candidate(request)
 
     @app.get("/api/runs")
     def history() -> list[dict[str, Any]]:

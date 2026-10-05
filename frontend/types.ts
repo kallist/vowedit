@@ -1,4 +1,17 @@
 export type Asset = { id: string; width: number; height: number; url: string };
+export type PreparationMetadata = {
+  generation_source_label: string;
+  raw_candidate_asset: string;
+  prepared_candidate_asset: string;
+  preparation: {
+    type: "boundary-lock-v1";
+    source_size: [number, number];
+    target_size: [number, number];
+    normalization: { method: string; crop_box: number[]; resampling: string };
+    change_mask: string;
+  };
+};
+export type PreparedAsset = Asset & { metadata: PreparationMetadata };
 export type Contract = {
   change: { instruction: string; mask: string };
   keep: {
@@ -32,6 +45,7 @@ export type Candidate = {
   error: { code: string; message: string } | null;
   rank: number | null;
   seed: number | null;
+  generation_metadata?: Partial<PreparationMetadata>;
   manual_review: { verdict: "pending" | "pass" | "fail"; notes: string };
 };
 export type Run = {

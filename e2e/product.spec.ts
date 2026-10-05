@@ -112,7 +112,8 @@ for (const width of [1440, 1024, 768, 430, 390]) {
     expect(
       await page
         .getByTestId("ghost-overlay")
-        .evaluate((img: HTMLImageElement) => {
+        .evaluate(async (img: HTMLImageElement) => {
+          await img.decode();
           const canvas = document.createElement("canvas");
           canvas.width = img.naturalWidth;
           canvas.height = img.naturalHeight;

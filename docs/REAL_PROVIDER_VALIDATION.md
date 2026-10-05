@@ -1,5 +1,22 @@
 # Real provider validation — 2026-10-05
 
+## Explicit Boundary Lock case — 2026-10-06
+
+All three existing externally generated navy edits were prepared through the opt-in server operation,
+without a new generation call. Raw 1195×1316 → centered crop `[0,0.75,1195,1315.25]` → Lanczos
+640×704 → binary CHANGE-only composite. Original/masks/raw assets and direct-import rejection retained.
+Run `e5f59ad7-066d-4138-aa55-5fa9ba97b32f`: all three **TESTED / PASS** for local persistence,
+unchanged evaluation, ranking, Ghost and receipt. KEEP/outside 100%, drift 0%, CHANGE differences
+27.600803/29.078432/28.000647%, scores 100. Rank A → B → C, suggested A by original-index tie break.
+Generation: Codex built-in imagegen; model/version unavailable, seed null. Enforcement: VowEdit
+Boundary Lock. Evaluation: VowEdit rgb-mae-v1. Preservation measures the composite, not the raw model.
+
+Raw user semantic approval remains PASS, preferred A. Agent inspection finds all locked candidates
+clearly navy with preserved surroundings and no major boundary artifacts. Locked human review
+**PENDING**; raw approval is not copied. Controlled constraint-enforced success **YES**, human-approved
+final **PENDING**, portfolio-ready **NO** pending review. No direct OpenAI integration, new RunningHub
+tasks or reclassified failures. [Evidence](evidence/imported/blue-jacket-gpt-image).
+
 ## External candidate attempt — 2026-10-06
 
 Codex's built-in `image_gen.imagegen` produced three separate untouched navy-jacket edits from the

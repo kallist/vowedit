@@ -21,7 +21,35 @@ import {
   type Run,
   type Candidate,
 } from "./types";
-type View = "after" | "before" | "compare" | "ghost";
+type View = "after" | "before" | "compare" | "ghost" | "raw";
+function BoundaryDisclosure({ candidate }: { candidate: Candidate }) {
+  const metadata = candidate.generation_metadata!;
+  const preparation = metadata.preparation!;
+  return (
+    <div className="boundary-disclosure" aria-label="Boundary Lock provenance">
+      <strong>BOUNDARY LOCKED · VowEdit Boundary Lock</strong>
+      <p>
+        Generation: external · {metadata.generation_source_label}. Model/version
+        unavailable; seed not supplied.
+      </p>
+      <p>
+        Raw {preparation.source_size.join(" × ")} px → prepared{" "}
+        {preparation.target_size.join(" × ")} px. Aspect-preserving center crop
+        · Lanczos · binary CHANGE boundary.
+      </p>
+      <p>
+        The external candidate was normalized to the source canvas. Only pixels
+        permitted by the CHANGE mask were admitted into the evaluated result.
+        Pixels outside CHANGE were preserved from the original image.
+      </p>
+      <p>
+        Constraint enforcement: VowEdit Boundary Lock. Evaluation: VowEdit
+        rgb-mae-v1. Preservation reflects boundary enforcement; it does not
+        prove the external model preserved these pixels.
+      </p>
+    </div>
+  );
+}
 export default function ResultPage({ id }: { id: string }) {
   const router = useRouter(),
     [run, setRun] = useState<Run | null>(null),
@@ -227,6 +255,9 @@ export default function ResultPage({ id }: { id: string }) {
       )}
       {candidate && (
         <>
+          {candidate.generation_metadata?.preparation && (
+            <BoundaryDisclosure candidate={candidate} />
+          )}
           <div className="result-layout">
             <section className="comparison">
               <div className="comparison-header">
@@ -241,41 +272,57 @@ export default function ResultPage({ id }: { id: string }) {
                   role="group"
                   aria-label="Comparison view"
                 >
-                  {(["before", "after", "compare", "ghost"] as View[]).map(
-                    (v) => (
-                      <button
-                        key={v}
-                        aria-pressed={view === v}
-                        disabled={v === "ghost" && !candidate.ghost}
-                        onClick={() => setView(v)}
-                      >
-                        {v === "ghost" ? (
-                          <>
-                            <ScanLine size={14} aria-hidden />
-                            Ghost View
-                          </>
-                        ) : v === "compare" ? (
-                          "Before / After"
-                        ) : v === "before" ? (
-                          "Original"
-                        ) : (
-                          "Result"
-                        )}
-                      </button>
-                    ),
-                  )}
+                  {(
+                    [
+                      "before",
+                      "after",
+                      "compare",
+                      "ghost",
+                      ...(candidate.generation_metadata?.preparation
+                        ? ["raw"]
+                        : []),
+                    ] as View[]
+                  ).map((v) => (
+                    <button
+                      key={v}
+                      aria-pressed={view === v}
+                      disabled={v === "ghost" && !candidate.ghost}
+                      onClick={() => setView(v)}
+                    >
+                      {v === "ghost" ? (
+                        <>
+                          <ScanLine size={14} aria-hidden />
+                          Ghost View
+                        </>
+                      ) : v === "compare" ? (
+                        "Before / After"
+                      ) : v === "before" ? (
+                        "Original"
+                      ) : v === "raw" ? (
+                        "Raw external"
+                      ) : (
+                        "Result"
+                      )}
+                    </button>
+                  ))}
                 </div>
               </div>
               <div className="comparison-mat">
                 <div className="compare-image" data-testid="comparison-image">
                   <img
                     src={assetUrl(
-                      view === "before" ? run.source_image : candidate.image,
+                      view === "before"
+                        ? run.source_image
+                        : view === "raw"
+                          ? candidate.generation_metadata!.raw_candidate_asset!
+                          : candidate.image,
                     )}
                     alt={
                       view === "before"
                         ? "Original image"
-                        : `Candidate ${label(candidate.index)} result`
+                        : view === "raw"
+                          ? `Candidate ${label(candidate.index)} raw external image`
+                          : `Candidate ${label(candidate.index)} result`
                     }
                   />
                   {view === "compare" && (
@@ -419,6 +466,8 @@ export default function ResultPage({ id }: { id: string }) {
                   onClick={() => {
                     setChosen(c.id);
                     setReceipt(false);
+                    if (view === "raw" && !c.generation_metadata?.preparation)
+                      setView("compare");
                   }}
                 >
                   <div className="candidate-thumbnail">
@@ -606,6 +655,9 @@ function Receipt({
               Generation source: external-import. Candidates were generated
               externally and imported into VowEdit for evaluation.
             </p>
+          )}
+          {reviewed.generation_metadata?.preparation && (
+            <BoundaryDisclosure candidate={reviewed} />
           )}
           <p className="field-note">
             CHANGE · {run.contract.change.mask.slice(0, 8)} · Evaluation{" "}

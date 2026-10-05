@@ -9,7 +9,12 @@ import MaskEditor, {
 import { api, ApiError, jsonPost, upload } from "@/frontend/api";
 import type { Stroke } from "@/frontend/masks";
 import { importReady, submissionPath } from "@/frontend/imports";
-import { assetUrl, type Asset, type Run } from "@/frontend/types";
+import {
+  assetUrl,
+  type Asset,
+  type Run,
+  type PreparedAsset,
+} from "@/frontend/types";
 export default function NewEdit() {
   const router = useRouter(),
     input = useRef<HTMLInputElement>(null),
@@ -33,6 +38,17 @@ export default function NewEdit() {
     null,
   ]);
   const [sourceLabel, setSourceLabel] = useState("GPT Image via Codex");
+  const [rawCandidates, setRawCandidates] = useState<(Asset | null)[]>([
+    null,
+    null,
+    null,
+  ]);
+  const [locked, setLocked] = useState<(PreparedAsset | null)[]>([
+    null,
+    null,
+    null,
+  ]);
+  const maskAssets = useRef<{ change: Asset; keep: Asset | null } | null>(null);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [drag, setDrag] = useState(false);
@@ -91,6 +107,9 @@ export default function NewEdit() {
       setDraftMasks({});
       setPrepared(null);
       setCandidates([null, null, null]);
+      setRawCandidates([null, null, null]);
+      setLocked([null, null, null]);
+      maskAssets.current = null;
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -115,6 +134,9 @@ export default function NewEdit() {
       );
       setAsset(source);
       setCandidates([null, null, null]);
+      setRawCandidates([null, null, null]);
+      setLocked([null, null, null]);
+      maskAssets.current = null;
       setMasks(null);
       setPrepared(null);
       setDraftStrokes([]);
@@ -149,8 +171,7 @@ export default function NewEdit() {
       if (!saved) {
         saved = {
           key: crypto.randomUUID(),
-          change: await upload(masks.change, "mask"),
-          keep: masks.keep ? await upload(masks.keep, "mask") : null,
+          ...(await saveMasks()),
         };
         setPrepared(saved);
       }
@@ -203,17 +224,80 @@ export default function NewEdit() {
     setError("");
     try {
       const candidate = await upload(file, "candidate");
+      setRawCandidates((old) =>
+        old.map((c, i) => (i === index ? candidate : c)),
+      );
+      setLocked((old) => old.map((c, i) => (i === index ? null : c)));
       if (
         candidate.width !== asset.width ||
         candidate.height !== asset.height
       ) {
-        throw new Error(
-          `CANDIDATE_SIZE_MISMATCH: Candidate ${String.fromCharCode(65 + index)} must be ${asset.width} × ${asset.height} px. No resizing is performed.`,
+        setCandidates((old) => old.map((c, i) => (i === index ? null : c)));
+        setError(
+          `CANDIDATE_SIZE_MISMATCH: Candidate ${String.fromCharCode(65 + index)} cannot be imported directly. Target: ${asset.width} × ${asset.height} px. Use the explicit Boundary Lock preparation below.`,
         );
+        return;
       }
       setCandidates((old) => old.map((c, i) => (i === index ? candidate : c)));
     } catch (e) {
-      setCandidates((old) => old.map((c, i) => (i === index ? null : c)));
+      setError((e as Error).message);
+    } finally {
+      pending.current = false;
+      setBusy(false);
+    }
+  }
+  async function saveMasks() {
+    if (!masks) throw new Error("Review the edit contract first.");
+    if (!maskAssets.current)
+      maskAssets.current = {
+        change: await upload(masks.change, "mask"),
+        keep: masks.keep ? await upload(masks.keep, "mask") : null,
+      };
+    return maskAssets.current;
+  }
+  async function applyBoundaryLock() {
+    if (
+      !asset ||
+      !masks?.keep ||
+      pending.current ||
+      !rawCandidates.every(Boolean)
+    )
+      return;
+    pending.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      const saved = await saveMasks();
+      // Each successful prepared asset survives a partial failure. Retrying prepares
+      // only the remaining slots and never creates a generation job.
+      for (let index = 0; index < 3; index++) {
+        if (locked[index]) continue;
+        const candidate = await api<PreparedAsset>(
+          "/prepared-candidates",
+          jsonPost({
+            source_image: asset.id,
+            candidate_image: rawCandidates[index]!.id,
+            source_label: sourceLabel.trim(),
+            contract: {
+              change: { instruction, mask: saved.change.id },
+              keep: [
+                {
+                  type: "manual_region",
+                  label: keepLabel,
+                  mask: saved.keep!.id,
+                  threshold,
+                },
+              ],
+              background_threshold: background ? threshold : null,
+            },
+          }),
+        );
+        setLocked((old) => old.map((c, i) => (i === index ? candidate : c)));
+        setCandidates((old) =>
+          old.map((c, i) => (i === index ? candidate : c)),
+        );
+      }
+    } catch (e) {
       setError((e as Error).message);
     } finally {
       pending.current = false;
@@ -461,7 +545,7 @@ export default function NewEdit() {
                       {asset.width} × {asset.height} px.
                     </p>
                     <div className="import-slots">
-                      {candidates.map((candidate, index) => (
+                      {rawCandidates.map((raw, index) => (
                         <div className="import-slot" key={index}>
                           <label htmlFor={`candidate-${index}`}>
                             Candidate {String.fromCharCode(65 + index)}
@@ -476,27 +560,68 @@ export default function NewEdit() {
                                 void chooseCandidate(index, e.target.files[0]);
                             }}
                           />
-                          {candidate && (
+                          {raw && (
                             <>
                               <img
-                                src={assetUrl(candidate.id)}
+                                src={assetUrl((candidates[index] || raw).id)}
                                 alt={`Uploaded Candidate ${String.fromCharCode(65 + index)}`}
                               />
                               <p className="field-note">
-                                Uploaded · {candidate.width} ×{" "}
-                                {candidate.height} px
+                                Raw · {raw.width} × {raw.height} px
+                                <br />
+                                Target · {asset.width} × {asset.height} px
+                                <br />
+                                {locked[index]
+                                  ? "BOUNDARY LOCKED · prepared asset"
+                                  : candidates[index]
+                                    ? "Uploaded · exact source size"
+                                    : "Direct import blocked: size mismatch"}
                               </p>
                             </>
                           )}
                         </div>
                       ))}
                     </div>
+                    <p className="field-note">
+                      Boundary Lock uses an aspect-preserving center crop and
+                      Lanczos resize, then admits only CHANGE pixels. Outside
+                      CHANGE stays exactly original. Raw candidates are
+                      retained. This is a separate, explicit preparation step;
+                      direct import never resizes.
+                    </p>
+                    <button
+                      type="button"
+                      className="button"
+                      disabled={
+                        !rawCandidates.every(Boolean) ||
+                        !masks.keep ||
+                        !sourceLabel.trim() ||
+                        locked.every(Boolean)
+                      }
+                      onClick={() => void applyBoundaryLock()}
+                    >
+                      {busy
+                        ? "Preparing candidates…"
+                        : "Apply VowEdit Boundary Lock"}
+                    </button>
                     <label htmlFor="source-label">Source label</label>
                     <input
                       id="source-label"
                       value={sourceLabel}
                       maxLength={80}
-                      onChange={(e) => setSourceLabel(e.target.value)}
+                      onChange={(e) => {
+                        setSourceLabel(e.target.value);
+                        setLocked([null, null, null]);
+                        setCandidates(
+                          rawCandidates.map((c) =>
+                            c &&
+                            c.width === asset.width &&
+                            c.height === asset.height
+                              ? c
+                              : null,
+                          ),
+                        );
+                      }}
                     />
                     {!sourceLabel.trim() && (
                       <p className="error">
@@ -552,6 +677,15 @@ export default function NewEdit() {
                 onClick={() => {
                   setMasks(null);
                   setPrepared(null);
+                  maskAssets.current = null;
+                  setLocked([null, null, null]);
+                  setCandidates(
+                    rawCandidates.map((c) =>
+                      c && c.width === asset.width && c.height === asset.height
+                        ? c
+                        : null,
+                    ),
+                  );
                 }}
               >
                 <ArrowLeft size={15} aria-hidden />
