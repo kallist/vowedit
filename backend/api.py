@@ -1,3 +1,4 @@
+import io
 import os
 import sqlite3
 from collections.abc import AsyncIterator
@@ -9,13 +10,25 @@ from uuid import UUID
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.body_limit import BodyLimitMiddleware
+from backend.candidate_plans import compile_plan
 from backend.providers import LocalComfyUIImageEditProvider
+from backend.reporting import report
 from backend.runninghub import RunningHubImageEditProvider
-from backend.schemas import AppError, CreateImportedRun, CreateRun, PrepareCandidate, Retry, Review
+from backend.schemas import (
+    AppError,
+    Continuation,
+    CreateImportedRun,
+    CreateRun,
+    PrepareCandidate,
+    PreviewPlan,
+    Retry,
+    Review,
+    Selection,
+)
 from backend.services import ImageEditService
 from backend.storage import MAX_BYTES
 
@@ -150,6 +163,33 @@ def create_app(service: ImageEditService | None = None) -> FastAPI:
     def create(request: CreateRun) -> dict[str, Any]:
         return svc().create(request)
 
+    @app.post("/api/candidate-plans")
+    def candidate_plans(request: PreviewPlan) -> dict[str, Any]:
+        return compile_plan(request.instruction)
+
+    @app.get("/api/prepared-candidates/{asset_id}/normalized-raw")
+    def normalized_raw(asset_id: UUID) -> Response:
+        image = svc().normalized_raw(str(asset_id))
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        return Response(buffer.getvalue(), media_type="image/png")
+
+    @app.put("/api/runs/{run_id}/selection")
+    def selection(run_id: UUID, request: Selection) -> dict[str, Any]:
+        return svc().select(str(run_id), request)
+
+    @app.post("/api/runs/{run_id}/continuations", status_code=201)
+    def continuation(run_id: UUID, request: Continuation) -> dict[str, Any]:
+        return svc().continue_edit(str(run_id), request)
+
+    @app.get("/api/drafts/{draft_id}")
+    def draft(draft_id: UUID) -> dict[str, Any]:
+        return svc().draft(str(draft_id))
+
+    @app.get("/api/runs/{run_id}/report")
+    def get_report(run_id: UUID) -> dict[str, Any]:
+        return report(svc().repo.get(str(run_id)))
+
     @app.post("/api/imported-runs", status_code=202)
     def create_imported(request: CreateImportedRun) -> dict[str, Any]:
         return svc().create_imported(request)
@@ -165,7 +205,8 @@ def create_app(service: ImageEditService | None = None) -> FastAPI:
                 key: run[key]
                 for key in ("id", "status", "created_at", "source_image", "contract", "provider")
             }
-            | {"source_label": run.get("source_label")}
+            | {key: run.get(key) for key in ("source_label", "parent_run_id",
+                 "parent_candidate_id", "root_run_id", "derivation_kind")}
             for run in svc().repo.history()
         ]
 

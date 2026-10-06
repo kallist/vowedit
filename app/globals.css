@@ -8,8 +8,9 @@
   --blue: #315d9a;
   --white: #fff;
   --serif: Georgia, "Times New Roman", serif;
-  --sans: Arial, Helvetica, sans-serif;
+  --sans: Arial, Helvetica, "Microsoft YaHei", "PingFang SC", sans-serif;
 }
+
 * {
   box-sizing: border-box;
 }
@@ -1233,15 +1234,25 @@ summary {
 }
 .history-item {
   border: 1px solid var(--line);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
-.history-item > img {
+.history-item > a {
+  display: block;
+  min-width: 0;
+}
+.history-item > a > img {
   width: 100%;
   height: 240px;
   object-fit: contain;
   background: #e9e8e0;
 }
-.history-item > div {
+.history-item > a > div {
   padding: 20px;
+}
+.history-item > p {
+  padding: 0 20px;
+  overflow-wrap: anywhere;
 }
 .history-item h2 {
   font-size: 23px;
@@ -1777,4 +1788,98 @@ summary {
 }
 .boundary-disclosure p {
   margin: 8px 0;
+}
+
+/* V0.2 workbench: picture first, decisions explicit, narrow views contained. */
+.plan-details,
+.decisions {
+  border-top: 1px solid var(--line);
+  margin-top: 20px;
+  padding-top: 16px;
+  overflow-wrap: anywhere;
+}
+.plan-details dt {
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 14px;
+}
+.plan-details dd {
+  margin: 4px 0 16px;
+  white-space: pre-wrap;
+  font-size: 13px;
+}
+.decisions p {
+  font-size: 12px;
+}
+.decisions fieldset {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+}
+.decisions .checkbox {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 44px;
+}
+.decisions input[type="checkbox"] {
+  width: 18px;
+  min-height: 18px;
+  flex: none;
+}
+.decisions button {
+  width: 100%;
+  margin-top: 12px;
+}
+.semantic-fail {
+  color: #87381f;
+  border-left: 3px solid var(--warm);
+  padding-left: 12px;
+}
+.split-presets {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.view-tabs button {
+  min-height: 44px;
+}
+.candidate-info {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.candidate-info span {
+  overflow-wrap: anywhere;
+}
+.locale-switch {
+  font-size: 12px;
+  padding: 8px;
+  min-width: 44px;
+}
+@media (max-width: 800px) {
+  .score-panel {
+    display: block;
+  }
+  .score-panel > .scores {
+    margin-top: 16px;
+  }
+}
+@media (max-width: 560px) {
+  .site-header nav {
+    gap: 8px;
+  }
+  .site-header nav a[href="/edit/new"] {
+    display: none;
+  }
+  .comparison-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding-bottom: 10px;
+  }
+  .candidate-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .candidate-info strong {
+    overflow-wrap: anywhere;
+  }
 }

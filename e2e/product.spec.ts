@@ -12,7 +12,12 @@ async function capture(page: Page, width: number, name: string) {
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  const directory = path.join("docs", "screenshots", "final", String(width));
+  const directory = path.join(
+    ".local",
+    "v02-evidence",
+    "legacy-product",
+    String(width),
+  );
   await fs.mkdir(directory, { recursive: true });
   await page.screenshot({
     path: path.join(directory, `${name}.png`),
@@ -124,6 +129,7 @@ for (const width of [1440, 1024, 768, 430, 390]) {
         }),
     ).toBe(true);
     await capture(page, width, "ghost-view");
+    await page.getByRole("button", { name: "Inspect Candidate B" }).click();
     await page.getByRole("button", { name: "View Edit Receipt" }).click();
     await expect(
       page.getByRole("region", { name: "Edit Receipt" }),

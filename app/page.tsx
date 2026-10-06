@@ -1,129 +1,141 @@
+"use client";
+import { useLocale } from "@/frontend/i18n/LocaleProvider";
 import Link from "next/link";
 import { ArrowRight, Scan, ShieldCheck, ScanLine } from "lucide-react";
 export default function Landing() {
+  const { t } = useLocale();
+
   return (
     <main className="landing">
       <section className="hero">
         <div className="hero-copy">
           <p className="eyebrow">
-            <span className="tiny-square" /> A LITTLE MORE INTENTION. A LOT LESS
-            DRIFT.
+            <span className="tiny-square" />
+            {t("A LITTLE MORE INTENTION. A LOT LESS DRIFT.")}
           </p>
           <h1>
-            Change what
+            {t("Change what")}
             <br />
-            you ask.
+            {t("you ask.")}
             <br />
             <em>
-              Keep what
+              {t("Keep what")}
               <br />
-              you don’t.
+              {t("you don’t.")}
             </em>
           </h1>
           <p className="hero-description">
-            An edit should change your image.
+            {t("An edit should change your image.")}
             <br />
-            Not your intention.
+            {t("Not your intention.")}
           </p>
           <p className="muted">
-            Tell AI what to change and what to leave alone.
+            {t("Tell AI what to change and what to leave alone.")}
             <br />
-            Then see how well it kept its promise.
+            {t("Then see how well it kept its promise.")}
           </p>
           <Link className="button primary hero-cta" href="/edit/new">
-            Try VowEdit <ArrowRight size={18} aria-hidden />
+            {t("Try VowEdit")}
+            <ArrowRight size={18} aria-hidden />
           </Link>
           <span className="caption">
-            LOCAL STUDIO · MOCK DEMO INCLUDED · NO ACCOUNT
+            {t("LOCAL STUDIO · MOCK DEMO INCLUDED · NO ACCOUNT")}
           </span>
         </div>
         <div className="hero-art">
           <div className="art-heading">
-            <span>01 / THE EDIT CONTRACT</span>
-            <span className="pill">Illustrative fixture</span>
+            <span>{t("01 / THE EDIT CONTRACT")}</span>
+            <span className="pill">{t("Illustrative fixture")}</span>
           </div>
           <div className="art-image">
             <img
               src="/fixtures/illustration.svg"
-              alt="Original geometric illustration of a person in a terracotta jacket"
+              alt={t(
+                "Original geometric illustration of a person in a terracotta jacket",
+              )}
             />
             <div className="keep-callout">
-              <ShieldCheck size={15} aria-hidden /> KEEP / face & hair
+              <ShieldCheck size={15} aria-hidden />
+              {t("KEEP / face & hair")}
             </div>
             <div className="change-callout">
-              <Scan size={15} aria-hidden /> CHANGE / jacket
+              <Scan size={15} aria-hidden />
+              {t("CHANGE / jacket")}
             </div>
             <div className="art-corner top-left" />
             <div className="art-corner bottom-right" />
           </div>
           <div className="art-bottom">
             <div>
-              <span className="eyebrow">THE REQUEST</span>
-              <p>“Change the jacket. Keep the character.”</p>
+              <span className="eyebrow">{t("THE REQUEST")}</span>
+              <p>{t("“Change the jacket. Keep the character.”")}</p>
             </div>
             <ArrowUp />
           </div>
           <div className="floating-note">
             <ScanLine aria-hidden size={19} />
             <div>
-              Every edit leaves a trace.
-              <span>Ghost View makes it visible.</span>
+              {t("Every edit leaves a trace.")}
+              <span>{t("Ghost View makes it visible.")}</span>
             </div>
           </div>
         </div>
       </section>
       <section className="story-strip">
         <p className="eyebrow">
-          A BETTER QUESTION THAN
+          {t("A BETTER QUESTION THAN")}
           <br />
-          “DOES IT LOOK GOOD?”
+          {t("“DOES IT LOOK GOOD?”")}
         </p>
         <h2>
-          Did it change
+          {t("Did it change")}
           <br />
-          <em>only what you asked?</em>
+          <em>{t("only what you asked?")}</em>
         </h2>
         <p>
-          Make your boundaries visible. Compare three candidates. Inspect
-          accidental changes. Leave with an Edit Receipt, not just another
-          image.
+          {t(
+            "Make your boundaries visible. Compare three candidates. Inspect accidental changes. Leave with an Edit Receipt, not just another image.",
+          )}
         </p>
       </section>
       <section className="steps">
         <article>
-          <span>01 / DEFINE</span>
+          <span>{t("01 / DEFINE")}</span>
           <h3>
-            Two intentions.
+            {t("Two intentions.")}
             <br />
-            One clear contract.
+            {t("One clear contract.")}
           </h3>
           <p>
-            Brush over what may change. Protect what matters. Review the
-            contract before you generate.
+            {t(
+              "Brush over what may change. Protect what matters. Review the contract before you generate.",
+            )}
           </p>
         </article>
         <article>
-          <span>02 / INSPECT</span>
+          <span>{t("02 / INSPECT")}</span>
           <h3>
-            Good edits.
+            {t("Good edits.")}
             <br />
-            Visible mistakes.
+            {t("Visible mistakes.")}
           </h3>
           <p>
-            See all three candidates. Ghost View reveals drift outside the area
-            you asked to edit.
+            {t(
+              "See all three candidates. Ghost View reveals drift outside the area you asked to edit.",
+            )}
           </p>
         </article>
         <article>
-          <span>03 / UNDERSTAND</span>
+          <span>{t("03 / UNDERSTAND")}</span>
           <h3>
-            A result.
+            {t("A result.")}
             <br />
-            And its receipt.
+            {t("And its receipt.")}
           </h3>
           <p>
-            Transparent pixel metrics, explicit warnings, and a place for your
-            judgment. No invented accuracy.
+            {t(
+              "Transparent pixel metrics, explicit warnings, and a place for your judgment. No invented accuracy.",
+            )}
           </p>
         </article>
       </section>

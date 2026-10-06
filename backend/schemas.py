@@ -33,6 +33,9 @@ class CreateRun(StrictModel):
     request_key: UUID
     provider: Literal["mock", "comfyui", "runninghub"] = "mock"
     candidate_count: Literal[3] = 3
+    candidate_mode: Literal["legacy-seeds-v1", "strategy-v1"] = "legacy-seeds-v1"
+    preview_fingerprint: str | None = Field(default=None, min_length=64, max_length=64)
+    continuation_draft_id: UUID | None = None
 
 
 class CreateImportedRun(StrictModel):
@@ -41,6 +44,22 @@ class CreateImportedRun(StrictModel):
     request_key: UUID
     candidate_images: list[UUID] = Field(min_length=3, max_length=3)
     source_label: str = Field(min_length=1, max_length=80)
+    continuation_draft_id: UUID | None = None
+
+
+class PreviewPlan(StrictModel):
+    instruction: str = Field(min_length=3, max_length=1500)
+
+
+class Selection(StrictModel):
+    candidate_id: UUID
+    expected_selection_revision: int = Field(ge=0)
+    confirmations: list[Literal["review_pending", "semantic_fail", "pixel_ineligible",
+                              "evaluation_missing"]] = Field(default_factory=list, max_length=4)
+
+
+class Continuation(Selection):
+    request_key: UUID
 
 
 class PrepareCandidate(StrictModel):

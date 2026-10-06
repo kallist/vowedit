@@ -1,4 +1,8 @@
 import { defineConfig } from "@playwright/test";
+import path from "node:path";
+const apiPort = Number(process.env.VOWEDIT_API_PORT || "8000");
+if (!Number.isInteger(apiPort) || apiPort < 1024 || apiPort > 65535)
+  throw new Error("VOWEDIT_API_PORT must be an unprivileged local port.");
 const python =
   process.env.VOWEDIT_PYTHON ||
   (process.platform === "win32"
@@ -20,10 +24,14 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: `"${python}" -m uvicorn backend.tests.e2e_app:app --host 127.0.0.1 --port 8000`,
-      url: "http://127.0.0.1:8000/api/config",
+      command: `"${python}" -m uvicorn backend.tests.e2e_app:app --host 127.0.0.1 --port ${apiPort}`,
+      url: `http://127.0.0.1:${apiPort}/api/config`,
       reuseExistingServer: false,
       timeout: 30000,
+      env: {
+        VOWEDIT_DATA_DIR: path.resolve(".local/v02-browser-data"),
+        VOWEDIT_PROVIDER: "mock",
+      },
     },
     {
       command: "npm run start",

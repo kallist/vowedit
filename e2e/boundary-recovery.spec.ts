@@ -41,6 +41,9 @@ test("partial preparation resumes saved slots; invalid replacement preserves pre
   });
   await lock.click();
   await expect(page.locator('p.error[role="alert"]')).toContainText(
+    "Local storage is unavailable. Check disk space and permissions.",
+  );
+  await expect(page.locator('p.error[role="alert"]')).not.toContainText(
     "Controlled offline storage failure",
   );
   await expect(
@@ -59,13 +62,11 @@ test("partial preparation resumes saved slots; invalid replacement preserves pre
     "src",
     first!,
   );
-  await page
-    .getByLabel("Upload Candidate A")
-    .setInputFiles({
-      name: "broken.png",
-      mimeType: "image/png",
-      buffer: Buffer.from("not an image"),
-    });
+  await page.getByLabel("Upload Candidate A").setInputFiles({
+    name: "broken.png",
+    mimeType: "image/png",
+    buffer: Buffer.from("not an image"),
+  });
   await expect(page.locator('p.error[role="alert"]')).toContainText(
     "This file could not be decoded safely.",
   );

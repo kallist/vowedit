@@ -1,4 +1,12 @@
 "use client";
+import {
+  localText,
+  sourceText,
+  stateText,
+  strategyText,
+  formatMetric,
+} from "@/frontend/i18n/format";
+import { useLocale } from "@/frontend/i18n/LocaleProvider";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,45 +20,49 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import { api, ApiError, jsonPost } from "./api";
-import {
-  assetUrl,
-  label,
-  metric,
-  terminal,
-  sourceBadge,
-  type Run,
-  type Candidate,
-} from "./types";
-type View = "after" | "before" | "compare" | "ghost" | "raw";
+import { safeErrorText } from "./i18n/errors";
+import PlanDetails from "./PlanDetails";
+import Decisions from "./Decisions";
+import { assetUrl, label, terminal, type Run, type Candidate } from "./types";
+type View = "after" | "before" | "compare" | "ghost" | "raw" | "aligned";
 function BoundaryDisclosure({ candidate }: { candidate: Candidate }) {
+  const { t } = useLocale();
+
   const metadata = candidate.generation_metadata!;
   const preparation = metadata.preparation!;
   return (
-    <div className="boundary-disclosure" aria-label="Boundary Lock provenance">
-      <strong>BOUNDARY LOCKED · VowEdit Boundary Lock</strong>
+    <details
+      className="boundary-disclosure"
+      aria-label={t("Boundary Lock provenance")}
+    >
+      <summary>{t("BOUNDARY LOCKED · VowEdit Boundary Lock")}</summary>
       <p>
-        Generation: external · {metadata.generation_source_label}. Model/version
-        unavailable; seed not supplied.
+        {t("Generation: external ·")} {metadata.generation_source_label}
+        {t(". Model/version unavailable; seed not supplied.")}
       </p>
       <p>
-        Raw {preparation.source_size.join(" × ")} px → prepared{" "}
-        {preparation.target_size.join(" × ")} px. Aspect-preserving center crop
-        · Lanczos · binary CHANGE boundary.
+        {t("Raw")} {preparation.source_size.join(" × ")} {t("px → prepared")}{" "}
+        {preparation.target_size.join(" × ")}
+        {t(
+          "px. Aspect-preserving center crop · Lanczos · binary CHANGE boundary.",
+        )}
       </p>
       <p>
-        The external candidate was normalized to the source canvas. Only pixels
-        permitted by the CHANGE mask were admitted into the evaluated result.
-        Pixels outside CHANGE were preserved from the original image.
+        {t(
+          "The external candidate was normalized to the source canvas. Only pixels permitted by the CHANGE mask were admitted into the evaluated result. Pixels outside CHANGE were preserved from the original image.",
+        )}
       </p>
       <p>
-        Constraint enforcement: VowEdit Boundary Lock. Evaluation: VowEdit
-        rgb-mae-v1. Preservation reflects boundary enforcement; it does not
-        prove the external model preserved these pixels.
+        {t(
+          "Constraint enforcement: VowEdit Boundary Lock. Evaluation: VowEdit rgb-mae-v1. Preservation reflects boundary enforcement; it does not prove the external model preserved these pixels.",
+        )}
       </p>
-    </div>
+    </details>
   );
 }
 export default function ResultPage({ id }: { id: string }) {
+  const { t, locale } = useLocale();
+
   const router = useRouter(),
     [run, setRun] = useState<Run | null>(null),
     [error, setError] = useState("");
@@ -70,7 +82,7 @@ export default function ResultPage({ id }: { id: string }) {
         if (!live) return;
         setRun(next);
         setError("");
-        if (!terminal(next.status)) timer = setTimeout(refresh, 600);
+        timer = setTimeout(refresh, terminal(next.status) ? 4000 : 600);
       } catch (e) {
         if (live) {
           if (e instanceof ApiError && e.status === 404) {
@@ -122,16 +134,17 @@ export default function ResultPage({ id }: { id: string }) {
   if (!run)
     return (
       <main className="studio-page">
-        <h1>Opening your edit…</h1>
+        <h1>{t("Opening your edit…")}</h1>
         {error && (
           <p className="error" role="alert">
-            {error}
+            {localText(error, t)}
           </p>
         )}
       </main>
     );
   const candidate =
     run.candidates.find((c) => c.id === chosen) ||
+    run.candidates.find((c) => c.id === run.user_selected_candidate_id) ||
     run.candidates.find((c) => c.id === run.selected_candidate_id) ||
     run.candidates[0];
   const finished = terminal(run.status),
@@ -142,26 +155,31 @@ export default function ResultPage({ id }: { id: string }) {
       <div className="page-intro">
         <div>
           <p className="eyebrow">
-            THE STUDIO / {finished ? "03 — INSPECT" : "02 — PROCESS"}
+            {t("THE STUDIO /")}{" "}
+            {finished ? t("03 — INSPECT") : t("02 — PROCESS")}
           </p>
           <h1>
             {finished
-              ? "The edit. And the evidence."
-              : "A little change, under review."}
+              ? t("The edit. And the evidence.")
+              : t("A little change, under review.")}
           </h1>
-          <p className="muted">{run.contract.change.instruction}</p>
+          <details className="run-intent">
+            <summary>{t("Original instruction")}</summary>
+            <p className="muted">{run.contract.change.instruction}</p>
+          </details>
         </div>
-        <span className="pill">{sourceBadge(run)}</span>
+        <span className="pill">{sourceText(run, t)}</span>
       </div>
       {run.provider === "imported" && (
         <p className="field-note">
-          Candidates were generated externally and imported into VowEdit for
-          evaluation. This is not a direct model API integration.
+          {t(
+            "Candidates were generated externally and imported into VowEdit for evaluation. This is not a direct model API integration.",
+          )}
         </p>
       )}
       {error && (
         <p role="alert" className="error">
-          {error}
+          {localText(error, t)}
         </p>
       )}
       {!finished && (
@@ -170,22 +188,27 @@ export default function ResultPage({ id }: { id: string }) {
           <div>
             <h2>
               {run.status === "queued"
-                ? "Preparing your edit"
+                ? t("Preparing your edit")
                 : run.status === "generating"
-                  ? "Generating candidates"
-                  : "Checking your boundaries"}
+                  ? t("Generating candidates")
+                  : t("Checking your boundaries")}
             </h2>
             <p>
-              {run.candidates.length} of 3 candidate images saved. You can leave
-              this page and come back.
+              {run.candidates.length}{" "}
+              {t(
+                "of 3 candidate images saved. You can leave this page and come back.",
+              )}
             </p>
             <div className="stage-list">
               {(run.provider === "imported"
                 ? ["queued", "evaluating"]
                 : ["queued", "generating", "evaluating"]
               ).map((s) => (
-                <span key={s} className={run.status === s ? "current" : ""}>
-                  {s}
+                <span
+                  key={stateText(s, t)}
+                  className={run.status === s ? "current" : ""}
+                >
+                  {stateText(s, t)}
                 </span>
               ))}
             </div>
@@ -198,10 +221,10 @@ export default function ResultPage({ id }: { id: string }) {
           <div>
             <h2>
               {run.status === "failed_evaluation"
-                ? "Images saved. Evaluation needs another try."
-                : "Generation could not finish."}
+                ? t("Images saved. Evaluation needs another try.")
+                : t("Generation could not finish.")}
             </h2>
-            <p>{run.error?.message}</p>
+            <p>{run.error && localText(safeErrorText(run.error.code), t)}</p>
             <p className="caption">{run.error?.code}</p>
             {run.status === "failed_evaluation" ? (
               <button
@@ -209,7 +232,7 @@ export default function ResultPage({ id }: { id: string }) {
                 className="button primary"
                 onClick={() => void retry("evaluation")}
               >
-                Retry Evaluation
+                {t("Retry Evaluation")}
               </button>
             ) : (
               <button
@@ -217,13 +240,14 @@ export default function ResultPage({ id }: { id: string }) {
                 className="button primary"
                 onClick={() => void retry("generation")}
               >
-                Retry Generation
+                {t("Retry Generation")}
               </button>
             )}
             {!run.generation_retry_safe && run.provider !== "imported" && (
               <p>
-                Provider state is unknown. Check its queue before creating a new
-                edit; an automatic retry could duplicate work.
+                {t(
+                  "Provider state is unknown. Check its queue before creating a new edit; an automatic retry could duplicate work.",
+                )}
               </p>
             )}
           </div>
@@ -232,45 +256,43 @@ export default function ResultPage({ id }: { id: string }) {
       {run.status === "partial" && (
         <section className="notice">
           <strong>
-            Partial success —{" "}
-            {run.candidates.filter((c) => c.evaluation).length} of 3 candidates
-            evaluated.
+            {t("Partial success —")}{" "}
+            {run.candidates.filter((c) => c.evaluation).length}{" "}
+            {t("of 3 candidates evaluated.")}
           </strong>
-          <p>Your successful results are preserved.</p>
+          <p>{t("Your successful results are preserved.")}</p>
           {run.candidates.some((c) => !c.evaluation) && (
             <button disabled={busy} onClick={() => void retry("evaluation")}>
-              Retry Evaluation
+              {t("Retry Evaluation")}
             </button>
           )}
         </section>
       )}
       {run.no_good_candidate && hasReceipt && (
         <section className="notice">
-          <strong>No candidate fully satisfied your constraints.</strong>
+          <strong>{t("No candidate fully satisfied your constraints.")}</strong>
           <p>
-            All candidates remain visible. The first ranked result is not an
-            approved edit.
+            {t(
+              "All candidates remain visible. The first ranked result is not an approved edit.",
+            )}
           </p>
         </section>
       )}
       {candidate && (
         <>
-          {candidate.generation_metadata?.preparation && (
-            <BoundaryDisclosure candidate={candidate} />
-          )}
           <div className="result-layout">
             <section className="comparison">
               <div className="comparison-header">
                 <span>
-                  CANDIDATE {label(candidate.index)}
+                  {t("CANDIDATE")} {label(candidate.index)}
                   {candidate.id === run.selected_candidate_id
-                    ? " / SUGGESTED"
-                    : " / INSPECTING"}
+                    ? ` / ${t("SUGGESTED")}`
+                    : ` / ${t("Currently viewing")}`}
                 </span>
                 <div
                   className="view-tabs"
                   role="group"
-                  aria-label="Comparison view"
+                  aria-label={t("Comparison view")}
                 >
                   {(
                     [
@@ -292,20 +314,28 @@ export default function ResultPage({ id }: { id: string }) {
                       {v === "ghost" ? (
                         <>
                           <ScanLine size={14} aria-hidden />
-                          Ghost View
+                          {t("Ghost View")}
                         </>
                       ) : v === "compare" ? (
-                        "Before / After"
+                        t("Before / After")
                       ) : v === "before" ? (
-                        "Original"
+                        t("Original")
                       ) : v === "raw" ? (
-                        "Raw external"
+                        t("Raw external")
                       ) : (
-                        "Result"
+                        t("Result")
                       )}
                     </button>
                   ))}
                 </div>
+                {candidate.generation_metadata?.preparation && (
+                  <button
+                    aria-pressed={view === "aligned"}
+                    onClick={() => setView("aligned")}
+                  >
+                    {t("Aligned raw / locked")}
+                  </button>
+                )}
               </div>
               <div className="comparison-mat">
                 <div className="compare-image" data-testid="comparison-image">
@@ -319,25 +349,47 @@ export default function ResultPage({ id }: { id: string }) {
                     )}
                     alt={
                       view === "before"
-                        ? "Original image"
+                        ? t("Original image")
                         : view === "raw"
-                          ? `Candidate ${label(candidate.index)} raw external image`
-                          : `Candidate ${label(candidate.index)} result`
+                          ? `${t("Candidate")} ${label(candidate.index)} ${t("raw external image")}`
+                          : `${t("Candidate")} ${label(candidate.index)} ${t("result")}`
                     }
                   />
-                  {view === "compare" && (
+                  {(view === "compare" || view === "aligned") && (
                     <>
                       <img
                         className="before-layer"
-                        src={assetUrl(run.source_image)}
-                        alt="Original layer in before and after comparison"
+                        src={
+                          view === "aligned"
+                            ? `/api/prepared-candidates/${candidate.image}/normalized-raw`
+                            : assetUrl(run.source_image)
+                        }
+                        alt={
+                          view === "aligned"
+                            ? t("Aligned raw preview")
+                            : t("Original layer in before and after comparison")
+                        }
+                        onError={
+                          view === "aligned"
+                            ? () => {
+                                setView("raw");
+                                setError(
+                                  "Aligned raw preview is unavailable. Showing untouched raw separately.",
+                                );
+                              }
+                            : undefined
+                        }
                         style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}
                       />
                       <div className="split-line" style={{ left: `${split}%` }}>
-                        <span>↔</span>
+                        <span>{t("↔")}</span>
                       </div>
-                      <div className="image-tag left">BEFORE</div>
-                      <div className="image-tag right">AFTER</div>
+                      <div className="image-tag left">
+                        {view === "aligned" ? t("ALIGNED RAW") : t("BEFORE")}
+                      </div>
+                      <div className="image-tag right">
+                        {view === "aligned" ? t("LOCKED") : t("AFTER")}
+                      </div>
                     </>
                   )}
                   {view === "ghost" && candidate.ghost && (
@@ -346,7 +398,7 @@ export default function ResultPage({ id }: { id: string }) {
                         className="ghost-layer"
                         data-testid="ghost-overlay"
                         src={assetUrl(candidate.ghost)}
-                        alt="Orange heatmap of pixel drift outside CHANGE"
+                        alt={t("Orange heatmap of pixel drift outside CHANGE")}
                       />
                       <div
                         className="mask-outline change-outline"
@@ -369,11 +421,11 @@ export default function ResultPage({ id }: { id: string }) {
                   )}
                 </div>
               </div>
-              {view === "compare" && (
+              {(view === "compare" || view === "aligned") && (
                 <label className="slider-label">
-                  Before / After
+                  {t("Before / After")}
                   <input
-                    aria-label="Before after slider"
+                    aria-label={t("Before after slider")}
                     type="range"
                     min="0"
                     max="100"
@@ -382,26 +434,143 @@ export default function ResultPage({ id }: { id: string }) {
                   />
                 </label>
               )}
+              {(view === "compare" || view === "aligned") && (
+                <div
+                  className="split-presets"
+                  aria-label={t("Comparison split presets")}
+                >
+                  {[0, 50, 100].map((value) => (
+                    <button key={value} onClick={() => setSplit(value)}>
+                      {value}%
+                    </button>
+                  ))}
+                </div>
+              )}
+              {view === "aligned" && (
+                <p className="field-note">
+                  {t(
+                    "Aligned raw preview uses the saved center crop and Lanczos recipe. It is not the untouched raw image.",
+                  )}
+                </p>
+              )}
               {view === "ghost" && (
                 <div className="ghost-legend">
-                  <span className="change-dot">Requested CHANGE</span>
-                  <span className="keep-dot">Protected KEEP</span>
-                  <span className="drift-dot">Orange = unintended drift</span>
+                  <span className="change-dot">{t("Requested CHANGE")}</span>
+                  <span className="keep-dot">{t("Protected KEEP")}</span>
+                  <span className="drift-dot">
+                    {t("Orange = unintended drift")}
+                  </span>
                   <p>
-                    Stronger orange means greater pixel difference. No orange
-                    inside CHANGE.
+                    {t(
+                      "Stronger orange means greater pixel difference. No orange inside CHANGE.",
+                    )}
                   </p>
                 </div>
               )}
+              <section className="candidate-section">
+                <div className="section-title">
+                  <h2>
+                    {t("Three takes.")} <em>{t("One intention.")}</em>
+                  </h2>
+                  <span className="caption">
+                    {t("RANKED BY CONSTRAINTS, THEN DRIFT & SCORE")}
+                  </span>
+                </div>
+                <div className="candidate-strip">
+                  {run.candidates.map((c) => (
+                    <button
+                      className={`candidate-card ${candidate.id === c.id ? "selected" : ""}`}
+                      key={c.id}
+                      aria-label={`${t("Inspect Candidate")} ${label(c.index)}`}
+                      aria-pressed={candidate.id === c.id}
+                      onClick={() => {
+                        setChosen(c.id);
+                        setReceipt(false);
+                        if (
+                          ["raw", "aligned"].includes(view) &&
+                          !c.generation_metadata?.preparation
+                        )
+                          setView("compare");
+                      }}
+                    >
+                      <div className="candidate-thumbnail">
+                        <img
+                          src={assetUrl(c.image)}
+                          alt={`${t("Candidate")} ${label(c.index)} ${t("thumbnail")}`}
+                        />
+                        <span className="candidate-letter">
+                          {label(c.index)}
+                        </span>
+                        {c.id === run.selected_candidate_id && (
+                          <span className="suggested">{t("SUGGESTED")}</span>
+                        )}
+                      </div>
+                      <div className="candidate-info">
+                        <strong>
+                          {t("Candidate")} {label(c.index)}
+                        </strong>
+                        <span>
+                          {(c.candidate_plan
+                            ? strategyText(c.candidate_plan.strategy_id, t)
+                            : null) ||
+                            (run.provider === "imported"
+                              ? t("Strategy unknown")
+                              : t("Legacy seed variant"))}
+                        </span>
+                        <span>
+                          {c.evaluation
+                            ? c.evaluation.eligible
+                              ? t("Eligible")
+                              : t("Ineligible")
+                            : t("Unscored")}
+                        </span>
+                      </div>
+                      <p>
+                        {c.evaluation
+                          ? c.evaluation.eligible
+                            ? t("Preserved. Ready for your review.")
+                            : `${c.evaluation.violations.length} ${t("KEEP violations")}${!c.evaluation.meaningful_change ? ` · ${t("too little change")}` : ""}`
+                          : t("Evaluation pending or failed")}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+                {run.failures.map((f) => (
+                  <p className="error" key={f.index}>
+                    {t("Candidate")} {label(f.index)}
+                    {t(":")} {localText(safeErrorText(f.code), t)}
+                  </p>
+                ))}
+              </section>
             </section>
             <aside className="score-panel">
-              <span className="eyebrow">VOWEDIT EVALUATION</span>
+              <span className="eyebrow">{t("VOWEDIT EVALUATION")}</span>
+              <h3
+                className={
+                  candidate.manual_review.verdict === "fail"
+                    ? "semantic-fail"
+                    : ""
+                }
+              >
+                {candidate.manual_review.verdict === "fail"
+                  ? t("Semantic review failed")
+                  : candidate.manual_review.verdict === "pass"
+                    ? t("Human review passed")
+                    : t("Human review pending")}
+              </h3>
+              <p className="field-note">
+                {candidate.generation_metadata?.preparation
+                  ? t(
+                      "Boundary Lock: outside pixels retained from the original, not proof of model preservation.",
+                    )
+                  : run.provider === "mock"
+                    ? t("Pixel simulation. Does not prove strategy semantics.")
+                    : run.provider === "imported"
+                      ? t("External candidate · strategy unknown")
+                      : t("Direct provider output")}
+              </p>
               {candidate.evaluation ? (
                 <>
-                  <div className="big-score">
-                    {metric(candidate.evaluation.overall_score)}
-                    <span>/ 100</span>
-                  </div>
                   <p
                     className={
                       candidate.evaluation.eligible
@@ -415,95 +584,95 @@ export default function ResultPage({ id }: { id: string }) {
                       <AlertTriangle size={16} aria-hidden />
                     )}
                     {candidate.evaluation.eligible
-                      ? "Pixel checks passed"
-                      : "Does not meet the contract"}
+                      ? t("Pixel checks passed")
+                      : t("Does not meet the contract")}
                   </p>
                   <ScoreCard candidate={candidate} />
                   <details className="formula">
-                    <summary>How this score works</summary>
+                    <summary>{t("Preservation summary")}</summary>
                     <p>
-                      RGB mean absolute difference, normalized to 0–100.{" "}
-                      {candidate.evaluation.weights.protected * 100}% KEEP
-                      preservation +{" "}
-                      {candidate.evaluation.weights.background * 100}%
-                      outside-CHANGE preservation.
+                      {formatMetric(
+                        candidate.evaluation.overall_score,
+                        t,
+                        locale,
+                      )}{" "}
+                      {t("/ 100")}
                     </p>
                     <p>
-                      Eligibility requires every hard threshold and at least{" "}
-                      {candidate.evaluation.minimum_change}% CHANGE difference.
-                      Ranking: eligible first, violations, meaningful change,
-                      lower drift, then score. More pixel change does not mean a
-                      better edit.
+                      {t("RGB mean absolute difference, normalized to 0–100.")}{" "}
+                      {candidate.evaluation.weights.protected * 100}
+                      {t("% KEEP preservation +")}{" "}
+                      {candidate.evaluation.weights.background * 100}
+                      {t("% outside-CHANGE preservation.")}
+                    </p>
+                    <p>
+                      {t(
+                        "Eligibility requires every hard threshold and at least",
+                      )}{" "}
+                      {candidate.evaluation.minimum_change}
+                      {t(
+                        "% CHANGE difference. Ranking: eligible first, violations, meaningful change, lower drift, then score, then original index to break ties. More pixel change does not mean a better edit.",
+                      )}
                     </p>
                   </details>
-                  <div className="warnings">
-                    {candidate.evaluation.warnings.map((w) => (
-                      <p key={w}>{w}</p>
-                    ))}
-                  </div>
+                  <p className="field-note">
+                    {t("Outside CHANGE mean RGB difference:")}{" "}
+                    {formatMetric(
+                      100 - candidate.evaluation.background_preservation,
+                      t,
+                      locale,
+                    )}
+                    {t("%. Small averages can hide important local changes.")}
+                  </p>
+                  {candidate.evaluation.regions?.map((region) => (
+                    <p className="field-note" key={region.label}>
+                      {region.label}
+                      {t(":")} {formatMetric(region.score, t, locale)}
+                      {t("% /")} {region.threshold}%
+                    </p>
+                  ))}
+                  <p className="field-note">
+                    {t("Outside threshold:")}{" "}
+                    {run.contract.background_threshold ?? t("Not defined")}
+                    {t("% · minimum CHANGE:")}{" "}
+                    {candidate.evaluation.minimum_change}%
+                  </p>
+                  <p className="field-note">
+                    {t(
+                      "The 2% minimum-change rule and an empty Ghost do not prove semantic success or identity.",
+                    )}
+                  </p>
                 </>
               ) : (
-                <p>{candidate.error?.message || "Waiting for evaluation."}</p>
+                <p>
+                  {candidate.error
+                    ? localText(safeErrorText(candidate.error.code), t)
+                    : t("Human review pending")}
+                </p>
+              )}
+              {hasReceipt && (
+                <Decisions run={run} candidate={candidate} onUpdate={setRun} />
               )}
             </aside>
           </div>
-          <section className="candidate-section">
-            <div className="section-title">
-              <h2>
-                Three takes. <em>One intention.</em>
-              </h2>
-              <span className="caption">
-                RANKED BY CONSTRAINTS, THEN DRIFT & SCORE
-              </span>
-            </div>
-            <div className="candidate-strip">
-              {run.candidates.map((c) => (
-                <button
-                  className={`candidate-card ${candidate.id === c.id ? "selected" : ""}`}
-                  key={c.id}
-                  aria-label={`Inspect Candidate ${label(c.index)}`}
-                  aria-pressed={candidate.id === c.id}
-                  onClick={() => {
-                    setChosen(c.id);
-                    setReceipt(false);
-                    if (view === "raw" && !c.generation_metadata?.preparation)
-                      setView("compare");
-                  }}
-                >
-                  <div className="candidate-thumbnail">
-                    <img
-                      src={assetUrl(c.image)}
-                      alt={`Candidate ${label(c.index)} thumbnail`}
-                    />
-                    <span className="candidate-letter">{label(c.index)}</span>
-                    {c.id === run.selected_candidate_id && (
-                      <span className="suggested">SUGGESTED</span>
-                    )}
-                  </div>
-                  <div className="candidate-info">
-                    <strong>Candidate {label(c.index)}</strong>
-                    <span>
-                      {c.evaluation
-                        ? metric(c.evaluation.overall_score)
-                        : "Unscored"}
-                    </span>
-                  </div>
-                  <p>
-                    {c.evaluation
-                      ? c.evaluation.eligible
-                        ? "Preserved. Ready for your review."
-                        : `${c.evaluation.violations.length} KEEP violations${!c.evaluation.meaningful_change ? " · too little change" : ""}`
-                      : "Evaluation pending or failed"}
-                  </p>
-                </button>
-              ))}
-            </div>
-            {run.failures.map((f) => (
-              <p className="error" key={f.index}>
-                Candidate {label(f.index)}: {f.message}
-              </p>
-            ))}
-          </section>
+          {candidate.generation_metadata?.preparation && (
+            <BoundaryDisclosure candidate={candidate} />
+          )}
+          {run.candidate_plan && (
+            <details>
+              <summary>{t("Frozen execution plan")}</summary>
+              <PlanDetails plan={run.candidate_plan} />
+            </details>
+          )}
+          {run.parent_run_id && (
+            <p>
+              <Link href={`/edit/${run.parent_run_id}`}>
+                {t("Return to parent edit")}
+              </Link>{" "}
+              · {stateText(run.derivation_kind || "", t)} ·{" "}
+              {run.parent_candidate_id?.slice(0, 8)}
+            </p>
+          )}
           {hasReceipt && (
             <>
               <div className="result-actions">
@@ -512,7 +681,7 @@ export default function ResultPage({ id }: { id: string }) {
                   onClick={() => setReceipt((r) => !r)}
                 >
                   <ShieldCheck size={18} aria-hidden />
-                  {receipt ? "Close Edit Receipt" : "View Edit Receipt"}
+                  {receipt ? t("Close Edit Receipt") : t("View Edit Receipt")}
                 </button>
                 {run.provider !== "imported" && (
                   <button
@@ -520,24 +689,19 @@ export default function ResultPage({ id }: { id: string }) {
                     disabled={busy || !run.generation_retry_safe}
                     onClick={() => void retry("generation")}
                   >
-                    Retry Generation
+                    {t("Retry Generation")}
                   </button>
                 )}
                 <Link href="/edit/new" className="text-button">
-                  New edit <ArrowRight size={15} aria-hidden />
+                  {t("New edit")}
+                  <ArrowRight size={15} aria-hidden />
                 </Link>
               </div>
               {receipt && (
                 <Receipt
                   key={candidate.id}
                   run={run}
-                  reviewed={
-                    run.provider === "imported"
-                      ? candidate
-                      : run.candidates.find(
-                          (c) => c.id === run.selected_candidate_id,
-                        ) || candidate
-                  }
+                  reviewed={candidate}
                   onUpdate={setRun}
                 />
               )}
@@ -549,35 +713,41 @@ export default function ResultPage({ id }: { id: string }) {
   );
 }
 function ScoreCard({ candidate }: { candidate: Candidate }) {
+  const { t, locale } = useLocale();
+
   const e = candidate.evaluation!;
   return (
     <dl className="scores">
       <div>
         <dt>
-          Protected similarity <small>Higher = more preserved</small>
+          {t("Protected similarity")}
+          <small>{t("Higher = more preserved")}</small>
         </dt>
         <dd>
-          {metric(e.protected_similarity)}
+          {formatMetric(e.protected_similarity, t, locale)}
           {e.protected_similarity !== null && "%"}
         </dd>
       </div>
       <div>
         <dt>
-          Outside preservation <small>Everything outside CHANGE</small>
+          {t("Outside preservation")}
+          <small>{t("Everything outside CHANGE")}</small>
         </dt>
-        <dd>{metric(e.background_preservation)}%</dd>
+        <dd>{formatMetric(e.background_preservation, t, locale)}%</dd>
       </div>
       <div>
         <dt>
-          Change difference <small>Pixel change, not prompt accuracy</small>
+          {t("Change difference")}
+          <small>{t("Pixel change, not prompt accuracy")}</small>
         </dt>
-        <dd>{metric(e.change_difference)}%</dd>
+        <dd>{formatMetric(e.change_difference, t, locale)}%</dd>
       </div>
       <div>
         <dt>
-          Unexpected drift <small>Lower = less accidental change</small>
+          {t("Unexpected drift")}
+          <small>{t("Lower = less accidental change")}</small>
         </dt>
-        <dd>{metric(e.unexpected_drift)}%</dd>
+        <dd>{formatMetric(e.unexpected_drift, t, locale)}%</dd>
       </div>
     </dl>
   );
@@ -591,6 +761,8 @@ function Receipt({
   reviewed: Candidate;
   onUpdate: (run: Run) => void;
 }) {
+  const { t, locale } = useLocale();
+
   const selected = run.candidates.find(
     (c) => c.id === run.selected_candidate_id,
   );
@@ -617,50 +789,54 @@ function Receipt({
     }
   }
   return (
-    <section className="receipt" aria-label="Edit Receipt">
+    <section className="receipt" aria-label={t("Edit Receipt")}>
       <div className="receipt-top">
         <div>
-          <p className="eyebrow">THE PROMISE, IN PIXELS</p>
+          <p className="eyebrow">{t("THE PROMISE, IN PIXELS")}</p>
           <h2>
-            Edit Receipt<span> / 01</span>
+            {t("Edit Receipt")}
+            <span> {t("/ 01")}</span>
           </h2>
         </div>
         <ShieldCheck size={36} strokeWidth={1} aria-hidden />
       </div>
       <div className="receipt-grid">
         <div>
-          <span className="eyebrow">EDIT REQUEST</span>
+          <span className="eyebrow">{t("EDIT REQUEST")}</span>
           <h3>{run.contract.change.instruction}</h3>
-          <span className="eyebrow keep-text">KEEP CONTRACT</span>
+          <span className="eyebrow keep-text">{t("KEEP CONTRACT")}</span>
           <p>
             {run.contract.keep.map((r) => r.label).join(" · ") ||
-              "No manually protected region"}
-            {run.contract.background_threshold !== null && " · Outside CHANGE"}
+              t("No manually protected region")}
+            {run.contract.background_threshold !== null &&
+              ` · ${t("Outside CHANGE")}`}
           </p>
-          <span className="eyebrow">SUGGESTED RESULT</span>
+          <span className="eyebrow">{t("SUGGESTED RESULT")}</span>
           <h3>
             {selected
-              ? `Candidate ${label(selected.index)}`
-              : "No qualifying candidate"}
+              ? `${t("Candidate")} ${label(selected.index)}`
+              : t("No qualifying candidate")}
           </h3>
           <p>
-            {run.candidates.length} / 3{" "}
-            {run.provider === "imported" ? "imported" : "generated"} ·{" "}
-            {sourceBadge(run)}
+            {run.candidates.length} {t("/ 3")}{" "}
+            {run.provider === "imported" ? t("imported") : t("generated")} ·{" "}
+            {sourceText(run, t)}
             {run.provider !== "imported" &&
               ` · ${run.generation_seconds ?? "—"}s`}
           </p>
           {run.provider === "imported" && (
             <p className="field-note">
-              Generation source: external-import. Candidates were generated
-              externally and imported into VowEdit for evaluation.
+              {t(
+                "Generation source: external-import. Candidates were generated externally and imported into VowEdit for evaluation.",
+              )}
             </p>
           )}
           {reviewed.generation_metadata?.preparation && (
             <BoundaryDisclosure candidate={reviewed} />
           )}
           <p className="field-note">
-            CHANGE · {run.contract.change.mask.slice(0, 8)} · Evaluation{" "}
+            {t("CHANGE ·")} {run.contract.change.mask.slice(0, 8)}{" "}
+            {t("· Evaluation")}{" "}
             {selected?.evaluation?.metric_version ||
               run.candidates.find((c) => c.evaluation)?.evaluation
                 ?.metric_version ||
@@ -672,61 +848,62 @@ function Receipt({
             <ScoreCard candidate={selected} />
           ) : (
             <p>
-              No candidate met every hard threshold and the minimum-change
-              check. Review each candidate’s warnings above.
+              {t(
+                "No candidate met every hard threshold and the minimum-change check. Review each candidate’s warnings above.",
+              )}
             </p>
           )}
           <p className="receipt-disclaimer">
-            Pixel preservation is not semantic correctness, identity
-            preservation or subjective quality.
+            {t(
+              "Pixel preservation is not semantic correctness, identity preservation or subjective quality.",
+            )}
           </p>
-          {selected?.evaluation?.warnings.map((w) => (
-            <p className="field-note" key={w}>
-              {w}
-            </p>
-          ))}
         </div>
       </div>
-      {(run.provider === "imported" || selected) && (
+      {
         <div className="human-review">
-          <span className="eyebrow">EDIT ADHERENCE / HUMAN REVIEW</span>
+          <span className="eyebrow">{t("EDIT ADHERENCE / HUMAN REVIEW")}</span>
           <p>
-            Reviewing Candidate {label(reviewed.index)}. System suggestion
-            remains unchanged.
+            {t("Reviewing Candidate")} {label(reviewed.index)}
+            {t(". System suggestion remains unchanged.")}
           </p>
-          <p>The score does not answer whether the instruction was followed.</p>
-          <label htmlFor="human-verdict">Your verdict</label>
+          <p>
+            {t(
+              "The score does not answer whether the instruction was followed.",
+            )}
+          </p>
+          <label htmlFor="human-verdict">{t("Your verdict")}</label>
           <select
             id="human-verdict"
             value={verdict}
             onChange={(e) => setVerdict(e.target.value as typeof verdict)}
           >
-            <option value="pending">Not reviewed</option>
-            <option value="pass">Instruction followed</option>
-            <option value="fail">Instruction not followed</option>
+            <option value="pending">{t("Not reviewed")}</option>
+            <option value="pass">{t("Instruction followed")}</option>
+            <option value="fail">{t("Instruction not followed")}</option>
           </select>
-          <label htmlFor="human-notes">Human notes</label>
+          <label htmlFor="human-notes">{t("Human notes")}</label>
           <textarea
             id="human-notes"
             value={notes}
             maxLength={1000}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="What worked? What changed accidentally?"
+            placeholder={t("What worked? What changed accidentally?")}
           />
           <button disabled={busy} onClick={() => void save()}>
-            Save human review
+            {t("Save human review")}
           </button>
-          {message && <p role="status">{message}</p>}
+          {message && <p role="status">{localText(message, t)}</p>}
         </div>
-      )}
+      }
       <div className="receipt-bottom">
         <span className="caption">
           {run.id.slice(0, 8).toUpperCase()} ·{" "}
-          {new Date(run.created_at).toLocaleDateString()}
+          {new Date(run.created_at).toLocaleDateString(locale)}
         </span>
         <a href={`/api/runs/${run.id}/receipt`} className="button" download>
           <Download size={16} aria-hidden />
-          Export JSON
+          {t("Export JSON")}
         </a>
       </div>
     </section>

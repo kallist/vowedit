@@ -55,17 +55,32 @@ class Repository:
             raise AppError("ASSET_NOT_FOUND", "The requested image or mask was not found.", 404)
         return dict(row)
 
+    def submitted_run(self, request_key: str) -> dict[str, Any] | None:
+        with self.connection() as db:
+            row = db.execute("SELECT runs.data FROM jobs JOIN runs ON runs.id=jobs.run_id "
+                             "WHERE jobs.request_key=?", (request_key,)).fetchone()
+        return json.loads(row[0]) if row else None
+
     def get(self, run_id: str) -> dict[str, Any]:
         with self.connection() as db:
             row = db.execute("SELECT data FROM runs WHERE id=?", (run_id,)).fetchone()
         if row is None:
             raise AppError("RUN_NOT_FOUND", "Edit not found.", 404)
-        return json.loads(row["data"])  # type: ignore[no-any-return]
+        return self.compatible(json.loads(row["data"]))
+
+    @staticmethod
+    def compatible(run: dict[str, Any]) -> dict[str, Any]:
+        defaults = dict(candidate_mode="legacy-seeds-v1", candidate_plan=None,
+                        user_selected_candidate_id=None, selection_revision=0,
+                        parent_candidate_id=None, continuation_draft_id=None,
+                        root_run_id=run["id"], derivation_kind=
+                        "generation_retry" if run.get("parent_run_id") else None)
+        return {**defaults, **run}
 
     def history(self) -> list[dict[str, Any]]:
         with self.connection() as db:
             rows = db.execute("SELECT data FROM runs ORDER BY created_at DESC LIMIT 50").fetchall()
-        return [json.loads(row["data"]) for row in rows]
+        return [self.compatible(json.loads(row["data"])) for row in rows]
 
     def submit(self, run: dict[str, Any], job: dict[str, str], *, retry: bool = False) -> str:
         with self.connection() as db:
@@ -123,7 +138,7 @@ class Repository:
     def mutate(
         self,
         run_id: str,
-        update: Callable[[dict[str, Any]], None],
+        update: Callable[[dict[str, Any]], None | bool],
         *,
         job_id: str | None = None,
         status: str | None = None,
@@ -138,7 +153,8 @@ class Repository:
                 raise AppError("JOB_CONFLICT", "A newer attempt owns this edit.", 409)
             if status:
                 check_transition(run["status"], status)
-            update(run)
+            if update(run) is False:
+                return self.compatible(run)
             if status:
                 run["status"] = status
                 db.execute("UPDATE jobs SET status=? WHERE id=?", (status, run["job_id"]))
@@ -147,7 +163,46 @@ class Repository:
                 "UPDATE runs SET status=?, data=? WHERE id=?",
                 (run["status"], json.dumps(run), run_id),
             )
-        return run  # type: ignore[no-any-return]
+        return self.compatible(run)
+
+    @staticmethod
+    def _starter(db: sqlite3.Connection, field: str, value: str) -> dict[str, Any] | None:
+        # field is an internal constant; user input is always a bound parameter.
+        if field not in {"id", "request_key"}:
+            raise ValueError("Invalid starter lookup")
+        row = db.execute(
+            "SELECT draft.value FROM runs, "
+            "json_each(runs.data, '$.continuation_starters') AS draft "
+            "WHERE json_extract(draft.value, ?) = ? LIMIT 1", (f"$.{field}", value)
+        ).fetchone()
+        return json.loads(row[0]) if row else None
+
+    def starter(self, value: str, *, request_key: bool = False) -> dict[str, Any] | None:
+        with self.connection() as db:
+            return self._starter(db, "request_key" if request_key else "id", value)
+
+    def register_starter(
+        self, run_id: str, draft: dict[str, Any],
+        validate: Callable[[dict[str, Any]], None], width: int, height: int,
+    ) -> dict[str, Any]:
+        with self.connection() as db:
+            db.execute("BEGIN IMMEDIATE")
+            existing = self._starter(db, "request_key", draft["request_key"])
+            if existing:
+                if existing["payload_hash"] != draft["payload_hash"]:
+                    raise AppError("JOB_CONFLICT", "Request key belongs to another continuation.",
+                                   409)
+                return existing
+            row = db.execute("SELECT data FROM runs WHERE id=?", (run_id,)).fetchone()
+            if row is None:
+                raise AppError("RUN_NOT_FOUND", "Edit not found.", 404)
+            run = json.loads(row[0])
+            validate(run)
+            db.execute("INSERT INTO assets VALUES (?, 'original', ?, ?)",
+                       (draft["source_image"], width, height))
+            run.setdefault("continuation_starters", []).append(draft)
+            db.execute("UPDATE runs SET data=? WHERE id=?", (json.dumps(run), run_id))
+        return draft
 
     def next_job(self) -> dict[str, Any] | None:
         with self.connection() as db:

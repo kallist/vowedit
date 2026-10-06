@@ -11,6 +11,7 @@ jobs:
     env:
       NEXT_TELEMETRY_DISABLED: '1'
       VOWEDIT_PROVIDER: mock
+      VOWEDIT_DATA_DIR: ${{ github.workspace }}/.local/v02-ci-data
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
