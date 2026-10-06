@@ -5,7 +5,7 @@ import tempfile
 import time
 from pathlib import Path
 
-# Validate isolation before backend.api's module-level app/dotenv initialization.
+# Validate isolation before backend.api's module-level dotenv initialization.
 local = Path(os.environ["VOWEDIT_DATA_DIR"])
 if not local.is_absolute():
     raise RuntimeError("Browser validation requires an absolute isolated data root.")

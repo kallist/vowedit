@@ -26,7 +26,7 @@ $env:PYTHON_DOTENV_DISABLED = '1'
 $env:VOWEDIT_DATA_DIR = (Join-Path (Get-Location) '.local/v021-validation-data')
 $env:VOWEDIT_PROVIDER = 'mock'
 Remove-Item Env:RUNNINGHUB_API_KEY, Env:RUNNINGHUB_WORKFLOW_ID, Env:COMFYUI_BASE_URL, Env:COMFYUI_CHECKPOINT -ErrorAction SilentlyContinue
-.\.venv\Scripts\python -m uvicorn backend.api:app --host 127.0.0.1 --port 8000
+.\.venv\Scripts\python -m uvicorn backend.api:create_app --factory --host 127.0.0.1 --port 8000
 ```
 
 In a second terminal, run `npm run dev` (or `npm run build -- --webpack` then `npm run start`).
