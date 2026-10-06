@@ -15,6 +15,11 @@ class BodyLimitMiddleware:
             await self.app(scope, receive, send)
             return
         limit = MAX_BYTES + 1_000_000 if scope["path"] == "/api/assets" else 64_000
+        if (scope["method"] == "POST" and scope["path"] == "/api/editing-drafts") or (
+            scope["method"] == "PUT" and scope["path"].startswith("/api/editing-drafts/")
+            and scope["path"].count("/") == 3
+        ):
+            limit = 1024 * 1024
         body = bytearray()
         while True:
             message = await receive()

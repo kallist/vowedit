@@ -19,11 +19,13 @@ from backend.reporting import issues, report
 from backend.schemas import (
     AppError,
     Continuation,
+    CreateEditingDraft,
     CreateImportedRun,
     CreateRun,
     PrepareCandidate,
     Review,
     Selection,
+    UpdateEditingDraft,
 )
 from backend.storage import AssetStore
 
@@ -65,8 +67,160 @@ class ImageEditService:
         keeps = [self.assets.load(rule["mask"]) for rule in contract["keep"]]
         return source, change, keeps
 
+    def _validate_draft(self, source_id: str, data: dict[str, Any]) -> None:
+        source = self.repo.asset(source_id, "original")
+        self.assets.load(source_id)
+        if data["continuation_starter_id"]:
+            starter = self.draft(data["continuation_starter_id"])
+            if starter["source_image"] != source_id:
+                raise AppError("DRAFT_CONFLICT", "Starter source differs.", 409)
+        for stroke in data["strokes"]:
+            if any(p["x"] > source["width"] or p["y"] > source["height"] for p in stroke["points"]):
+                raise AppError("INVALID_INPUT", "Stroke is outside the source image.", 422)
+        for masks in (data["seed_masks"], data["checkpoint"]):
+            for asset_id in masks.values():
+                if asset_id:
+                    self.repo.asset(asset_id, "mask")
+                    if self.assets.load(asset_id).size != (source["width"], source["height"]):
+                        raise AppError("DRAFT_CONFLICT", "Mask dimensions differ.", 409)
+        for asset_id in data["raw_candidates"]:
+            if asset_id:
+                self.repo.asset(asset_id, "candidate")
+                self.assets.load(asset_id)
+        for index, asset_id in enumerate(data["effective_candidates"]):
+            if asset_id:
+                asset = self.repo.asset(asset_id)
+                if asset["kind"] == "prepared_candidate":
+                    self.normalized_raw(asset_id)
+                    metadata = self.assets.preparation(asset_id)
+                    if (
+                        metadata["source_image"] != source_id
+                        or metadata["raw_candidate_asset"] != data["raw_candidates"][index]
+                        or metadata["generation_source_label"] != data["source_label"]
+                        or metadata["preparation"]["change_mask"] != data["checkpoint"]["change"]
+                    ):
+                        raise AppError(
+                            "DRAFT_CONFLICT", "Prepared candidate contract differs.", 409
+                        )
+                elif asset["kind"] != "candidate" or asset_id != data["raw_candidates"][index]:
+                    raise AppError("DRAFT_CONFLICT", "Candidate source differs.", 409)
+                if self.assets.load(asset_id).size != (source["width"], source["height"]):
+                    raise AppError("DRAFT_CONFLICT", "Candidate dimensions differ.", 409)
+        if (
+            data["plan_fingerprint"]
+            and compile_plan(data["instruction"])["fingerprint"] != (data["plan_fingerprint"])
+        ):
+            raise AppError("PLAN_CONFLICT", "Saved plan differs.", 409)
+
+    def create_editing_draft(self, request: CreateEditingDraft) -> dict[str, Any]:
+        data = request.data.model_dump(mode="json")
+        source = str(request.source_image)
+        return self.repo.create_editing_draft(
+            str(uuid4()),
+            source,
+            data,
+            str(request.request_key),
+            fingerprint({"source_image": source, "data": data}),
+            lambda: self._validate_draft(source, data),
+        )
+
+    def update_editing_draft(
+        self,
+        draft_id: str,
+        request: UpdateEditingDraft,
+    ) -> dict[str, Any]:
+        data = request.data.model_dump(mode="json")
+
+        def validate(draft: dict[str, Any]) -> None:
+            old = draft["data"]
+            if old["continuation_starter_id"] != data["continuation_starter_id"]:
+                raise AppError("DRAFT_CONFLICT", "Starter binding is immutable.", 409)
+            changed = any(
+                old[k] != data[k]
+                for k in (
+                    "strokes",
+                    "seed_masks",
+                    "instruction",
+                    "keep_label",
+                    "threshold",
+                    "background",
+                )
+            )
+            # Contract edits must acknowledge invalidation before preparing new artifacts.
+            if changed and (
+                any(data["checkpoint"].values())
+                or data["plan_fingerprint"]
+                or any(
+                    a and self.repo.asset(a)["kind"] == "prepared_candidate"
+                    for a in data["effective_candidates"]
+                )
+            ):
+                raise AppError(
+                    "DRAFT_CONFLICT", "Clear old preparation before changing intent.", 409
+                )
+            self._validate_draft(draft["source_image"], data)
+
+        return self.repo.update_editing_draft(
+            draft_id,
+            request.expected_revision,
+            str(request.mutation_key),
+            fingerprint(request.model_dump(mode="json", exclude={"mutation_key"})),
+            data,
+            validate,
+        )
+
+    def _draft_submission(
+        self,
+        draft: dict[str, Any],
+        request: CreateRun | CreateImportedRun,
+    ) -> None:
+        data = draft["data"]
+        self._validate_draft(draft["source_image"], data)
+        checkpoint = data["checkpoint"]
+        expected = {
+            "change": {"instruction": data["instruction"], "mask": checkpoint["change"]},
+            "keep": (
+                [
+                    {
+                        "type": "manual_region",
+                        "label": data["keep_label"],
+                        "mask": checkpoint["keep"],
+                        "threshold": data["threshold"],
+                    }
+                ]
+                if checkpoint["keep"]
+                else []
+            ),
+            "background_threshold": data["threshold"] if data["background"] else None,
+        }
+        matches = (
+            draft["source_image"] == str(request.source_image)
+            and request.contract.model_dump(mode="json") == expected
+            and data["continuation_starter_id"]
+            == (str(request.continuation_draft_id) if request.continuation_draft_id else None)
+        )
+        if isinstance(request, CreateRun):
+            matches = (
+                matches
+                and data["mode"] == "generate"
+                and data["provider"] == request.provider
+                and request.candidate_mode == "strategy-v1"
+                and data["plan_fingerprint"] == request.preview_fingerprint
+            )
+        else:
+            matches = (
+                matches
+                and data["mode"] == "import"
+                and data["source_label"] == request.source_label
+                and data["effective_candidates"] == [str(a) for a in request.candidate_images]
+            )
+        if not matches:
+            raise AppError("DRAFT_CONFLICT", "Submit the last acknowledged draft contract.", 409)
+
     def create(
-        self, request: CreateRun, parent: str | None = None,
+        self,
+        request: CreateRun,
+        parent: str | None = None,
         frozen_plan: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         if request.provider not in self.providers:
@@ -130,15 +284,19 @@ class ImageEditService:
             if recipe != expected or self.assets.load(asset_id).size != source.size:
                 raise ValueError("Recipe mismatch")
             return raw.convert("RGB").resize(
-                source.size, resample=Image.Resampling.LANCZOS,
+                source.size,
+                resample=Image.Resampling.LANCZOS,
                 box=tuple(recipe["normalization"]["crop_box"]),
             )
         except (KeyError, TypeError, ValueError, AppError) as exc:
-            raise AppError("PREPARATION_UNAVAILABLE", "Aligned raw preview is unavailable.",
-                           409) from exc
+            raise AppError(
+                "PREPARATION_UNAVAILABLE", "Aligned raw preview is unavailable.", 409
+            ) from exc
 
     def _submit(
-        self, request: CreateRun | CreateImportedRun, parent: str | None = None,
+        self,
+        request: CreateRun | CreateImportedRun,
+        parent: str | None = None,
         frozen_plan: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         self.repo.asset(str(request.source_image), "original")
@@ -146,6 +304,10 @@ class ImageEditService:
         for rule in request.contract.keep:
             self.repo.asset(str(rule.mask), "mask")
         payload = request.model_dump(mode="json")
+        editing_id = payload.pop("editing_draft_id", None)
+        editing_revision = payload.pop("expected_draft_revision", None)
+        if editing_id is not None:
+            payload.update(editing_draft_id=editing_id, expected_draft_revision=editing_revision)
         # Preserve the exact V0.1 hash shape for legacy pending/ambiguous requests.
         draft_id = payload.pop("continuation_draft_id", None)
         plan = None
@@ -155,9 +317,12 @@ class ImageEditService:
             if mode == "strategy-v1":
                 replay = self.repo.submitted_run(str(request.request_key))
                 replay_plan = (replay or {}).get("candidate_plan")
-                if (replay_plan and replay_plan["fingerprint"] == preview and
-                        replay_plan["slots"][0]["base_instruction"] ==
-                        request.contract.change.instruction):
+                if (
+                    replay_plan
+                    and replay_plan["fingerprint"] == preview
+                    and replay_plan["slots"][0]["base_instruction"]
+                    == request.contract.change.instruction
+                ):
                     plan = replay_plan
                 else:
                     plan = frozen_plan or compile_plan(request.contract.change.instruction)
@@ -165,22 +330,30 @@ class ImageEditService:
                     raise AppError("PLAN_CONFLICT", "Preview changed. Review the plan again.", 409)
                 payload.update(candidate_mode=mode, candidate_plan=plan, hash_version="plan-v1")
             elif preview is not None:
-                raise AppError("INVALID_INPUT", "Legacy mode does not accept a plan fingerprint.",
-                               422)
+                raise AppError(
+                    "INVALID_INPUT", "Legacy mode does not accept a plan fingerprint.", 422
+                )
         lineage: dict[str, Any] = {}
         if draft_id:
             draft = self.draft(draft_id)
             if draft["source_image"] != str(request.source_image):
                 raise AppError("DRAFT_CONFLICT", "Original does not belong to this starter.", 409)
-            lineage = dict(continuation_draft_id=draft_id, parent_run_id=draft["parent_run_id"],
-                           parent_candidate_id=draft["parent_candidate_id"],
-                           root_run_id=draft["root_run_id"], derivation_kind="continuation")
+            lineage = dict(
+                continuation_draft_id=draft_id,
+                parent_run_id=draft["parent_run_id"],
+                parent_candidate_id=draft["parent_candidate_id"],
+                root_run_id=draft["root_run_id"],
+                derivation_kind="continuation",
+            )
             payload["continuation_draft_id"] = draft_id
         if parent:
             ancestor = self.repo.get(parent)
-            lineage = dict(parent_run_id=parent, parent_candidate_id=None,
-                           root_run_id=ancestor.get("root_run_id", parent),
-                           derivation_kind="generation_retry")
+            lineage = dict(
+                parent_run_id=parent,
+                parent_candidate_id=None,
+                root_run_id=ancestor.get("root_run_id", parent),
+                derivation_kind="generation_retry",
+            )
         source, change, keeps = self._contract_images(payload)
         validate_masks(source, change, keeps)
         candidates = []
@@ -261,7 +434,15 @@ class ImageEditService:
                 json.dumps(payload, sort_keys=True).encode()
             ).hexdigest(),
         }
-        actual_id = self.repo.submit(run, job)
+        binding = None
+        if editing_id is not None:
+            binding = (
+                editing_id,
+                int(editing_revision),
+                lambda draft: self._draft_submission(draft, request),
+            )
+            run["editing_draft_id"] = editing_id
+        actual_id = self.repo.submit(run, job, draft_binding=binding)
         self.wake.set()
         return self.repo.get(actual_id)
 
@@ -281,19 +462,26 @@ class ImageEditService:
             )
         request = CreateRun.model_validate(
             {key: run[key] for key in ("source_image", "contract", "provider", "candidate_count")}
-            | {"request_key": request_key,
-               "candidate_mode": run.get("candidate_mode", "legacy-seeds-v1"),
-               "preview_fingerprint": (run.get("candidate_plan") or {}).get("fingerprint")}
+            | {
+                "request_key": request_key,
+                "candidate_mode": run.get("candidate_mode", "legacy-seeds-v1"),
+                "preview_fingerprint": (run.get("candidate_plan") or {}).get("fingerprint"),
+            }
         )
         return self.create(request, parent=run_id, frozen_plan=run.get("candidate_plan"))
 
     def _selection_candidate(
-        self, run: dict[str, Any], request: Selection, *, continuing: bool = False,
+        self,
+        run: dict[str, Any],
+        request: Selection,
+        *,
+        continuing: bool = False,
     ) -> dict[str, Any]:
         if run["status"] not in {"completed", "partial"}:
             raise AppError("JOB_CONFLICT", "Wait for the edit to finish.", 409)
-        candidate = next((c for c in run["candidates"]
-                          if c["id"] == str(request.candidate_id)), None)
+        candidate = next(
+            (c for c in run["candidates"] if c["id"] == str(request.candidate_id)), None
+        )
         if candidate is None:
             raise AppError("CANDIDATE_MISSING", "Candidate not found.", 404)
         self.repo.asset(candidate["image"])
@@ -310,16 +498,24 @@ class ImageEditService:
         def update(run: dict[str, Any]) -> None | bool:
             # Identical desired state is a no-op even after a lost response.
             if run.get("user_selected_candidate_id") == str(request.candidate_id):
-                repeated = request.model_copy(update={"expected_selection_revision":
-                    run.get("selection_revision", 0), "confirmations": [
-                        "review_pending", "semantic_fail", "pixel_ineligible", "evaluation_missing"
-                    ]})
+                repeated = request.model_copy(
+                    update={
+                        "expected_selection_revision": run.get("selection_revision", 0),
+                        "confirmations": [
+                            "review_pending",
+                            "semantic_fail",
+                            "pixel_ineligible",
+                            "evaluation_missing",
+                        ],
+                    }
+                )
                 self._selection_candidate(run, repeated)
                 return False
             candidate = self._selection_candidate(run, request)
             run["user_selected_candidate_id"] = candidate["id"]
             run["selection_revision"] = run.get("selection_revision", 0) + 1
             return None
+
         return self.repo.mutate(run_id, update)
 
     def draft(self, draft_id: str) -> dict[str, Any]:
@@ -331,8 +527,13 @@ class ImageEditService:
         return draft
 
     def continue_edit(self, run_id: str, request: Continuation) -> dict[str, Any]:
-        payload_hash = fingerprint({"operation": "continuation-v1", "parent": run_id,
-                                    **request.model_dump(mode="json", exclude={"request_key"})})
+        payload_hash = fingerprint(
+            {
+                "operation": "continuation-v1",
+                "parent": run_id,
+                **request.model_dump(mode="json", exclude={"request_key"}),
+            }
+        )
         existing = self.repo.starter(str(request.request_key), request_key=True)
         if existing:
             if existing["payload_hash"] != payload_hash:
@@ -343,18 +544,27 @@ class ImageEditService:
         image = self.assets.load(candidate["image"])
         # Atomic file precedes transaction. Failed/racing commands may leave an orphan only.
         source_id = self.assets.save(image)
-        draft = dict(id=str(uuid4()), request_key=str(request.request_key),
-                     payload_hash=payload_hash, source_image=source_id,
-                     parent_run_id=run_id, parent_candidate_id=candidate["id"],
-                     root_run_id=run.get("root_run_id", run_id),
-                     artifact_kind="locked" if candidate.get("generation_metadata", {}).get(
-                         "preparation") else "candidate", created_at=now(),
-                     source_candidate_asset=candidate["image"],
-                     confirmed_issues=request.confirmations,
-                     source_size=list(image.size))
+        draft = dict(
+            id=str(uuid4()),
+            request_key=str(request.request_key),
+            payload_hash=payload_hash,
+            source_image=source_id,
+            parent_run_id=run_id,
+            parent_candidate_id=candidate["id"],
+            root_run_id=run.get("root_run_id", run_id),
+            artifact_kind="locked"
+            if candidate.get("generation_metadata", {}).get("preparation")
+            else "candidate",
+            created_at=now(),
+            source_candidate_asset=candidate["image"],
+            confirmed_issues=request.confirmations,
+            source_size=list(image.size),
+        )
+
         def validate(current: dict[str, Any]) -> None:
             self._selection_candidate(current, request, continuing=True)
             self.assets.load(source_id)
+
         return self.repo.register_starter(run_id, draft, validate, image.width, image.height)
 
     def retry_evaluation(self, run_id: str, request_key: str) -> dict[str, Any]:
@@ -468,8 +678,8 @@ class ImageEditService:
                                 source,
                                 change,
                                 run["candidate_plan"]["slots"][index]["effective_instruction"]
-                                if run.get("candidate_plan") else
-                                run["contract"]["change"]["instruction"],
+                                if run.get("candidate_plan")
+                                else run["contract"]["change"]["instruction"],
                                 index,
                                 4100 + index,
                                 record_provider_job,
@@ -492,7 +702,8 @@ class ImageEditService:
                                 "simulation": run["provider"] == "mock",
                             },
                             "candidate_plan": run["candidate_plan"]["slots"][index]
-                            if run.get("candidate_plan") else None,
+                            if run.get("candidate_plan")
+                            else None,
                         }
 
                         def append_candidate(

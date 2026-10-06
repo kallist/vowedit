@@ -15,9 +15,32 @@ const LocaleContext = createContext<{
   setLocale: (locale: Locale) => void;
   t: Translate;
 }>({ locale: "en", setLocale: () => {}, t: (key) => en[key] });
-export function LocaleProvider({ children }: { children: ReactNode }) {
+export type LocaleStorage = {
+  get: () => Promise<string | null>;
+  set: (locale: Locale) => Promise<void>;
+};
+export function LocaleProvider({
+  children,
+  storage,
+}: {
+  children: ReactNode;
+  storage?: LocaleStorage;
+}) {
   const [locale, updateLocale] = useState<Locale>("en");
   useEffect(() => {
+    if (storage) {
+      let live = true;
+      storage
+        .get()
+        .then((value) => {
+          if (live && (value === "en" || value === "zh-CN"))
+            updateLocale(value);
+        })
+        .catch(() => {});
+      return () => {
+        live = false;
+      };
+    }
     let preference: string | null = null;
     try {
       preference = localStorage.getItem("vowedit.locale");
@@ -31,12 +54,16 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
           ? "zh-CN"
           : "en",
     );
-  }, []);
+  }, [storage]);
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
   function setLocale(next: Locale) {
     updateLocale(next);
+    if (storage) {
+      void storage.set(next);
+      return;
+    }
     try {
       localStorage.setItem("vowedit.locale", next);
     } catch {

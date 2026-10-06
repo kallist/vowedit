@@ -364,7 +364,9 @@ def test_server_config_registers_fixed_model_without_checkpoint(tmp_path, monkey
     # Product configuration exposes names only; no origin, model graph or credential.
     from fastapi.testclient import TestClient
 
-    with TestClient(app) as client:
+    with TestClient(
+        app, base_url="http://127.0.0.1", headers={"Origin": "http://127.0.0.1:3000"}
+    ) as client:
         config = client.get("/api/config")
         assert TEST_KEY not in config.text and "runninghub.cn" not in config.text
         assert "runninghub" in config.json()["providers"]

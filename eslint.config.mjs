@@ -11,9 +11,11 @@ export default tseslint.config(
       "test-results/**",
       "playwright-report/**",
       ".local/**",
+      "extension/dist/**",
     ],
   },
   js.configs.recommended,
+  { files: ["extension/build.mjs"], languageOptions: { globals: { console: "readonly" } } },
   ...tseslint.configs.recommended,
   {
     files: ["**/*.{ts,tsx}"],

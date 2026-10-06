@@ -17,6 +17,7 @@ export default defineConfig({
   use: {
     baseURL: "http://127.0.0.1:3000",
     trace: "retain-on-failure",
+    extraHTTPHeaders: { Origin: "http://127.0.0.1:3000" },
     screenshot: "only-on-failure",
     launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
       ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
@@ -25,12 +26,13 @@ export default defineConfig({
   webServer: [
     {
       command: `"${python}" -m uvicorn backend.tests.e2e_app:app --host 127.0.0.1 --port ${apiPort}`,
-      url: `http://127.0.0.1:${apiPort}/api/config`,
+      url: `http://127.0.0.1:${apiPort}/api/capabilities`,
       reuseExistingServer: false,
       timeout: 30000,
       env: {
         VOWEDIT_DATA_DIR: path.resolve(".local/v02-browser-data"),
         VOWEDIT_PROVIDER: "mock",
+        PYTHON_DOTENV_DISABLED: "1",
       },
     },
     {

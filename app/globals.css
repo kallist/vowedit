@@ -1,15 +1,4 @@
-:root {
-  --paper: #f8f7f3;
-  --ink: #262724;
-  --muted: #6a6c64;
-  --line: #d9d9d0;
-  --warm: #b5472c;
-  --warm-soft: #f5e7de;
-  --blue: #315d9a;
-  --white: #fff;
-  --serif: Georgia, "Times New Roman", serif;
-  --sans: Arial, Helvetica, "Microsoft YaHei", "PingFang SC", sans-serif;
-}
+@import "../frontend/tokens.css";
 
 * {
   box-sizing: border-box;

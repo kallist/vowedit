@@ -237,7 +237,9 @@ def test_stale_job_cannot_regress_state(client, service, images):
 
 def test_restart_recovers_queued_and_interruptions(tmp_path, images):
     service = ImageEditService(tmp_path)
-    client = TestClient(create_app(service))  # intentionally no worker lifespan
+    client = TestClient(
+        create_app(service), headers={"Origin": "http://127.0.0.1:3000"}
+    )  # intentionally no worker lifespan
     data = payload(client, images)
     run = service.create(CreateRun.model_validate(data))
     service.repo.mutate(run["id"], lambda r: None, job_id=run["job_id"], status="generating")
@@ -245,7 +247,9 @@ def test_restart_recovers_queued_and_interruptions(tmp_path, images):
     assert service.repo.get(run["id"])["status"] == "failed_generation"
     data["request_key"] = str(uuid4())
     queued = service.create(CreateRun.model_validate(data))
-    with TestClient(create_app(ImageEditService(tmp_path))) as restarted:
+    with TestClient(
+        create_app(ImageEditService(tmp_path)), headers={"Origin": "http://127.0.0.1:3000"}
+    ) as restarted:
         assert wait_run(restarted, queued["id"])["status"] == "completed"
 
 

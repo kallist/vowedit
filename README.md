@@ -2,6 +2,25 @@
 
 **Change what you ask. Keep what you don’t.**
 
+## V0.2.1 Browser Side Panel
+
+**Generate anywhere. Re-edit beside your AI.** The packaged MV3 companion is a human-operated
+browser Side Panel. Hand over authorized PNG/JPEG file bytes by paste, drop or upload, paint
+CHANGE/KEEP, explicitly generate with Mock or import three candidates, inspect evidence, then adopt.
+It does not collect host-page content or fetch image URLs. No ChatGPT/Codex host adapter is installed.
+
+The extension pairs through an explicit local workbench approval and a manually transferred one-time
+code. Its loopback client uses a bound bearer credential; protected images are fetched as Blob URLs.
+A minimal SQLite `editing_drafts` table stores unfinished edits with revision/CAS and atomic Run
+submission. **Fine editing in full workbench** flushes the saved draft before opening the same ID.
+Only server-acknowledged snapshots survive closing; an in-flight browser write is not guaranteed.
+
+Status: **IMPLEMENTED**, **TESTED WITH OFFLINE/MOCK** and **TESTED IN AUTOMATED CHROMIUM EXTENSION**.
+Actual Google Chrome and Microsoft Edge toolbar/native-panel QA is **NOT TESTED**; V0.2.1 READY is
+**NO** until the required Chrome product path is verified. Store readiness is **NO**.
+See [setup, pairing and privacy](docs/EXTENSION.md), [validation](docs/V0.2.1-VALIDATION.md) and
+[second-pass self-review](docs/V0.2.1-REVIEW.md).
+
 ## V0.2 Re-edit Workbench
 
 The studio previews three deterministic modification strategies (restrained, balanced, stronger),
@@ -21,14 +40,15 @@ confirmation as repair material; no verdict becomes PASS. Reload restores the sa
 Children retain parent/candidate/root lineage, and history links back to the parent.
 Adoption, continuation and starter recovery submit no generation or evaluation jobs.
 
-SQLite schema is unchanged: starters are immutable entries in existing run JSON, transactionally
+In V0.2, SQLite schema was unchanged: starters are immutable entries in existing run JSON, transactionally
 registered with cloned original assets. Request-key replay, selection revision conflicts and file/DB
 failure boundaries are covered by isolated fixtures. Existing user data is not used for validation.
 Before first upgrading a real installation, stop services and back up the database/WAL and assets;
 do not run old and new binaries against the same directory. Rollback means stopping and restoring
 that backup, not assuming older binaries understand new metadata.
 
-Browser Companion V0.2.1 and MCP/Agent V0.3 remain roadmap work, **NOT IMPLEMENTED**.
+V0.2.1 adds mutable editing drafts alongside those immutable starters. MCP/Agent V0.3 remains
+roadmap work, **NOT IMPLEMENTED**.
 Real RunningHub strategy semantics and real ComfyUI generation are **NOT TESTED** in V0.2.
 See [V0.2 validation](docs/V0.2-VALIDATION.md) and [second-pass self-review](docs/V0.2-REVIEW.md).
 
@@ -187,6 +207,7 @@ are **not** automatically assessed. Receipts expose the formula and accept a sav
 ```powershell
 $env:VOWEDIT_DATA_DIR = (Join-Path (Get-Location) '.local/v02-validation-data')
 $env:VOWEDIT_PROVIDER = 'mock'
+$env:PYTHON_DOTENV_DISABLED = '1'
 .\.venv\Scripts\python -m ruff check backend scripts
 .\.venv\Scripts\python -m mypy backend --exclude backend/tests
 .\.venv\Scripts\python -m pytest -q
@@ -198,6 +219,10 @@ npm audit --audit-level=high
 npm run build -- --webpack
 npx playwright install chromium
 npm run e2e
+npm run extension:typecheck
+npm run extension:build
+npm run extension:test
+npm run extension:e2e
 ```
 
 E2E starts an isolated test API with deterministic provider faults and a production Next.js server;
@@ -217,7 +242,8 @@ local success does not establish hosted CI success.
 
 ## Limitations
 
-Single-user local process, no auth. PNG/JPEG only, 10 MB, each side 32–1536 pixels. One painted KEEP
+Single-user local process with paired extension authentication; no multi-user account system.
+PNG/JPEG only, 10 MB, each side 32–1536 pixels. One painted KEEP
 region in the UI (multiple regions supported in the API). Mean pixel similarity can dilute small
 important edits and penalize harmless shifts. The default 98 threshold and 2% change gate are heuristics.
 Real RunningHub generation is **TESTED** with retained semantic failures. Local ComfyUI generation
@@ -233,7 +259,8 @@ external jacket case does not establish success on the three broader creative de
 
 Validate the three [demo slots](demo-assets/README.md) with consented creative assets and real model
 runs, collect human notes, and compare heuristics against that evidence. Video/Motion is future-only.
-V0.2.1 paired browser extension and V0.3 authenticated MCP with explicit approvals are **NOT IMPLEMENTED**.
+V0.2.1 actual Chrome/Edge acceptance is pending. V0.3 authenticated MCP with explicit approvals
+is **NOT IMPLEMENTED**.
 Docker is not applicable to this delivery; no GPU stack or extra infrastructure was introduced.
 
 ## Security
@@ -247,3 +274,11 @@ metadata is stripped, output files get UUID names, and filesystem assets stay ou
 Host/Origin checks restrict browser access. Keys remain server-side; raw provider errors are never
 returned or logged. Cloud image downloads use an allowlisted HTTPS host with no credential forwarding
 or redirects. The secret-pattern CI check is a small hygiene gate, not a complete security scanner.
+
+Private requests with no bearer now require an exact trusted local Web Origin, or a same-site/
+same-origin browser GET with loopback Host. Anonymous requests without both Origin and trusted
+Fetch Metadata are rejected. Non-browser local API clients must send an explicit trusted local Origin
+or a paired credential. Invalid declared extension authority never falls back to the local Web path.
+Pairing grants access to local history and editing commands, including explicitly requested generation
+with a configured real provider. The digest registry is separate from Run/receipt/domain persistence.
+Windows registry-file protection uses inherited filesystem ACLs; POSIX mode 0600 is not a Windows ACL.

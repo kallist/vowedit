@@ -14,6 +14,12 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.body_limit import BodyLimitMiddleware
+from backend.browser_pairing import (
+    LOCAL_ORIGINS,
+    WEB_ORIGINS,
+    BrowserPairings,
+    extension_route,
+)
 from backend.candidate_plans import compile_plan
 from backend.providers import LocalComfyUIImageEditProvider
 from backend.reporting import report
@@ -21,13 +27,17 @@ from backend.runninghub import RunningHubImageEditProvider
 from backend.schemas import (
     AppError,
     Continuation,
+    CreateEditingDraft,
     CreateImportedRun,
     CreateRun,
+    PairingBootstrap,
+    PairingExchange,
     PrepareCandidate,
     PreviewPlan,
     Retry,
     Review,
     Selection,
+    UpdateEditingDraft,
 )
 from backend.services import ImageEditService
 from backend.storage import MAX_BYTES
@@ -46,6 +56,10 @@ def create_app(service: ImageEditService | None = None) -> FastAPI:
 
     app = FastAPI(title="VowEdit", lifespan=lifespan)
     app.state.service = service or ImageEditService(Path(os.getenv("VOWEDIT_DATA_DIR", "data")))
+    pairing = BrowserPairings(
+        app.state.service.repo.path.parent / ".security/browser-pairings.json"
+    )
+    app.state.pairings = pairing
     if service is None and os.getenv("COMFYUI_BASE_URL") and os.getenv("COMFYUI_CHECKPOINT"):
         app.state.service.providers["comfyui"] = LocalComfyUIImageEditProvider(
             os.environ["COMFYUI_BASE_URL"],
@@ -64,25 +78,120 @@ def create_app(service: ImageEditService | None = None) -> FastAPI:
             timeout=float(os.getenv("RUNNINGHUB_TIMEOUT_SECONDS", "180")),
         )
     app.add_middleware(
-        TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "testserver"]
+        TrustedHostMiddleware,
+        allowed_hosts=["127.0.0.1", "localhost"] + (["testserver"] if service else []),
     )
     app.add_middleware(BodyLimitMiddleware)
 
     @app.middleware("http")
     async def local_boundary(request: Request, call_next: Any) -> Any:
         origin = request.headers.get("origin")
-        allowed = {
-            "http://localhost:3000",
-            "http://127.0.0.1:3000",
-            "http://localhost:8000",
-            "http://127.0.0.1:8000",
-        }
-        if (origin and origin not in allowed) or request.headers.get(
-            "sec-fetch-site"
-        ) == "cross-site":
-            return JSONResponse(
-                {"error": {"code": "ORIGIN_REJECTED", "message": "Local access only."}}, 403
+        client_origin = request.headers.get("x-vowedit-extension-origin")
+        authorization = request.headers.get("authorization")
+        path, method = request.url.path, request.method
+        cors_origin = None
+        try:
+            if request.url.hostname not in {"127.0.0.1", "localhost"} | (
+                {"testserver"} if service else set()
+            ):
+                raise AppError("HOST_REJECTED", "Local access only.", 400)
+            if method == "OPTIONS":
+                requested = request.headers.get("access-control-request-method", "")
+                headers = {
+                    h.strip().lower()
+                    for h in request.headers.get("access-control-request-headers", "").split(",")
+                    if h.strip()
+                }
+                exchange = path == "/api/browser-pairing/exchange"
+                from backend.browser_pairing import EXTENSION
+
+                public = (
+                    path == "/api/capabilities"
+                    and requested == "GET"
+                    and EXTENSION.fullmatch(origin or "") is not None
+                )
+                valid = public or pairing.can_preflight(origin or "", exchange=exchange)
+                route = (
+                    (exchange and requested == "POST") or public or extension_route(requested, path)
+                )
+                if (
+                    not valid
+                    or not route
+                    or not headers.issubset(
+                        {"authorization", "content-type", "x-vowedit-extension-origin"}
+                    )
+                ):
+                    raise AppError("ORIGIN_REJECTED", "Local access only.", 403)
+                response = Response(
+                    status_code=204,
+                    headers={
+                        "Access-Control-Allow-Origin": origin or "",
+                        "Access-Control-Allow-Methods": requested,
+                        "Access-Control-Allow-Headers": ", ".join(sorted(headers)),
+                        "Vary": "Origin",
+                        "Cache-Control": "no-store",
+                    },
+                )
+                return response
+            if path == "/api/browser-pairing/exchange":
+                from backend.browser_pairing import extension_origin
+
+                extension_origin(origin or "")
+                if (
+                    method != "POST"
+                    or client_origin != origin
+                    or authorization is not None
+                    or request.headers.get("content-type", "").split(";")[0] != "application/json"
+                ):
+                    raise AppError("PAIRING_REFUSED", "Pair again.", 403)
+                cors_origin = origin
+            elif (
+                path == "/api/capabilities"
+                and method == "GET"
+                and authorization is None
+                and client_origin is None
+            ):
+                if origin and origin not in LOCAL_ORIGINS:
+                    from backend.browser_pairing import extension_origin
+
+                    extension_origin(origin)
+                    cors_origin = origin
+            elif (
+                authorization is not None
+                or client_origin is not None
+                or (origin and origin.startswith("chrome-extension:"))
+            ):
+                if not authorization or not authorization.startswith("Bearer "):
+                    raise AppError("PAIRING_REFUSED", "Pair again.", 401)
+                request.state.pairing_id = pairing.authenticate(
+                    authorization[7:], client_origin or "", origin
+                )
+                if not extension_route(method, path):
+                    raise AppError("ORIGIN_REJECTED", "Command is not permitted.", 403)
+                cors_origin = origin
+            else:
+                site = request.headers.get("sec-fetch-site")
+                if (
+                    (origin is not None and origin not in LOCAL_ORIGINS)
+                    or (site is not None and site not in {"same-origin", "same-site"})
+                    or (
+                        origin is None
+                        and not (method == "GET" and site in {"same-origin", "same-site"})
+                    )
+                ):
+                    raise AppError("ORIGIN_REJECTED", "Local access only.", 403)
+                if path.startswith("/api/browser-pairing") and (
+                    origin not in WEB_ORIGINS
+                    or request.headers.get("x-vowedit-local") != "1"
+                    or request.headers.get("content-type", "").split(";")[0] != "application/json"
+                ):
+                    raise AppError("ORIGIN_REJECTED", "Approve from the local studio.", 403)
+        except AppError as exc:
+            response = JSONResponse(
+                {"error": {"code": exc.code, "message": exc.message}}, exc.status
             )
+            response.headers["Cache-Control"] = "no-store"
+            return response
         try:
             size = int(request.headers.get("content-length", "0"))
         except ValueError:
@@ -94,6 +203,9 @@ def create_app(service: ImageEditService | None = None) -> FastAPI:
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Cache-Control"] = "no-store"
+        if cors_origin:
+            response.headers["Access-Control-Allow-Origin"] = cors_origin
+            response.headers["Vary"] = "Origin"
         return response
 
     @app.exception_handler(AppError)
@@ -127,6 +239,58 @@ def create_app(service: ImageEditService | None = None) -> FastAPI:
 
     def svc() -> ImageEditService:
         return app.state.service  # type: ignore[no-any-return]
+
+    @app.get("/api/capabilities")
+    def capabilities() -> dict[str, Any]:
+        return {
+            "api_version": "side-panel-v1",
+            "features": [
+                "editing-drafts-v1",
+                "candidate-plans-v1",
+                "browser-pairing-v1",
+                "report-v2",
+                "continuations-v1",
+            ],
+            "limits": {"max_upload_mb": 10, "max_image_side": 1536},
+        }
+
+    @app.post("/api/browser-pairing/bootstrap")
+    def bootstrap(body: PairingBootstrap) -> dict[str, Any]:
+        return pairing.bootstrap(body.origin)
+
+    @app.post("/api/browser-pairing/exchange")
+    def exchange(body: PairingExchange, request: Request) -> dict[str, Any]:
+        if body.origin != request.headers.get("origin"):
+            raise AppError("PAIRING_REFUSED", "Pair again.", 403)
+        return pairing.exchange(body.code, body.origin)
+
+    @app.get("/api/browser-pairings")
+    def list_pairings() -> list[dict[str, Any]]:
+        return pairing.list()
+
+    @app.delete("/api/browser-pairings/{pairing_id}")
+    def revoke(pairing_id: UUID) -> dict[str, bool]:
+        pairing.revoke(str(pairing_id))
+        return {"revoked": True}
+
+    @app.delete("/api/browser-pairing/current")
+    def unpair(request: Request) -> dict[str, bool]:
+        if not hasattr(request.state, "pairing_id"):
+            raise AppError("PAIRING_REFUSED", "Pair again.", 403)
+        pairing.revoke(request.state.pairing_id)
+        return {"revoked": True}
+
+    @app.post("/api/editing-drafts", status_code=201)
+    def create_editing_draft(request: CreateEditingDraft) -> dict[str, Any]:
+        return svc().create_editing_draft(request)
+
+    @app.get("/api/editing-drafts/{draft_id}")
+    def get_editing_draft(draft_id: UUID) -> dict[str, Any]:
+        return svc().repo.editing_draft(str(draft_id))
+
+    @app.put("/api/editing-drafts/{draft_id}")
+    def update_editing_draft(draft_id: UUID, request: UpdateEditingDraft) -> dict[str, Any]:
+        return svc().update_editing_draft(str(draft_id), request)
 
     @app.get("/api/config")
     def config() -> dict[str, Any]:
@@ -205,8 +369,16 @@ def create_app(service: ImageEditService | None = None) -> FastAPI:
                 key: run[key]
                 for key in ("id", "status", "created_at", "source_image", "contract", "provider")
             }
-            | {key: run.get(key) for key in ("source_label", "parent_run_id",
-                 "parent_candidate_id", "root_run_id", "derivation_kind")}
+            | {
+                key: run.get(key)
+                for key in (
+                    "source_label",
+                    "parent_run_id",
+                    "parent_candidate_id",
+                    "root_run_id",
+                    "derivation_kind",
+                )
+            }
             for run in svc().repo.history()
         ]
 

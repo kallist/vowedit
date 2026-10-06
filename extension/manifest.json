@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "VowEdit — Re-edit beside your AI",
+  "description": "Human-operated local image boundaries. Offline Mock, no analytics or automatic page collection.",
+  "version": "0.2.1",
+  "minimum_chrome_version": "116",
+  "permissions": ["sidePanel", "storage", "clipboardWrite"],
+  "host_permissions": ["http://127.0.0.1/*"],
+  "action": {
+    "default_title": "Open VowEdit side panel",
+    "default_icon": { "16": "icons/16.png", "32": "icons/32.png" }
+  },
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "background": { "service_worker": "service-worker.js", "type": "module" },
+  "side_panel": { "default_path": "sidepanel.html" },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; frame-src 'none'; connect-src 'self' http://127.0.0.1:*; img-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; base-uri 'none'"
+  }
+}
