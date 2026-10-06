@@ -3,7 +3,6 @@ from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
 
 import pytest
-from fastapi.testclient import TestClient
 
 import backend.services as service_module
 from backend.api import create_app
@@ -11,7 +10,7 @@ from backend.persistence import Repository
 from backend.providers import MockImageEditProvider
 from backend.schemas import AppError, CreateRun
 from backend.services import ImageEditService
-from backend.tests.conftest import payload, png
+from backend.tests.conftest import TestClient, payload, png
 
 
 def wait_run(client, run_id):

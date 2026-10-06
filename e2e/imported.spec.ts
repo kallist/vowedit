@@ -1,6 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 import fs from "node:fs/promises";
 
+test.beforeEach(async ({page}) => {
+  const bootstrap=await page.request.post('/api/browser-session',{headers:{Origin:'http://127.0.0.1:3000'}});
+  expect(bootstrap.ok()).toBe(true);
+});
+
 const fixture = (letter: string) =>
   `public/fixtures/imported/candidate-${letter.toLowerCase()}.png`;
 async function prepare(page: Page) {

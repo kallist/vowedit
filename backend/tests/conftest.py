@@ -2,7 +2,7 @@ import io
 from uuid import uuid4
 
 import pytest
-from fastapi.testclient import TestClient
+from fastapi.testclient import TestClient as BaseClient
 from PIL import Image, ImageDraw
 
 from backend.api import create_app
@@ -13,6 +13,17 @@ def png(image):
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
     return buffer.getvalue()
+
+
+class TestClient(BaseClient):
+    __test__ = False
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.headers["Origin"] = "http://127.0.0.1:3000"
+        response = self.post("/api/browser-session")
+        assert response.status_code == 200, response.text
+        self.headers["X-Vowedit-CSRF"] = response.json()["csrf"]
 
 
 @pytest.fixture

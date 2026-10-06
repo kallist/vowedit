@@ -29,8 +29,10 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 30000,
       env: {
-        VOWEDIT_DATA_DIR: path.resolve(".local/v02-browser-data"),
+        VOWEDIT_DATA_DIR: path.resolve(".local/v03-validation-data/browser"),
         VOWEDIT_PROVIDER: "mock",
+        PYTHON_DOTENV_DISABLED: "1",
+        COMFYUI_BASE_URL: "", COMFYUI_CHECKPOINT: "", RUNNINGHUB_API_KEY: "", RUNNINGHUB_WORKFLOW_ID: "",
       },
     },
     {

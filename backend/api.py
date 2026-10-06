@@ -13,6 +13,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, Response
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from backend.agent_api import install_agent_routes
+from backend.agent_services import web_port
 from backend.body_limit import BodyLimitMiddleware
 from backend.candidate_plans import compile_plan
 from backend.providers import LocalComfyUIImageEditProvider
@@ -67,13 +69,14 @@ def create_app(service: ImageEditService | None = None) -> FastAPI:
         TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "testserver"]
     )
     app.add_middleware(BodyLimitMiddleware)
+    install_agent_routes(app)
 
     @app.middleware("http")
     async def local_boundary(request: Request, call_next: Any) -> Any:
         origin = request.headers.get("origin")
         allowed = {
-            "http://localhost:3000",
-            "http://127.0.0.1:3000",
+            f"http://localhost:{web_port()}",
+            f"http://127.0.0.1:{web_port()}",
             "http://localhost:8000",
             "http://127.0.0.1:8000",
         }
@@ -91,6 +94,22 @@ def create_app(service: ImageEditService | None = None) -> FastAPI:
             return JSONResponse(
                 {"error": {"code": "INVALID_IMAGE", "message": "Upload too large."}}, 413
             )
+        try:
+            public = request.url.path in {
+                "/api/config", "/api/agent/capabilities", "/api/browser-session"
+            }
+            # Even public URLs never downgrade an invalid/revoked bearer to anonymous.
+            if not public or request.headers.get("authorization") is not None:
+                principal = app.state.auth.principal(request)
+                request.state.principal = principal
+                if principal != "user" and (
+                    not request.url.path.startswith("/api/agent/") or
+                    request.url.path == "/api/browser-session"
+                ):
+                    raise AppError("FORBIDDEN_RESOURCE", "This operation requires VowEdit Web UI.",
+                                   403)
+        except AppError as exc:
+            return JSONResponse({"error": {"code": exc.code, "message": exc.message}}, exc.status)
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Cache-Control"] = "no-store"

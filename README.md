@@ -2,6 +2,21 @@
 
 **Change what you ask. Keep what you don’t.**
 
+## V0.3 Agent Control
+
+Nine typed stdio MCP tools share recoverable drafts with the existing Web editor. Agent
+proposals leave the saved contract unchanged. Generation, adoption, continuation and retries
+remain pending until a separate trusted Web decision. Three deterministic strategies still
+use the existing service, provider adapters and single-worker job queue.
+
+Open the exact `/drafts/<UUID>` or `/edit/<UUID>` link to review original pixels, boundaries,
+intent, provider disclosure and results. Saved revisions are server-acknowledged; conflicting
+local edits remain visible until explicitly discarded. SQLite gains four additive tables.
+See [local setup and API](docs/AGENT.md), [validation](docs/V0.3-VALIDATION.md) and
+[self-review](docs/V0.3-REVIEW.md). Actual Codex CLI 0.160.0 stdio calls and the corresponding
+automated Web Mock path were exercised. This is a Web fallback. Embedded UI, real V0.3
+RunningHub/ComfyUI generation and human-operated confirmation are NOT TESTED.
+
 ## V0.2 Re-edit Workbench
 
 The studio previews three deterministic modification strategies (restrained, balanced, stronger),
@@ -28,7 +43,8 @@ Before first upgrading a real installation, stop services and back up the databa
 do not run old and new binaries against the same directory. Rollback means stopping and restoring
 that backup, not assuming older binaries understand new metadata.
 
-Browser Companion V0.2.1 and MCP/Agent V0.3 remain roadmap work, **NOT IMPLEMENTED**.
+Browser Companion V0.2.1 remains roadmap work, **NOT IMPLEMENTED**. V0.3 above is additive;
+the V0.2 evidence below remains historical.
 Real RunningHub strategy semantics and real ComfyUI generation are **NOT TESTED** in V0.2.
 See [V0.2 validation](docs/V0.2-VALIDATION.md) and [second-pass self-review](docs/V0.2-REVIEW.md).
 

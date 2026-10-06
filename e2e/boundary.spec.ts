@@ -1,6 +1,11 @@
 import { expect, test } from "@playwright/test";
 import fs from "node:fs/promises";
 
+test.beforeEach(async ({page}) => {
+  const bootstrap=await page.request.post('/api/browser-session',{headers:{Origin:'http://127.0.0.1:3000'}});
+  expect(bootstrap.ok()).toBe(true);
+});
+
 for (const width of [1440, 768, 390]) {
   test(`explicit boundary preparation then evaluation at ${width}`, async ({
     page,
@@ -166,7 +171,7 @@ for (const width of [1440, 768, 390]) {
         .getByRole("button", { name: "Before / After", exact: true })
         .click();
       await page.screenshot({
-        path: "docs/screenshots/v02/locked-human-fail.png",
+        path: ".local/v03-evidence/v02/locked-human-fail.png",
         fullPage: true,
       });
       // The UI must never overlay mismatched raw coordinates when the recipe is unavailable.

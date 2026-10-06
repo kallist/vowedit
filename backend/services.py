@@ -450,6 +450,19 @@ class ImageEditService:
             )
             source, change, keeps = self._contract_images(run)
             if stage == "generating":
+                if run.get("agent_binding"):
+                    from backend.agent_services import AgentService, provider_binding
+
+                    actual = provider_binding(self, run["provider"])
+                    approved = run["agent_binding"]
+                    if any(approved.get(k) != v for k, v in actual.items()) or any(
+                        AgentService(self).pixel_hash(i) != digest
+                        for i, digest in approved["source_and_masks"].items()
+                    ):
+                        raise AppError(
+                            "APPROVAL_CONFIG_CHANGED",
+                            "Provider configuration changed; no approved data was sent.",
+                        )
                 started = time.monotonic()
                 for index in range(3):
                     if self.stop.is_set():
@@ -609,11 +622,14 @@ class ImageEditService:
             if isinstance(exc, AppError) and exc.code == "JOB_CONFLICT":
                 return
             terminal = "failed_evaluation" if stage == "evaluating" else "failed_generation"
+            config_changed = isinstance(exc, AppError) and exc.code == "APPROVAL_CONFIG_CHANGED"
             self.repo.mutate(
                 run_id,
                 lambda r: r.update(
                     error={
-                        "code": "EVALUATION_FAILED" if stage == "evaluating" else "STORAGE_FAILED",
+                        "code": "APPROVAL_CONFIG_CHANGED" if config_changed else (
+                            "EVALUATION_FAILED" if stage == "evaluating" else "STORAGE_FAILED"
+                        ),
                         "message": "The job could not finish. Saved images are preserved.",
                     }
                 ),

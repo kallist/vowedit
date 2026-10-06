@@ -1,0 +1,221 @@
+{
+  "evidence_version": "agent-v03-actual-host-v1",
+  "date": "2026-10-06",
+  "host": {
+    "name": "Codex CLI",
+    "version": "0.160.0",
+    "transport": "stdio",
+    "configuration": "ephemeral process-local; global user configuration unchanged",
+    "initialized": true,
+    "mcp_apps_html_advertised": false
+  },
+  "source": {
+    "fixture": "public/fixtures/original.png",
+    "file_sha256": "7efc7b005d8989d21561a87a9dba5a8e8058eebc7a8b7c1870a68cd8936ccef2",
+    "provenance": "Project-owned deterministic fixture. Initial actual host created awaiting-image draft; browser fixture uploaded it. Fresh draft reused only that authorized source UUID.",
+    "mask_geometry": "Manual source-pixel rectangles: CHANGE [100,100,160,160], KEEP [0,0,40,40]. Face is a fixture label, not semantic detection."
+  },
+  "draft_id": "3fa1bd21-cdb7-479f-997c-b7a4f209483a",
+  "proposal_id": "c8a0e120-3c0b-4189-9b04-8336c2d68342",
+  "generation_action_id": "03ba32bb-d7a9-4f17-a469-ad1c36923d6c",
+  "run_id": "8811b49d-276e-4226-b19f-85ea2fc9b8ea",
+  "job_id": "33da010c-84fd-4ba1-9a84-1a0b0db44fce",
+  "observed_result": {
+    "status": "completed",
+    "candidate_count": 3,
+    "provider": "mock",
+    "simulation": true,
+    "manual_verdicts": [
+      "pending",
+      "pending",
+      "pending"
+    ],
+    "adopted_candidate_id": null,
+    "semantic_success": "NOT CLAIMED"
+  },
+  "activity": [
+    {
+      "cursor": 23,
+      "event": "action_requested",
+      "actor": "agent",
+      "action_id": "03ba32bb-d7a9-4f17-a469-ad1c36923d6c"
+    },
+    {
+      "cursor": 24,
+      "event": "user_accepted",
+      "actor": "user",
+      "action_id": "03ba32bb-d7a9-4f17-a469-ad1c36923d6c"
+    },
+    {
+      "cursor": 25,
+      "event": "generation_queued",
+      "actor": "system",
+      "action_id": "03ba32bb-d7a9-4f17-a469-ad1c36923d6c"
+    },
+    {
+      "cursor": 26,
+      "event": "provider_response_observed",
+      "actor": "provider",
+      "action_id": null
+    },
+    {
+      "cursor": 27,
+      "event": "candidate_saved",
+      "actor": "system",
+      "action_id": null
+    },
+    {
+      "cursor": 28,
+      "event": "provider_response_observed",
+      "actor": "provider",
+      "action_id": null
+    },
+    {
+      "cursor": 29,
+      "event": "candidate_saved",
+      "actor": "system",
+      "action_id": null
+    },
+    {
+      "cursor": 30,
+      "event": "provider_response_observed",
+      "actor": "provider",
+      "action_id": null
+    },
+    {
+      "cursor": 31,
+      "event": "candidate_saved",
+      "actor": "system",
+      "action_id": null
+    },
+    {
+      "cursor": 32,
+      "event": "evaluation_started",
+      "actor": "system",
+      "action_id": null
+    },
+    {
+      "cursor": 33,
+      "event": "evaluation_completed",
+      "actor": "system",
+      "action_id": null
+    }
+  ],
+  "actual_tool_calls": [
+    {
+      "phase": "fresh",
+      "tool": "vowedit_get_capabilities",
+      "error_code": null
+    },
+    {
+      "phase": "fresh",
+      "tool": "vowedit_create_edit",
+      "error_code": null
+    },
+    {
+      "phase": "fresh",
+      "tool": "vowedit_propose_contract",
+      "error_code": null
+    },
+    {
+      "phase": "fresh",
+      "tool": "vowedit_get_edit",
+      "error_code": null
+    },
+    {
+      "phase": "freshrequest",
+      "tool": "vowedit_get_edit",
+      "error_code": null
+    },
+    {
+      "phase": "freshrequest",
+      "tool": "vowedit_get_edit",
+      "error_code": null
+    },
+    {
+      "phase": "freshrequest",
+      "tool": "vowedit_request_action",
+      "error_code": null
+    },
+    {
+      "phase": "freshrequest",
+      "tool": "vowedit_get_edit",
+      "error_code": null
+    },
+    {
+      "phase": "freshreport",
+      "tool": "vowedit_get_activity",
+      "error_code": null
+    },
+    {
+      "phase": "freshreport",
+      "tool": "vowedit_get_run",
+      "error_code": null
+    },
+    {
+      "phase": "freshreport",
+      "tool": "vowedit_get_report",
+      "error_code": null
+    },
+    {
+      "phase": "freshreport",
+      "tool": "vowedit_open_ui",
+      "error_code": null
+    },
+    {
+      "phase": "freshreport",
+      "tool": "vowedit_get_activity",
+      "error_code": null
+    },
+    {
+      "phase": "freshreport",
+      "tool": "vowedit_get_activity",
+      "error_code": null
+    },
+    {
+      "phase": "recheck",
+      "tool": "vowedit_get_capabilities",
+      "error_code": null
+    },
+    {
+      "phase": "recheck",
+      "tool": "vowedit_get_activity",
+      "error_code": null
+    },
+    {
+      "phase": "recheck",
+      "tool": "vowedit_get_report",
+      "error_code": null
+    },
+    {
+      "phase": "recheck",
+      "tool": "vowedit_get_run",
+      "error_code": null
+    }
+  ],
+  "authorized_resources_fetched": [
+    "vowedit://drafts/3fa1bd21-cdb7-479f-997c-b7a4f209483a",
+    "vowedit://runs/8811b49d-276e-4226-b19f-85ea2fc9b8ea/report"
+  ],
+  "web": {
+    "driver": "Playwright Chromium; explicit en-US; separate automated browser fixture",
+    "decisions": "Accept contract and confirm Mock generation clicked in Web; no genuine human review claimed",
+    "observed": "Exact draft and Run, original/masks/intent/strategies, completed candidate comparison, slider, Ghost and Edit Receipt",
+    "screenshots": [
+      "accepted-contract.png",
+      "mock-result-ghost-receipt.png"
+    ],
+    "opener": "Owner fixture used --no-open; actual open_ui returned not_requested. OS opener visibility is NOT TESTED."
+  },
+  "restart": "Latest actual Codex re-read after API restart recovered same Run/job/candidates and linked approval activity",
+  "embedded_ui": {
+    "implemented": false,
+    "tested": false,
+    "condition": "Selected actual initialization did not advertise io.modelcontextprotocol/ui HTML MIME support. Authorized text resource fetch succeeded; no HTML bridge/rendering claim."
+  },
+  "real_providers": {
+    "runninghub": "NOT TESTED",
+    "comfyui": "NOT TESTED"
+  },
+  "runtime_after_validation": "Temporary services stopped and isolated credentials/database cleaned. UUIDs are historical controlled-run evidence, not a live deployment."
+}
