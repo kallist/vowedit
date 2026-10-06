@@ -35,6 +35,31 @@ export type Evaluation = {
   warnings: string[];
   weights: { protected: number; background: number };
   minimum_change: number;
+  regions: { label: string; type: string; threshold: number; score: number }[];
+};
+export type PlanSlot = {
+  index: number;
+  seed: number;
+  strategy_id: "safe" | "balanced" | "bold";
+  base_instruction: string;
+  strategy_directive: string;
+  effective_instruction: string;
+  template_version: string;
+};
+export type CandidatePlan = {
+  mode: "strategy-v1";
+  fingerprint: string;
+  template_version: string;
+  directive_language: "en";
+  slots: PlanSlot[];
+};
+export type Starter = {
+  id: string;
+  source_image: string;
+  source_size: [number, number];
+  parent_run_id: string;
+  parent_candidate_id: string;
+  artifact_kind: string;
 };
 export type Candidate = {
   id: string;
@@ -47,6 +72,7 @@ export type Candidate = {
   seed: number | null;
   generation_metadata?: Partial<PreparationMetadata>;
   manual_review: { verdict: "pending" | "pass" | "fail"; notes: string };
+  candidate_plan?: PlanSlot | null;
 };
 export type Run = {
   id: string;
@@ -64,6 +90,14 @@ export type Run = {
   failures: { index: number; code: string; message: string }[];
   created_at: string;
   generation_seconds?: number;
+  candidate_mode?: string;
+  candidate_plan?: CandidatePlan | null;
+  user_selected_candidate_id?: string | null;
+  selection_revision?: number;
+  parent_run_id?: string | null;
+  parent_candidate_id?: string | null;
+  root_run_id?: string;
+  derivation_kind?: string | null;
 };
 export const assetUrl = (id: string) => `/api/assets/${id}`;
 export const sourceBadge = (run: Pick<Run, "provider" | "source_label">) =>

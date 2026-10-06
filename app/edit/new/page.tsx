@@ -1,4 +1,6 @@
 "use client";
+import { localText } from "@/frontend/i18n/format";
+import { useLocale } from "@/frontend/i18n/LocaleProvider";
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Upload, ShieldCheck } from "lucide-react";
@@ -9,13 +11,18 @@ import MaskEditor, {
 import { api, ApiError, jsonPost, upload } from "@/frontend/api";
 import type { Stroke } from "@/frontend/masks";
 import { importReady, submissionPath } from "@/frontend/imports";
+import PlanDetails from "@/frontend/PlanDetails";
 import {
   assetUrl,
   type Asset,
   type Run,
   type PreparedAsset,
+  type CandidatePlan,
+  type Starter,
 } from "@/frontend/types";
 export default function NewEdit() {
+  const { t } = useLocale();
+
   const router = useRouter(),
     input = useRef<HTMLInputElement>(null),
     pending = useRef(false);
@@ -37,7 +44,45 @@ export default function NewEdit() {
     null,
     null,
   ]);
-  const [sourceLabel, setSourceLabel] = useState("GPT Image via Codex");
+  const [sourceLabel, setSourceLabel] = useState("External tool");
+  const [plan, setPlan] = useState<CandidatePlan | null>(null);
+  const [starter, setStarter] = useState<Starter | null>(null);
+  const [loadingStarter, setLoadingStarter] = useState(false);
+  useEffect(() => {
+    const draftId = new URLSearchParams(window.location.search).get("draft");
+    if (!draftId) return;
+    setLoadingStarter(true);
+    api<Starter>(`/drafts/${encodeURIComponent(draftId)}`)
+      .then((draft) => {
+        setStarter(draft);
+        setAsset({
+          id: draft.source_image,
+          width: draft.source_size[0],
+          height: draft.source_size[1],
+          url: assetUrl(draft.source_image),
+        });
+        setMasks(null);
+        setDraftStrokes([]);
+        setDraftMasks({});
+        setInstruction("");
+      })
+      .catch((e) => setError((e as Error).message))
+      .finally(() => setLoadingStarter(false));
+  }, []);
+  useEffect(() => {
+    if (!masks || mode !== "generate") return;
+    let live = true;
+    api<CandidatePlan>("/candidate-plans", jsonPost({ instruction }))
+      .then((value) => {
+        if (live) setPlan(value);
+      })
+      .catch((e) => {
+        if (live) setError((e as Error).message);
+      });
+    return () => {
+      live = false;
+    };
+  }, [masks, mode, instruction]);
   const [rawCandidates, setRawCandidates] = useState<(Asset | null)[]>([
     null,
     null,
@@ -102,6 +147,8 @@ export default function NewEdit() {
     setError("");
     try {
       setAsset(await upload(file, "original"));
+      setStarter(null);
+      setPlan(null);
       setMasks(null);
       setDraftStrokes([]);
       setDraftMasks({});
@@ -133,6 +180,8 @@ export default function NewEdit() {
         "original",
       );
       setAsset(source);
+      setStarter(null);
+      setPlan(null);
       setCandidates([null, null, null]);
       setRawCandidates([null, null, null]);
       setLocked([null, null, null]);
@@ -158,6 +207,7 @@ export default function NewEdit() {
   }
   async function generate() {
     if (!asset || !masks || pending.current) return;
+    if (mode === "generate" && !plan) return;
     if (
       mode === "import" &&
       (!masks.keep || !importReady(candidates, sourceLabel))
@@ -183,7 +233,13 @@ export default function NewEdit() {
               candidate_images: candidates.map((c) => c!.id),
               source_label: sourceLabel.trim(),
             }
-          : { provider, candidate_count: 3 }),
+          : {
+              provider,
+              candidate_count: 3,
+              candidate_mode: "strategy-v1",
+              preview_fingerprint: plan!.fingerprint,
+            }),
+        ...(starter ? { continuation_draft_id: starter.id } : {}),
         contract: {
           change: { instruction, mask: saved.change.id },
           keep: saved.keep
@@ -233,9 +289,7 @@ export default function NewEdit() {
         candidate.height !== asset.height
       ) {
         setCandidates((old) => old.map((c, i) => (i === index ? null : c)));
-        setError(
-          `CANDIDATE_SIZE_MISMATCH: Candidate ${String.fromCharCode(65 + index)} cannot be imported directly. Target: ${asset.width} × ${asset.height} px. Use the explicit Boundary Lock preparation below.`,
-        );
+        setError("CANDIDATE_SIZE_MISMATCH");
         return;
       }
       setCandidates((old) => old.map((c, i) => (i === index ? candidate : c)));
@@ -308,23 +362,25 @@ export default function NewEdit() {
   if (recoveringSubmission) {
     return (
       <main className="studio-page">
-        <p className="eyebrow">RECOVER YOUR EDIT</p>
-        <h1>One request. One edit.</h1>
+        <p className="eyebrow">{t("RECOVER YOUR EDIT")}</p>
+        <h1>{t("One request. One edit.")}</h1>
         <p>
-          We are checking your previous submission before starting another edit.
+          {t(
+            "We are checking your previous submission before starting another edit.",
+          )}
         </p>
         {busy ? (
-          <p role="status">Recovering the original request…</p>
+          <p role="status">{t("Recovering the original request…")}</p>
         ) : (
           <>
             <p role="alert" className="error">
-              {error}
+              {localText(error, t)}
             </p>
             <button
               className="button primary"
               onClick={() => window.location.reload()}
             >
-              Retry submission recovery
+              {t("Retry submission recovery")}
             </button>
           </>
         )}
@@ -333,43 +389,62 @@ export default function NewEdit() {
   }
   return (
     <main className="studio-page">
+      {loadingStarter && (
+        <p role="status">{t("Loading continuation starter…")}</p>
+      )}
+      {starter && (
+        <section className="notice">
+          <strong>{t("Continue from adopted final image")}</strong>
+          <p>
+            {t(
+              "New original saved. Paint new CHANGE and KEEP boundaries and write a new instruction.",
+            )}
+          </p>
+          <a href={`/edit/${starter.parent_run_id}`}>
+            {t("Return to parent edit")}
+          </a>
+        </section>
+      )}
       <div className="page-intro">
         <div>
           <p className="eyebrow">
-            THE STUDIO / {summary ? "02 — CONFIRM" : "01 — DEFINE"}
+            {t("THE STUDIO /")} {summary ? t("02 — CONFIRM") : t("01 — DEFINE")}
           </p>
           <h1>
             {summary
-              ? "A promise, before the pixels."
-              : "Make room for the right change."}
+              ? t("A promise, before the pixels.")
+              : t("Make room for the right change.")}
           </h1>
         </div>
         <span className="pill">
           {mode === "import"
-            ? "IMPORTED · external generation"
+            ? t("IMPORTED · external generation")
             : provider === "mock"
-              ? "MOCK · pixel simulation"
-              : "Configured provider"}
+              ? t("MOCK · pixel simulation")
+              : t("Configured provider")}
         </span>
       </div>
       <div className="workspace-grid">
         <aside className="contract-panel">
-          <span className="section-number">YOUR INTENTION</span>
-          <label htmlFor="instruction">What would you like to change?</label>
+          <span className="section-number">{t("YOUR INTENTION")}</span>
+          <label htmlFor="instruction">
+            {t("What would you like to change?")}
+          </label>
           <textarea
             id="instruction"
             value={instruction}
             disabled={summary || busy}
             maxLength={1500}
-            placeholder="Change the jacket to white. Keep the character."
+            placeholder={t("Change the jacket to white. Keep the character.")}
             onChange={(e) => setInstruction(e.target.value)}
           />
           <p className="field-note">
-            Be specific. Prompt adherence is reviewed by you, not inferred from
-            a pixel score.
+            {t(
+              "Be specific. Prompt adherence is reviewed by you, not inferred from a pixel score.",
+            )}
           </p>
           <hr />
-          <label htmlFor="keep-label">Name your KEEP region</label>
+          <label htmlFor="keep-label">{t("Name your KEEP region")}</label>
           <input
             id="keep-label"
             value={keepLabel}
@@ -378,7 +453,8 @@ export default function NewEdit() {
             onChange={(e) => setKeepLabel(e.target.value)}
           />
           <label htmlFor="threshold">
-            Preservation threshold <span>{threshold}%</span>
+            {t("Preservation threshold")}
+            <span>{threshold}%</span>
           </label>
           <input
             id="threshold"
@@ -397,16 +473,17 @@ export default function NewEdit() {
               disabled={summary || busy}
               onChange={(e) => setBackground(e.target.checked)}
             />
-            Protect everything outside CHANGE
+            {t("Protect everything outside CHANGE")}
           </label>
           <p className="field-note">
-            “Background” means outside your painted edit area, not automatic
-            scene segmentation.
+            {t(
+              "“Background” means outside your painted edit area, not automatic scene segmentation.",
+            )}
           </p>
           <hr />
           {mode === "generate" && (
             <>
-              <label htmlFor="provider">Generation source</label>
+              <label htmlFor="provider">{t("Generation source")}</label>
               <select
                 id="provider"
                 value={provider}
@@ -415,23 +492,27 @@ export default function NewEdit() {
               >
                 {providers.map((p) => (
                   <option key={p} value={p}>
-                    {p === "mock" ? "Mock — deterministic demo" : p}
+                    {p === "mock" ? t("Mock — deterministic demo") : p}
                   </option>
                 ))}
               </select>
               <p className="field-note">
                 {provider === "mock"
-                  ? "No model call. Controlled edits and deliberate drift let you explore the entire product."
-                  : "Your image, CHANGE mask and instruction leave this app for the configured provider."}
+                  ? t(
+                      "No model call. Controlled edits and deliberate drift let you explore the entire product.",
+                    )
+                  : t(
+                      "Your image, CHANGE mask and instruction leave this app for the configured provider.",
+                    )}
               </p>
             </>
           )}
           <div className="quiet-note">
             <ShieldCheck size={20} aria-hidden />
             <p>
-              KEEP is a measurable contract.
+              {t("KEEP is a measurable contract.")}
               <br />
-              Not a promise from the model.
+              {t("Not a promise from the model.")}
             </p>
           </div>
         </aside>
@@ -455,17 +536,17 @@ export default function NewEdit() {
                 <Upload size={34} strokeWidth={1} aria-hidden />
               </div>
               <h2>
-                Your image.
+                {t("Your image.")}
                 <br />
-                <em>Your boundaries.</em>
+                <em>{t("Your boundaries.")}</em>
               </h2>
-              <p>Drop an image here to begin.</p>
+              <p>{t("Drop an image here to begin.")}</p>
               <input
                 ref={input}
                 type="file"
                 accept="image/png,image/jpeg"
                 hidden
-                aria-label="Upload original image"
+                aria-label={t("Upload original image")}
                 onChange={(e) => {
                   if (e.target.files?.[0]) void choose(e.target.files[0]);
                 }}
@@ -475,50 +556,57 @@ export default function NewEdit() {
                 disabled={busy}
                 onClick={() => input.current?.click()}
               >
-                Choose an image <ArrowRight size={17} aria-hidden />
+                {t("Choose an image")}
+                <ArrowRight size={17} aria-hidden />
               </button>
               <span className="caption">
-                PNG OR JPEG · UP TO 10 MB · 32–1536 PX PER SIDE
+                {t("PNG OR JPEG · UP TO 10 MB · 32–1536 PX PER SIDE")}
               </span>
               <button
                 className="text-button"
                 disabled={busy}
                 onClick={() => void fixture()}
               >
-                Use Demo — image, instruction & masks
+                {t("Use Demo — image, instruction & masks")}
               </button>
             </div>
           ) : summary ? (
             <div className="summary-card">
               <div className="summary-heading">
                 <span className="eyebrow">
-                  EDIT CONTRACT / READY FOR YOUR REVIEW
+                  {t("EDIT CONTRACT / READY FOR YOUR REVIEW")}
                 </span>
                 <ShieldCheck size={25} aria-hidden />
               </div>
               <div className="summary-content">
                 <img
                   src={assetUrl(asset.id)}
-                  alt="Source image for this edit contract"
+                  alt={t("Source image for this edit contract")}
                 />
                 <div>
-                  <span className="change-text eyebrow">CHANGE</span>
+                  <span className="change-text eyebrow">{t("CHANGE")}</span>
                   <h2>{instruction}</h2>
-                  <p>{masks.changePixels.toLocaleString()} editable pixels</p>
-                  <span className="keep-text eyebrow">KEEP</span>
+                  <p>
+                    {masks.changePixels.toLocaleString()} {t("editable pixels")}
+                  </p>
+                  <span className="keep-text eyebrow">{t("KEEP")}</span>
                   <h3>
-                    {masks.keepPixels ? keepLabel : "No painted KEEP region"}
+                    {masks.keepPixels ? keepLabel : t("No painted KEEP region")}
                   </h3>
                   <p>
                     {background
-                      ? `Outside CHANGE · ${threshold}% minimum preservation`
-                      : "Outside CHANGE will be measured, without a hard threshold."}
+                      ? `${t("Outside CHANGE")} · ${threshold}% ${t("minimum preservation")}`
+                      : t(
+                          "Outside CHANGE will be measured, without a hard threshold.",
+                        )}
                   </p>
-                  <p>{masks.keepPixels.toLocaleString()} protected pixels</p>
+                  <p>
+                    {masks.keepPixels.toLocaleString()} {t("protected pixels")}
+                  </p>
                 </div>
               </div>
               <fieldset className="import-source" disabled={busy || !!prepared}>
-                <legend>Choose candidate source</legend>
+                <legend>{t("Choose candidate source")}</legend>
                 <label className="checkbox">
                   <input
                     type="radio"
@@ -526,7 +614,7 @@ export default function NewEdit() {
                     checked={mode === "generate"}
                     onChange={() => setMode("generate")}
                   />
-                  Generate with configured provider
+                  {t("Generate with configured provider")}
                 </label>
                 <label className="checkbox">
                   <input
@@ -535,26 +623,28 @@ export default function NewEdit() {
                     checked={mode === "import"}
                     onChange={() => setMode("import")}
                   />
-                  Import 3 candidates
+                  {t("Import 3 candidates")}
                 </label>
                 {mode === "import" && (
                   <>
                     <p className="field-note">
-                      Generation happened externally. VowEdit imports and
-                      evaluates your images. Each must match the original:{" "}
-                      {asset.width} × {asset.height} px.
+                      {t(
+                        "Generation happened externally. VowEdit imports and evaluates your images. Each must match the original:",
+                      )}{" "}
+                      {asset.width} {t("×")} {asset.height}
+                      {t("px.")}
                     </p>
                     <div className="import-slots">
                       {rawCandidates.map((raw, index) => (
                         <div className="import-slot" key={index}>
                           <label htmlFor={`candidate-${index}`}>
-                            Candidate {String.fromCharCode(65 + index)}
+                            {t("Candidate")} {String.fromCharCode(65 + index)}
                           </label>
                           <input
                             id={`candidate-${index}`}
                             type="file"
                             accept="image/png,image/jpeg"
-                            aria-label={`Upload Candidate ${String.fromCharCode(65 + index)}`}
+                            aria-label={`${t("Upload Candidate")} ${String.fromCharCode(65 + index)}`}
                             onChange={(e) => {
                               if (e.target.files?.[0])
                                 void chooseCandidate(index, e.target.files[0]);
@@ -564,18 +654,20 @@ export default function NewEdit() {
                             <>
                               <img
                                 src={assetUrl((candidates[index] || raw).id)}
-                                alt={`Uploaded Candidate ${String.fromCharCode(65 + index)}`}
+                                alt={`${t("Uploaded Candidate")} ${String.fromCharCode(65 + index)}`}
                               />
                               <p className="field-note">
-                                Raw · {raw.width} × {raw.height} px
+                                {t("Raw ·")} {raw.width} {t("×")} {raw.height}{" "}
+                                px
                                 <br />
-                                Target · {asset.width} × {asset.height} px
+                                {t("Target ·")} {asset.width} {t("×")}{" "}
+                                {asset.height} px
                                 <br />
                                 {locked[index]
-                                  ? "BOUNDARY LOCKED · prepared asset"
+                                  ? t("BOUNDARY LOCKED · prepared asset")
                                   : candidates[index]
-                                    ? "Uploaded · exact source size"
-                                    : "Direct import blocked: size mismatch"}
+                                    ? t("Uploaded · exact source size")
+                                    : t("Direct import blocked: size mismatch")}
                               </p>
                             </>
                           )}
@@ -583,11 +675,9 @@ export default function NewEdit() {
                       ))}
                     </div>
                     <p className="field-note">
-                      Boundary Lock uses an aspect-preserving center crop and
-                      Lanczos resize, then admits only CHANGE pixels. Outside
-                      CHANGE stays exactly original. Raw candidates are
-                      retained. This is a separate, explicit preparation step;
-                      direct import never resizes.
+                      {t(
+                        "Boundary Lock uses an aspect-preserving center crop and Lanczos resize, then admits only CHANGE pixels. Outside CHANGE stays exactly original. Raw candidates are retained. This is a separate, explicit preparation step; direct import never resizes.",
+                      )}
                     </p>
                     <button
                       type="button"
@@ -601,10 +691,10 @@ export default function NewEdit() {
                       onClick={() => void applyBoundaryLock()}
                     >
                       {busy
-                        ? "Preparing candidates…"
-                        : "Apply VowEdit Boundary Lock"}
+                        ? t("Preparing candidates…")
+                        : t("Apply VowEdit Boundary Lock")}
                     </button>
-                    <label htmlFor="source-label">Source label</label>
+                    <label htmlFor="source-label">{t("Source label")}</label>
                     <input
                       id="source-label"
                       value={sourceLabel}
@@ -625,17 +715,19 @@ export default function NewEdit() {
                     />
                     {!sourceLabel.trim() && (
                       <p className="error">
-                        Enter a source label (1–80 characters).
+                        {t("Enter a source label (1–80 characters).")}
                       </p>
                     )}
                     <p className="field-note">
-                      Descriptive attribution supplied by you; this does not
-                      verify a direct API integration.
+                      {t(
+                        "Descriptive attribution supplied by you; this does not verify a direct API integration.",
+                      )}
                     </p>
                     {!masks.keep && (
                       <p className="error">
-                        Import requires a painted KEEP region. Edit the contract
-                        to add one.
+                        {t(
+                          "Import requires a painted KEEP region. Edit the contract to add one.",
+                        )}
                       </p>
                     )}
                   </>
@@ -643,34 +735,41 @@ export default function NewEdit() {
               </fieldset>
               <div className="summary-footer">
                 <p>
-                  <strong>3 candidates</strong> ·{" "}
+                  <strong>{t("3 candidates")}</strong> ·{" "}
                   {mode === "import"
                     ? `Imported · ${sourceLabel.trim() || "External candidates"}`
                     : provider === "mock"
-                      ? "Mock simulation, no AI inference"
-                      : "Configured generation provider"}
+                      ? t("Mock simulation, no AI inference")
+                      : t("Configured generation provider")}
                   <br />
                   <span className="muted">
-                    We check preservation. You judge the edit.
+                    {t("We check preservation. You judge the edit.")}
                   </span>
                 </p>
                 <button
                   className="button primary"
                   disabled={
                     busy ||
+                    (mode === "generate" && !plan) ||
                     (mode === "import" &&
                       (!masks.keep || !importReady(candidates, sourceLabel)))
                   }
                   onClick={() => void generate()}
                 >
                   {busy
-                    ? "Submitting…"
+                    ? t("Submitting…")
                     : mode === "import"
-                      ? "Evaluate imported candidates"
-                      : "Generate 3 candidates"}
+                      ? t("Evaluate imported candidates")
+                      : t("Generate 3 candidates")}
                   <ArrowRight size={18} aria-hidden />
                 </button>
               </div>
+              {mode === "generate" &&
+                (plan ? (
+                  <PlanDetails plan={plan} />
+                ) : (
+                  <p role="status">{t("Preparing execution plan…")}</p>
+                ))}
               <button
                 className="text-button"
                 disabled={busy || !!prepared}
@@ -689,13 +788,13 @@ export default function NewEdit() {
                 }}
               >
                 <ArrowLeft size={15} aria-hidden />
-                Edit the contract
+                {t("Edit the contract")}
               </button>
             </div>
           ) : (
             <>
               <div className="editor-title">
-                <span>DEFINE YOUR BOUNDARIES</span>
+                <span>{t("DEFINE YOUR BOUNDARIES")}</span>
                 <button
                   className="text-button"
                   onClick={() => {
@@ -703,7 +802,7 @@ export default function NewEdit() {
                     setPrepared(null);
                   }}
                 >
-                  Change image
+                  {t("Change image")}
                 </button>
               </div>
               <MaskEditor
@@ -732,10 +831,12 @@ export default function NewEdit() {
           )}
           {error && (
             <p role="alert" className="error">
-              {error}
+              {localText(error, t)}
             </p>
           )}
-          {busy && !summary && <p role="status">Preparing your image…</p>}
+          {busy && !summary && (
+            <p role="status">{t("Preparing your image…")}</p>
+          )}
         </section>
       </div>
     </main>

@@ -1,5 +1,6 @@
 """Isolated browser-test host. Fault injection is never enabled in the production app."""
 
+import os
 import tempfile
 import time
 from pathlib import Path
@@ -19,17 +20,20 @@ class BrowserMock(MockImageEditProvider):
     def generate(self, request):
         self.calls += 1
         time.sleep(0.7)
-        if request.instruction == "Test no qualifying edit":
+        instruction = request.instruction.split("\n\n")[0]
+        if instruction == "Test no qualifying edit":
             return request.source.copy()
-        if request.instruction == "Test provider recovery" and not self.failed:
+        if instruction == "Test provider recovery" and not self.failed:
             self.failed = True
             raise AppError("PROVIDER_UNAVAILABLE", "Controlled provider outage. Retry this edit.")
         return super().generate(request)
 
 
-local = Path(".local")
-local.mkdir(exist_ok=True)
-root = Path(tempfile.mkdtemp(prefix="browser-test-", dir=local))
+local = Path(os.environ["VOWEDIT_DATA_DIR"]).resolve()
+if local == Path("data").resolve() or Path("data").resolve() in local.parents:
+    raise RuntimeError("Browser validation requires isolated data.")
+local.mkdir(parents=True, exist_ok=True)
+root = Path(tempfile.mkdtemp(prefix="browser-test-", dir=local)).resolve()
 original_evaluate = service_module.evaluate
 faults_remaining = 0
 

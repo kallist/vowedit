@@ -22,7 +22,7 @@ async function capture(page: Page, width: number, name: string) {
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  const dir = `docs/screenshots/imported/${width}`;
+  const dir = `.local/v02-evidence/legacy-imported/${width}`;
   await fs.mkdir(dir, { recursive: true });
   await page.screenshot({ path: `${dir}/${name}.png`, fullPage: true });
 }

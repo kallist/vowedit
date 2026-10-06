@@ -44,10 +44,11 @@ Mock is mandatory: deterministic pixel edits and deliberately failed candidates 
 product without GPUs, accounts or paid calls. Its color inversion ignores semantic instructions.
 The production API contains no test-failure switches; browser fault injection lives in tests.
 
-Real adapters use one repository-owned SD/SDXL core-node latent inpainting template. Runtime
-configuration supplies model names and, for RunningHub, a saved workflow ID and API key. No arbitrary
-browser-supplied graphs. CHANGE is inverted into source alpha for ComfyUI LoadImage's mask output.
-Inputs are padded to multiples of eight and outputs cropped back; other dimensional changes fail.
+Local ComfyUI uses the repository-owned SD/SDXL core-node latent inpainting template.
+RunningHub uses its separately fingerprinted Z-Image workflow, not the ComfyUI graph.
+Runtime configuration supplies model names and, for RunningHub, a saved workflow ID and API key.
+No arbitrary browser-supplied graphs. CHANGE is inverted into source alpha for LoadImage's mask output.
+ComfyUI inputs are padded to multiples of eight and outputs cropped back; dimensional changes fail.
 KEEP is primarily a post-generation check. Provider outputs are not silently composited over the
 source to hide drift. The 2026-10-06 opt-in imported preparation below explicitly enforces boundaries
 and records that intervention separately from generation and evaluation.
@@ -123,3 +124,38 @@ use a separate unauthenticated client, HTTPS allowlisted host and no redirects. 
 No authentication: trusted single-user machine only. Other local processes with filesystem access
 are outside this trust boundary. No cloud storage service, Redis, distributed workers, accounts,
 mobile app, training, video or GPU containers. Docker adds little to this local prototype and is omitted.
+
+## V0.2 Re-edit Workbench — 2026-10-06
+
+The application service freezes deterministic `strategy-en-v1` plans before submission.
+The new UI requests safe/balanced/bold instructions; old API submissions retain legacy seed behavior
+and the exact old normalized payload hash. Canonical base instructions keep the schema's existing
+whitespace trimming. Fixed English directives are separate from localized UI copy; this version
+does not translate user prompts. Effective text is capped at 2400 characters. This is a service-side
+input bound, not evidence that every real model supports or responds to it. Worker execution,
+submission replay and generation retries read frozen snapshots. No workflow, evaluator, seed,
+candidate budget or transport changes.
+
+`selected_candidate_id` remains the pixel-rule recommendation. Viewing, human review and
+`user_selected_candidate_id` are independent. Selection uses a persisted revision/CAS inside
+`BEGIN IMMEDIATE`; repeating the same desired selection is a no-op after checking resource validity.
+Issues are derived from structural evaluation/verdict data and individually confirmed for repair use.
+
+Continuation starters live as immutable entries in the parent run JSON. They have no job lifecycle,
+so a separate table/migration would add unnecessary state. SQLite JSON queries search stored starters
+across all runs (not only the latest 50). The immediate transaction serializes global starter request-key
+lookup, parent state/revision validation, original-asset registration and starter insertion. Files are
+atomically written first. Failures/races can leave orphan PNG files but no duplicate registered result
+or broken reference. Persisted command results are returned before revalidating a changed selection.
+Selection/review/worker updates read current run JSON under the same write transaction and preserve
+starter metadata. There are no session/project/version-graph tables, command bus or bulk legacy rewrite.
+
+New originals clone final evaluated pixels, including locked outputs. New UI boundaries and intentions
+start empty. Generated/imported children bind to the server-owned starter source and carry lineage;
+generation retries remain a different derivation. The v1 receipt keeps its original automatic selected
+meaning and adds `report-v2`. Continuation does not change the parent receipt.
+
+Normalized raw previews validate server provenance against the existing center-crop/Lanczos recipe,
+return only PNG bytes and write nothing. Raw and historical experimental evidence stay immutable.
+The local browser host and hosted CI explicitly set isolated data roots before application import.
+No real user database was upgraded during validation. There is no schema change or migration in V0.2.

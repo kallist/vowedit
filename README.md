@@ -2,6 +2,36 @@
 
 **Change what you ask. Keep what you don’t.**
 
+## V0.2 Re-edit Workbench
+
+The studio previews three deterministic modification strategies (restrained, balanced, stronger),
+then freezes their complete instructions before submitting the existing three-candidate budget.
+The UI supports English and 简体中文. UI language does **not** translate user instructions: each
+plan shows the original intent, fixed English strategy directive and effective provider text.
+Old API requests without a candidate mode retain V0.1 seed behavior and idempotency hashes.
+
+Results put the comparison canvas and candidate controls first. Pixel-rule recommendation,
+current preview, explicit user adoption and human semantic review are separate states.
+The score is a preservation summary, not image quality; human FAIL remains visible even at 100.
+Prepared external candidates offer aligned raw/locked comparison and a separate untouched raw view.
+
+After explicit adoption, **Continue Editing** saves a new original from the final candidate and
+opens an empty-boundary starter. Pending/failed reviews and pixel failures require individual
+confirmation as repair material; no verdict becomes PASS. Reload restores the same starter.
+Children retain parent/candidate/root lineage, and history links back to the parent.
+Adoption, continuation and starter recovery submit no generation or evaluation jobs.
+
+SQLite schema is unchanged: starters are immutable entries in existing run JSON, transactionally
+registered with cloned original assets. Request-key replay, selection revision conflicts and file/DB
+failure boundaries are covered by isolated fixtures. Existing user data is not used for validation.
+Before first upgrading a real installation, stop services and back up the database/WAL and assets;
+do not run old and new binaries against the same directory. Rollback means stopping and restoring
+that backup, not assuming older binaries understand new metadata.
+
+Browser Companion V0.2.1 and MCP/Agent V0.3 remain roadmap work, **NOT IMPLEMENTED**.
+Real RunningHub strategy semantics and real ComfyUI generation are **NOT TESTED** in V0.2.
+See [V0.2 validation](docs/V0.2-VALIDATION.md) and [second-pass self-review](docs/V0.2-REVIEW.md).
+
 ## Problem
 
 Ask AI for a new jacket. Get a new face, too.
@@ -47,6 +77,11 @@ with explicitly labelled offline fixtures at 1440, 768 and 390 pixels.
 
 Requires Node 22.14–24.x and Python 3.10+ (local validation used Node 24 and Python 3.10).
 Run from the repository root. Mock is the default; no `.env` is required.
+
+The web proxy defaults to loopback API port 8000. If Windows blocks that port, set
+`VOWEDIT_API_PORT=8001` for both the build and Playwright invocation (or local Next startup),
+and start the API on the same port. Only numeric local ports are accepted, not arbitrary URLs.
+Browser tests always set an absolute isolated `VOWEDIT_DATA_DIR` before importing the test host.
 
 ```powershell
 py -3.10 -m venv .venv
@@ -150,6 +185,8 @@ are **not** automatically assessed. Receipts expose the formula and accept a sav
 ## Testing
 
 ```powershell
+$env:VOWEDIT_DATA_DIR = (Join-Path (Get-Location) '.local/v02-validation-data')
+$env:VOWEDIT_PROVIDER = 'mock'
 .\.venv\Scripts\python -m ruff check backend scripts
 .\.venv\Scripts\python -m mypy backend --exclude backend/tests
 .\.venv\Scripts\python -m pytest -q
@@ -157,16 +194,19 @@ are **not** automatically assessed. Receipts expose the formula and accept a sav
 npm run lint
 npm run typecheck
 npm test
+npm audit --audit-level=high
 npm run build -- --webpack
 npx playwright install chromium
 npm run e2e
 ```
 
 E2E starts an isolated test API with deterministic provider faults and a production Next.js server;
-stop other services on 3000/8000 first. It writes required screenshots to `docs/screenshots` and ignored
-temporary runtime data under `.local/`. Optionally set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to an installed
+check ownership and stop only your own services on 3000/8000 first. New V0.2 evidence goes to
+`docs/screenshots/v02`; legacy test captures and runtime data go to ignored `.local/` directories and
+do not overwrite historical screenshots. Optionally set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to an installed
 Chrome executable. In restricted environments use `pytest --basetemp=.local/pytest-run` for writable
-temporary storage. Current test results and remaining checks are in [HARDENING_VALIDATION.md](docs/HARDENING_VALIDATION.md).
+temporary storage. Current V0.2 results are in [V0.2-VALIDATION.md](docs/V0.2-VALIDATION.md).
+The prior hardening record is [HARDENING_VALIDATION.md](docs/HARDENING_VALIDATION.md).
 The earlier [VALIDATION.md](docs/VALIDATION.md) is the dated initial-delivery record.
 
 The public [repository](https://github.com/kallist/vowedit) uses `feat/vowedit-v0.1` as its existing default
@@ -193,6 +233,7 @@ external jacket case does not establish success on the three broader creative de
 
 Validate the three [demo slots](demo-assets/README.md) with consented creative assets and real model
 runs, collect human notes, and compare heuristics against that evidence. Video/Motion is future-only.
+V0.2.1 paired browser extension and V0.3 authenticated MCP with explicit approvals are **NOT IMPLEMENTED**.
 Docker is not applicable to this delivery; no GPU stack or extra infrastructure was introduced.
 
 ## Security

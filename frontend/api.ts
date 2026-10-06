@@ -1,20 +1,31 @@
 import type { Asset } from "./types";
+import { safeErrorText } from "./i18n/errors";
 export class ApiError extends Error {
   constructor(
     message: string,
     public status: number,
+    public code: string = "UNKNOWN_ERROR",
   ) {
     super(message);
   }
 }
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`/api${path}`, { ...init, cache: "no-store" });
+  const response = await fetch(`/api${path}`, {
+    ...init,
+    cache: "no-store",
+  }).catch(() => {
+    throw new ApiError(
+      safeErrorText("CONNECTION_FAILED"),
+      0,
+      "CONNECTION_FAILED",
+    );
+  });
   const data = await response.json().catch(() => null);
   if (!response.ok)
     throw new ApiError(
-      data?.error?.message ||
-        "The local service could not be reached. Try again.",
+      safeErrorText(data?.error?.code),
       response.status,
+      typeof data?.error?.code === "string" ? data.error.code : "UNKNOWN_ERROR",
     );
   return data as T;
 }

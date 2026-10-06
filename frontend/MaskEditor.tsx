@@ -1,4 +1,6 @@
 "use client";
+import { localText } from "@/frontend/i18n/format";
+import { useLocale } from "@/frontend/i18n/LocaleProvider";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Brush, Eraser, RotateCcw, Undo2, Trash2 } from "lucide-react";
 import { assetUrl, type Asset } from "./types";
@@ -29,6 +31,8 @@ export default function MaskEditor({
   initialStrokes?: Stroke[];
   initialMasks?: SeedMasks;
 }) {
+  const { t } = useLocale();
+
   const [seedMasks, setSeedMasks] = useState<SeedMasks>(initialMasks);
   const [seedImages, setSeedImages] = useState<
     Partial<Record<Stroke["mode"], HTMLImageElement>>
@@ -173,7 +177,7 @@ export default function MaskEditor({
             className={mode === "change" ? "mode change active" : "mode change"}
             onClick={() => setMode("change")}
           >
-            01 / CHANGE
+            {t("01 / CHANGE")}
           </button>
           <button
             type="button"
@@ -181,13 +185,13 @@ export default function MaskEditor({
             className={mode === "keep" ? "mode keep active" : "mode keep"}
             onClick={() => setMode("keep")}
           >
-            02 / KEEP
+            {t("02 / KEEP")}
           </button>
         </div>
         <div className="tool-buttons">
           <button
             type="button"
-            aria-label="Brush"
+            aria-label={t("Brush")}
             aria-pressed={!erase}
             onClick={() => setErase(false)}
           >
@@ -195,7 +199,7 @@ export default function MaskEditor({
           </button>
           <button
             type="button"
-            aria-label="Erase"
+            aria-label={t("Erase")}
             aria-pressed={erase}
             onClick={() => setErase(true)}
           >
@@ -203,7 +207,7 @@ export default function MaskEditor({
           </button>
           <button
             type="button"
-            aria-label="Undo last stroke"
+            aria-label={t("Undo last stroke")}
             disabled={!strokes.length}
             onClick={() => setStrokes((s) => s.slice(0, -1))}
           >
@@ -211,7 +215,7 @@ export default function MaskEditor({
           </button>
           <button
             type="button"
-            aria-label="Clear current mask"
+            aria-label={t("Clear current mask")}
             onClick={() => {
               setStrokes((s) => s.filter((stroke) => stroke.mode !== mode));
               setSeedMasks((s) => ({ ...s, [mode]: undefined }));
@@ -221,7 +225,7 @@ export default function MaskEditor({
           </button>
           <button
             type="button"
-            aria-label="Reset both masks"
+            aria-label={t("Reset both masks")}
             onClick={() => {
               setStrokes([]);
               setSeedMasks({});
@@ -234,7 +238,8 @@ export default function MaskEditor({
       </div>
       <div className="brush-row">
         <label htmlFor="brush-size">
-          Brush size <strong>{size}px</strong>
+          {t("Brush size")}
+          <strong>{size}px</strong>
         </label>
         <input
           id="brush-size"
@@ -246,8 +251,8 @@ export default function MaskEditor({
         />
         <span>
           {mode === "change"
-            ? "Paint what may change."
-            : "Paint what must stay."}
+            ? t("Paint what may change.")
+            : t("Paint what must stay.")}
         </span>
       </div>
       <div className="editor-mat">
@@ -257,13 +262,15 @@ export default function MaskEditor({
         >
           <img
             src={assetUrl(asset.id)}
-            alt="Your original image for defining CHANGE and KEEP"
+            alt={t("Your original image for defining CHANGE and KEEP")}
             draggable={false}
           />
           <canvas
             ref={surfaceRef}
             data-testid="mask-surface"
-            aria-label="Mask painting surface. Use coordinate controls below for keyboard painting."
+            aria-label={t(
+              "Mask painting surface. Use coordinate controls below for keyboard painting.",
+            )}
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId);
               const p = pointInImage(
@@ -300,25 +307,25 @@ export default function MaskEditor({
       <canvas ref={keepRef} hidden />
       <div className="mask-legend">
         <span className="change-dot">
-          CHANGE · {stats.changePixels.toLocaleString()} px
+          {t("CHANGE ·")} {stats.changePixels.toLocaleString()} px
         </span>
         <span className="keep-dot">
-          KEEP · {stats.keepPixels.toLocaleString()} px
+          {t("KEEP ·")} {stats.keepPixels.toLocaleString()} px
         </span>
         <span>
-          {asset.width} × {asset.height}
+          {asset.width} {t("×")} {asset.height}
         </span>
       </div>
       <details className="keyboard-paint">
-        <summary>Keyboard painting</summary>
+        <summary>{t("Keyboard painting")}</summary>
         <p>
-          Set a position as a percentage of the image. Add a brush dab using the
-          current mode and size. Undo and erase work the same way as pointer
-          painting.
+          {t(
+            "Set a position as a percentage of the image. Add a brush dab using the current mode and size. Undo and erase work the same way as pointer painting.",
+          )}
         </p>
         <div className="coordinate-controls">
           <label>
-            X %
+            {t("X %")}
             <input
               type="number"
               min="0"
@@ -333,7 +340,7 @@ export default function MaskEditor({
             />
           </label>
           <label>
-            Y %
+            {t("Y %")}
             <input
               type="number"
               min="0"
@@ -366,13 +373,17 @@ export default function MaskEditor({
               ])
             }
           >
-            Add brush dab
+            {t("Add brush dab")}
           </button>
         </div>
       </details>
       {(error || stats.overlap > 0) && (
         <p className="error" role="alert">
-          {error || "CHANGE and KEEP overlap. Erase the overlap."}
+          {localText(
+            error ||
+              "CHANGE and KEEP overlap. Erase the overlap before continuing.",
+            t,
+          )}
         </p>
       )}
       <button
@@ -381,7 +392,8 @@ export default function MaskEditor({
         disabled={loadingSeeds}
         onClick={proceed}
       >
-        Review edit contract <span aria-hidden>→</span>
+        {t("Review edit contract")}
+        <span aria-hidden>→</span>
       </button>
     </div>
   );
