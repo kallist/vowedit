@@ -35,6 +35,21 @@ class CreateRun(StrictModel):
     candidate_count: Literal[3] = 3
 
 
+class CreateImportedRun(StrictModel):
+    source_image: UUID
+    contract: EditContract
+    request_key: UUID
+    candidate_images: list[UUID] = Field(min_length=3, max_length=3)
+    source_label: str = Field(min_length=1, max_length=80)
+
+
+class PrepareCandidate(StrictModel):
+    source_image: UUID
+    candidate_image: UUID
+    contract: EditContract
+    source_label: str = Field(min_length=1, max_length=80)
+
+
 class Retry(StrictModel):
     request_key: UUID
 

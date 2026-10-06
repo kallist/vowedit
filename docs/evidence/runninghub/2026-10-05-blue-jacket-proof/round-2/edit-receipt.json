@@ -1,0 +1,215 @@
+{
+  "receipt_version": "v1",
+  "run_id": "cfaf84e4-d0a5-4f1a-93db-5df04b83fdea",
+  "provider": "runninghub",
+  "simulation": false,
+  "contract": {
+    "change": {
+      "instruction": "Remove the dark blotchy markings from the jacket and replace the entire jacket with a clean solid navy blue. Keep the face, hair, pants, pose, and background unchanged. Preserve the original flat illustration style. No orange or brown should remain on the jacket.",
+      "mask": "40d237e2-182c-45cb-afa9-3dfa97883fed"
+    },
+    "keep": [
+      {
+        "type": "manual_region",
+        "label": "Face hair skin pants background shadow outside jacket",
+        "mask": "c1dd0aaa-1281-4091-afc7-358e5c9f7d4a",
+        "threshold": 98.0
+      }
+    ],
+    "background_threshold": 98.0
+  },
+  "source_image": "b770d3c2-c634-4e3e-8c73-5c029008b728",
+  "generated": 3,
+  "requested": 3,
+  "selected": {
+    "id": "5478ff3d-da64-404d-aaf9-0e8372bced70",
+    "index": 2,
+    "image": "6736353d-4ffd-4c5f-b6ee-b96d038788e9",
+    "seed": 5202,
+    "evaluation": {
+      "metric_version": "rgb-mae-v1",
+      "protected_similarity": 99.18373572826385,
+      "background_preservation": 99.18373572826385,
+      "change_difference": 4.081882476806641,
+      "unexpected_drift": 0.816264271736145,
+      "overall_score": 99.18373572826385,
+      "weights": {
+        "protected": 0.6,
+        "background": 0.4
+      },
+      "minimum_change": 2.0,
+      "meaningful_change": true,
+      "violations": [],
+      "eligible": true,
+      "regions": [
+        {
+          "label": "Face hair skin pants background shadow outside jacket",
+          "type": "manual_region",
+          "threshold": 98.0,
+          "score": 99.18373572826385
+        }
+      ],
+      "warnings": [
+        "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+        "Prompt adherence and visual quality need manual review."
+      ],
+      "edit_adherence": "manual_review"
+    },
+    "ghost": "57c1a568-15c1-44b4-8438-ce5eea982d69",
+    "rank": 1,
+    "error": null,
+    "manual_review": {
+      "verdict": "fail",
+      "notes": "User reviewed round-2 A/B/C: all FAIL; still did not meet the navy-blue requirement."
+    },
+    "generation_metadata": {
+      "provider": "runninghub",
+      "simulation": false
+    }
+  },
+  "candidates": [
+    {
+      "id": "5478ff3d-da64-404d-aaf9-0e8372bced70",
+      "index": 2,
+      "image": "6736353d-4ffd-4c5f-b6ee-b96d038788e9",
+      "seed": 5202,
+      "evaluation": {
+        "metric_version": "rgb-mae-v1",
+        "protected_similarity": 99.18373572826385,
+        "background_preservation": 99.18373572826385,
+        "change_difference": 4.081882476806641,
+        "unexpected_drift": 0.816264271736145,
+        "overall_score": 99.18373572826385,
+        "weights": {
+          "protected": 0.6,
+          "background": 0.4
+        },
+        "minimum_change": 2.0,
+        "meaningful_change": true,
+        "violations": [],
+        "eligible": true,
+        "regions": [
+          {
+            "label": "Face hair skin pants background shadow outside jacket",
+            "type": "manual_region",
+            "threshold": 98.0,
+            "score": 99.18373572826385
+          }
+        ],
+        "warnings": [
+          "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+          "Prompt adherence and visual quality need manual review."
+        ],
+        "edit_adherence": "manual_review"
+      },
+      "ghost": "57c1a568-15c1-44b4-8438-ce5eea982d69",
+      "rank": 1,
+      "error": null,
+      "manual_review": {
+        "verdict": "fail",
+        "notes": "User reviewed round-2 A/B/C: all FAIL; still did not meet the navy-blue requirement."
+      },
+      "generation_metadata": {
+        "provider": "runninghub",
+        "simulation": false
+      }
+    },
+    {
+      "id": "34445ee6-bfb4-43d1-998c-936aa442d1e7",
+      "index": 1,
+      "image": "34925e3b-a4ac-4849-b89d-74cd7662191a",
+      "seed": 5201,
+      "evaluation": {
+        "metric_version": "rgb-mae-v1",
+        "protected_similarity": 99.1173432469368,
+        "background_preservation": 99.1173432469368,
+        "change_difference": 10.233863830566406,
+        "unexpected_drift": 0.8826567530632019,
+        "overall_score": 99.1173432469368,
+        "weights": {
+          "protected": 0.6,
+          "background": 0.4
+        },
+        "minimum_change": 2.0,
+        "meaningful_change": true,
+        "violations": [],
+        "eligible": true,
+        "regions": [
+          {
+            "label": "Face hair skin pants background shadow outside jacket",
+            "type": "manual_region",
+            "threshold": 98.0,
+            "score": 99.1173432469368
+          }
+        ],
+        "warnings": [
+          "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+          "Prompt adherence and visual quality need manual review."
+        ],
+        "edit_adherence": "manual_review"
+      },
+      "ghost": "f5cbd006-d747-4f32-9a25-879990e80661",
+      "rank": 2,
+      "error": null,
+      "manual_review": {
+        "verdict": "fail",
+        "notes": "User reviewed round-2 A/B/C: all FAIL; still did not meet the navy-blue requirement."
+      },
+      "generation_metadata": {
+        "provider": "runninghub",
+        "simulation": false
+      }
+    },
+    {
+      "id": "0c4ad502-90da-4444-a9cc-855978e3f333",
+      "index": 0,
+      "image": "a75cd615-052a-43ad-8038-1d0ebc2c4ef6",
+      "seed": 5200,
+      "evaluation": {
+        "metric_version": "rgb-mae-v1",
+        "protected_similarity": 99.10617965459824,
+        "background_preservation": 99.10617965459824,
+        "change_difference": 4.299393653869629,
+        "unexpected_drift": 0.8938203454017639,
+        "overall_score": 99.10617965459824,
+        "weights": {
+          "protected": 0.6,
+          "background": 0.4
+        },
+        "minimum_change": 2.0,
+        "meaningful_change": true,
+        "violations": [],
+        "eligible": true,
+        "regions": [
+          {
+            "label": "Face hair skin pants background shadow outside jacket",
+            "type": "manual_region",
+            "threshold": 98.0,
+            "score": 99.10617965459824
+          }
+        ],
+        "warnings": [
+          "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+          "Prompt adherence and visual quality need manual review."
+        ],
+        "edit_adherence": "manual_review"
+      },
+      "ghost": "93fc7e4a-cae2-49cd-813f-7945a9965dff",
+      "rank": 3,
+      "error": null,
+      "manual_review": {
+        "verdict": "fail",
+        "notes": "User reviewed round-2 A/B/C: all FAIL; still did not meet the navy-blue requirement."
+      },
+      "generation_metadata": {
+        "provider": "runninghub",
+        "simulation": false
+      }
+    }
+  ],
+  "no_good_candidate": false,
+  "failures": [],
+  "generation_seconds": 94.203,
+  "created_at": "2026-10-05T05:37:56.762120+00:00",
+  "disclaimer": "Pixel similarity is not prompt adherence, identity or image quality. Semantic adherence and artifacts require human review."
+}

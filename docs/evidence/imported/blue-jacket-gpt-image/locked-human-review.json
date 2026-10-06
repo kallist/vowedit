@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-06",
+  "run_id": "e5f59ad7-066d-4138-aa55-5fa9ba97b32f",
+  "scope": "final derived Boundary Lock A/B/C displayed through VowEdit production UI",
+  "exact_user_reply": "A/B/C 均 PASS，偏好 A",
+  "verdicts": {
+    "A": "PASS",
+    "B": "PASS",
+    "C": "PASS"
+  },
+  "preferred": "A",
+  "review_api": "PUT /api/runs/{run_id}/candidates/{candidate_id}/review",
+  "persisted_readback": "PASS",
+  "ranking_and_images_unchanged": true,
+  "new_generation_calls": 0,
+  "new_runs": 0
+}

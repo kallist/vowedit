@@ -67,6 +67,22 @@ def test_concurrent_idempotent_submission(client, service, images):
         service.create(changed)
 
 
+def test_concurrent_api_submission_creates_only_three_outputs(client, service, images):
+    request = payload(client, images)
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        responses = list(pool.map(lambda _: client.post("/api/runs", json=request), range(12)))
+    assert all(response.status_code == 202 for response in responses)
+    ids = {response.json()["id"] for response in responses}
+    assert len(ids) == 1
+    run = wait_run(client, ids.pop())
+    assert len(run["candidates"]) == 3
+    assert len(service.repo.history()) == 1
+    changed = dict(request, contract={**request["contract"], "background_threshold": 90})
+    rejected = client.post("/api/runs", json=changed)
+    assert rejected.status_code == 409
+    assert rejected.json()["error"]["code"] == "JOB_CONFLICT"
+
+
 class PartialProvider(MockImageEditProvider):
     def generate(self, request):
         if request.index == 0:

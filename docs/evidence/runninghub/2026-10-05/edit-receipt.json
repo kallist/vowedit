@@ -1,0 +1,215 @@
+{
+  "receipt_version": "v1",
+  "run_id": "33031921-27bc-4d2b-ba16-3572ab9bf130",
+  "provider": "runninghub",
+  "simulation": false,
+  "contract": {
+    "change": {
+      "instruction": "Change the jacket to cool blue.",
+      "mask": "84745a6a-e1f3-4abc-a5a6-38cd93f704aa"
+    },
+    "keep": [
+      {
+        "type": "manual_region",
+        "label": "Face and hair",
+        "mask": "88a7d83e-b558-49cf-b352-e1543766547b",
+        "threshold": 98.0
+      }
+    ],
+    "background_threshold": 98.0
+  },
+  "source_image": "61342904-9ebc-4be0-b3f7-643f12d45fbf",
+  "generated": 3,
+  "requested": 3,
+  "selected": {
+    "id": "b06d0f42-1db7-46c2-914d-214071dabf0e",
+    "index": 0,
+    "image": "9bd06172-b534-4a3a-abfb-3576d79823cd",
+    "seed": 4100,
+    "evaluation": {
+      "metric_version": "rgb-mae-v1",
+      "protected_similarity": 99.0667073726654,
+      "background_preservation": 99.16422778367996,
+      "change_difference": 5.34033203125,
+      "unexpected_drift": 0.8357722163200378,
+      "overall_score": 99.10571553707123,
+      "weights": {
+        "protected": 0.6,
+        "background": 0.4
+      },
+      "minimum_change": 2.0,
+      "meaningful_change": true,
+      "violations": [],
+      "eligible": true,
+      "regions": [
+        {
+          "label": "Face and hair",
+          "type": "manual_region",
+          "threshold": 98.0,
+          "score": 99.0667073726654
+        }
+      ],
+      "warnings": [
+        "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+        "Prompt adherence and visual quality need manual review."
+      ],
+      "edit_adherence": "manual_review"
+    },
+    "ghost": "b76c7d09-86a7-4248-a7f3-d8ae148c4eb6",
+    "rank": 1,
+    "error": null,
+    "manual_review": {
+      "verdict": "fail",
+      "notes": "Human review (project user, 2026-10-05): prefers candidate A. The cool-blue jacket requirement was not completed."
+    },
+    "generation_metadata": {
+      "provider": "runninghub",
+      "simulation": false
+    }
+  },
+  "candidates": [
+    {
+      "id": "b06d0f42-1db7-46c2-914d-214071dabf0e",
+      "index": 0,
+      "image": "9bd06172-b534-4a3a-abfb-3576d79823cd",
+      "seed": 4100,
+      "evaluation": {
+        "metric_version": "rgb-mae-v1",
+        "protected_similarity": 99.0667073726654,
+        "background_preservation": 99.16422778367996,
+        "change_difference": 5.34033203125,
+        "unexpected_drift": 0.8357722163200378,
+        "overall_score": 99.10571553707123,
+        "weights": {
+          "protected": 0.6,
+          "background": 0.4
+        },
+        "minimum_change": 2.0,
+        "meaningful_change": true,
+        "violations": [],
+        "eligible": true,
+        "regions": [
+          {
+            "label": "Face and hair",
+            "type": "manual_region",
+            "threshold": 98.0,
+            "score": 99.0667073726654
+          }
+        ],
+        "warnings": [
+          "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+          "Prompt adherence and visual quality need manual review."
+        ],
+        "edit_adherence": "manual_review"
+      },
+      "ghost": "b76c7d09-86a7-4248-a7f3-d8ae148c4eb6",
+      "rank": 1,
+      "error": null,
+      "manual_review": {
+        "verdict": "fail",
+        "notes": "Human review (project user, 2026-10-05): prefers candidate A. The cool-blue jacket requirement was not completed."
+      },
+      "generation_metadata": {
+        "provider": "runninghub",
+        "simulation": false
+      }
+    },
+    {
+      "id": "4f645ef2-62c5-4e33-8cc0-2e7023686564",
+      "index": 2,
+      "image": "4c36b840-2441-45fb-919f-ffa04dd5192e",
+      "seed": 4102,
+      "evaluation": {
+        "metric_version": "rgb-mae-v1",
+        "protected_similarity": 99.0797091126442,
+        "background_preservation": 99.16367083787918,
+        "change_difference": 3.8394622802734375,
+        "unexpected_drift": 0.8363291621208191,
+        "overall_score": 99.11329380273818,
+        "weights": {
+          "protected": 0.6,
+          "background": 0.4
+        },
+        "minimum_change": 2.0,
+        "meaningful_change": true,
+        "violations": [],
+        "eligible": true,
+        "regions": [
+          {
+            "label": "Face and hair",
+            "type": "manual_region",
+            "threshold": 98.0,
+            "score": 99.0797091126442
+          }
+        ],
+        "warnings": [
+          "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+          "Prompt adherence and visual quality need manual review."
+        ],
+        "edit_adherence": "manual_review"
+      },
+      "ghost": "ff40b2fa-d19d-4378-a9ce-e86713ef580c",
+      "rank": 2,
+      "error": null,
+      "manual_review": {
+        "verdict": "pending",
+        "notes": ""
+      },
+      "generation_metadata": {
+        "provider": "runninghub",
+        "simulation": false
+      }
+    },
+    {
+      "id": "2d591c19-d2e3-4174-8a52-411ac88d0797",
+      "index": 1,
+      "image": "2d39ea2c-4c68-497d-86c1-ca78a7647f1b",
+      "seed": 4101,
+      "evaluation": {
+        "metric_version": "rgb-mae-v1",
+        "protected_similarity": 99.07366454601288,
+        "background_preservation": 99.1624538898468,
+        "change_difference": 2.49440598487854,
+        "unexpected_drift": 0.8375461101531982,
+        "overall_score": 99.10918028354645,
+        "weights": {
+          "protected": 0.6,
+          "background": 0.4
+        },
+        "minimum_change": 2.0,
+        "meaningful_change": true,
+        "violations": [],
+        "eligible": true,
+        "regions": [
+          {
+            "label": "Face and hair",
+            "type": "manual_region",
+            "threshold": 98.0,
+            "score": 99.07366454601288
+          }
+        ],
+        "warnings": [
+          "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+          "Prompt adherence and visual quality need manual review."
+        ],
+        "edit_adherence": "manual_review"
+      },
+      "ghost": "387a676e-928d-44f3-acd3-9a6807ab0e3b",
+      "rank": 3,
+      "error": null,
+      "manual_review": {
+        "verdict": "pending",
+        "notes": ""
+      },
+      "generation_metadata": {
+        "provider": "runninghub",
+        "simulation": false
+      }
+    }
+  ],
+  "no_good_candidate": false,
+  "failures": [],
+  "generation_seconds": 58.015,
+  "created_at": "2026-10-05T03:42:33.000866+00:00",
+  "disclaimer": "Pixel similarity is not prompt adherence, identity or image quality. Semantic adherence and artifacts require human review."
+}

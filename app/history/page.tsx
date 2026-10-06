@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/frontend/api";
-import { assetUrl, type Run } from "@/frontend/types";
+import { assetUrl, sourceBadge, type Run } from "@/frontend/types";
 export default function History() {
   const [runs, setRuns] = useState<Run[] | null>(null),
     [error, setError] = useState("");
@@ -43,7 +43,7 @@ export default function History() {
             <img src={assetUrl(run.source_image)} alt="Source of saved edit" />
             <div>
               <span className="eyebrow">
-                {run.provider} / {run.status.replaceAll("_", " ")}
+                {sourceBadge(run)} / {run.status.replaceAll("_", " ")}
               </span>
               <h2>{run.contract.change.instruction}</h2>
               <span className="caption">

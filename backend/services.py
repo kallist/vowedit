@@ -11,8 +11,9 @@ from filelock import FileLock, Timeout
 
 from backend.evaluation import evaluate, rank_candidates, validate_masks
 from backend.persistence import Repository, now
+from backend.preparation import NOTICE, boundary_lock
 from backend.providers import GenerationRequest, ImageEditProvider, MockImageEditProvider
-from backend.schemas import AppError, CreateRun, Review
+from backend.schemas import AppError, CreateImportedRun, CreateRun, PrepareCandidate, Review
 from backend.storage import AssetStore
 
 logger = logging.getLogger("vowedit.jobs")
@@ -58,6 +59,49 @@ class ImageEditService:
             raise AppError(
                 "PROVIDER_UNAVAILABLE", "This provider is not configured on the server.", 503
             )
+        return self._submit(request, parent)
+
+    def create_imported(self, request: CreateImportedRun) -> dict[str, Any]:
+        if not request.contract.keep:
+            raise AppError("KEEP_REQUIRED", "Imported edits require a KEEP mask.")
+        return self._submit(request)
+
+    def prepare_candidate(self, request: PrepareCandidate) -> dict[str, Any]:
+        if not request.contract.keep:
+            raise AppError("KEEP_REQUIRED", "Imported edits require a KEEP mask.")
+        self.repo.asset(str(request.source_image), "original")
+        self.repo.asset(str(request.candidate_image), "candidate")
+        self.repo.asset(str(request.contract.change.mask), "mask")
+        for rule in request.contract.keep:
+            self.repo.asset(str(rule.mask), "mask")
+        source, change, keeps = self._contract_images(request.model_dump(mode="json"))
+        validate_masks(source, change, keeps)
+        raw = self.assets.load(str(request.candidate_image))
+        final, preparation = boundary_lock(source, raw, change)
+        preparation["change_mask"] = str(request.contract.change.mask)
+        image_id = self.assets.save(final)
+        metadata = {
+            "generation_source": "external",
+            "generation_source_label": request.source_label,
+            "raw_candidate_asset": str(request.candidate_image),
+            "prepared_candidate_asset": image_id,
+            "source_image": str(request.source_image),
+            "preparation": preparation,
+        }
+        self.assets.save_preparation(image_id, metadata)
+        # Files + provenance precede DB registration: failures leave only unreferenced files.
+        self.repo.add_asset(image_id, "prepared_candidate", final.width, final.height)
+        return {
+            "id": image_id,
+            "width": final.width,
+            "height": final.height,
+            "url": f"/api/assets/{image_id}",
+            "metadata": metadata,
+        }
+
+    def _submit(
+        self, request: CreateRun | CreateImportedRun, parent: str | None = None
+    ) -> dict[str, Any]:
         self.repo.asset(str(request.source_image), "original")
         self.repo.asset(str(request.contract.change.mask), "mask")
         for rule in request.contract.keep:
@@ -65,6 +109,54 @@ class ImageEditService:
         payload = request.model_dump(mode="json")
         source, change, keeps = self._contract_images(payload)
         validate_masks(source, change, keeps)
+        candidates = []
+        imported = isinstance(request, CreateImportedRun)
+        if isinstance(request, CreateImportedRun):
+            payload.update(provider="imported", candidate_count=3, candidate_source="imported")
+            for index, image_id in enumerate(request.candidate_images):
+                asset = self.repo.asset(str(image_id))
+                if asset["kind"] not in {"candidate", "prepared_candidate"}:
+                    raise AppError("ASSET_NOT_FOUND", "The requested candidate was not found.", 404)
+                preparation_metadata = {}
+                if asset["kind"] == "prepared_candidate":
+                    preparation_metadata = self.assets.preparation(str(image_id))
+                    if (
+                        preparation_metadata["source_image"] != str(request.source_image)
+                        or preparation_metadata["preparation"]["change_mask"]
+                        != str(request.contract.change.mask)
+                        or preparation_metadata["generation_source_label"] != request.source_label
+                    ):
+                        raise AppError(
+                            "PREPARATION_CONFLICT",
+                            "Prepared candidate belongs to a different source, "
+                            "CHANGE mask or source label.",
+                            409,
+                        )
+                if self.assets.load(str(image_id)).size != source.size:
+                    raise AppError(
+                        "CANDIDATE_SIZE_MISMATCH",
+                        "Candidate dimensions must match the original. No resizing is performed.",
+                    )
+                candidates.append(
+                    {
+                        "id": str(uuid4()),
+                        "index": index,
+                        "image": str(image_id),
+                        "seed": None,
+                        "evaluation": None,
+                        "ghost": None,
+                        "rank": None,
+                        "error": None,
+                        "manual_review": {"verdict": "pending", "notes": ""},
+                        "generation_metadata": {
+                            "provider": "imported",
+                            "source": "external",
+                            "source_label": request.source_label,
+                            "simulation": False,
+                            **preparation_metadata,
+                        },
+                    }
+                )
         run_id, job_id = str(uuid4()), str(uuid4())
         stamp = now()
         run = dict(
@@ -74,13 +166,13 @@ class ImageEditService:
             status="queued",
             created_at=stamp,
             updated_at=stamp,
-            candidates=[],
+            candidates=candidates,
             provider_jobs=[],
             failures=[],
             error=None,
             selected_candidate_id=None,
             no_good_candidate=False,
-            generation_retry_safe=True,
+            generation_retry_safe=not imported,
             parent_run_id=parent,
         )
         payload.pop("request_key")
@@ -88,7 +180,7 @@ class ImageEditService:
         job = {
             "id": job_id,
             "request_key": str(request.request_key),
-            "kind": "generation",
+            "kind": "evaluation" if imported else "generation",
             "payload_hash": hashlib.sha256(
                 json.dumps(payload, sort_keys=True).encode()
             ).hexdigest(),
@@ -99,6 +191,10 @@ class ImageEditService:
 
     def retry_generation(self, run_id: str, request_key: str) -> dict[str, Any]:
         run = self.repo.get(run_id)
+        if run["provider"] == "imported":
+            raise AppError(
+                "GENERATION_NOT_APPLICABLE", "Imported edits only support evaluation retries.", 409
+            )
         if run["status"] not in {"failed_generation", "partial", "completed", "failed_evaluation"}:
             raise AppError("JOB_CONFLICT", "Wait for the current job to finish.", 409)
         if not run["generation_retry_safe"]:
@@ -150,7 +246,27 @@ class ImageEditService:
             "simulation": run["provider"] == "mock",
             "contract": run["contract"],
             "source_image": run["source_image"],
-            "generated": len(run["candidates"]),
+            "generated": 0 if run["provider"] == "imported" else len(run["candidates"]),
+            **(
+                {
+                    "imported": len(run["candidates"]),
+                    "generation_source": "external-import",
+                    "source_label": run["source_label"],
+                    "generation_notice": "Candidates were generated externally and imported "
+                    "into VowEdit for evaluation.",
+                    "constraint_enforcement": [
+                        {"candidate_id": c["id"], **c["generation_metadata"]}
+                        for c in run["candidates"]
+                        if c["generation_metadata"].get("preparation")
+                    ],
+                    "preparation_notice": NOTICE
+                    if any(c["generation_metadata"].get("preparation") for c in run["candidates"])
+                    else None,
+                    "evaluation_source": "VowEdit rgb-mae-v1",
+                }
+                if run["provider"] == "imported"
+                else {}
+            ),
             "requested": 3,
             "selected": selected,
             "candidates": run["candidates"],
@@ -300,7 +416,7 @@ class ImageEditService:
                 except Exception:
                     candidate["error"] = {
                         "code": "EVALUATION_FAILED",
-                        "message": "Evaluation failed. The generated image is preserved.",
+                        "message": "Evaluation failed. The candidate image is preserved.",
                     }
 
                 def save_evaluation(r: dict[str, Any], c: dict[str, Any] = candidate) -> None:

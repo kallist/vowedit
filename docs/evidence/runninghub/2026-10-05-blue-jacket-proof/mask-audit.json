@@ -1,0 +1,17 @@
+{
+  "source_sha256": "7efc7b005d8989d21561a87a9dba5a8e8058eebc7a8b7c1870a68cd8936ccef2",
+  "size": [
+    640,
+    704
+  ],
+  "change_pixels": 67406,
+  "keep_pixels": 383154,
+  "overlap_pixels": 0,
+  "construction": "Full jacket polygon intersected with exact original jacket/seam/fastener colors; excludes visible neck, skin and hair. KEEP is its complement.",
+  "case_only": true,
+  "original_fixture_unchanged": true,
+  "thresholds": {
+    "keep": 98,
+    "outside_change": 98
+  }
+}

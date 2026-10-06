@@ -1,0 +1,13 @@
+{
+  "source": "Explicit project user review after viewing all real A/B/C outputs",
+  "reply": "A/B/C 全部 FAIL，外套未变海军蓝",
+  "verdicts": {"A": "fail", "B": "fail", "C": "fail"},
+  "notes": {
+    "A": "User reviewed A/B/C: all FAIL; jacket did not become navy blue.",
+    "B": "User reviewed A/B/C: all FAIL; jacket did not become navy blue.",
+    "C": "User reviewed A/B/C: all FAIL; jacket did not become navy blue."
+  },
+  "showcase_candidate": null,
+  "criteria_1_and_2": "FAIL: jacket remains predominantly orange-brown",
+  "criteria_3_to_8": "NOT SEPARATELY ASSESSED by the user; no overall PASS"
+}

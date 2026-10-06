@@ -1,0 +1,180 @@
+{
+  "date": "2026-10-06",
+  "type": "boundary-lock-v1",
+  "provider_generation_calls": 0,
+  "raw_direct_import_recheck": {
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "CANDIDATE_SIZE_MISMATCH",
+        "message": "Candidate dimensions must match the original. No resizing is performed."
+      }
+    }
+  },
+  "prepare_responses": [
+    {
+      "id": "b34aedef-46ef-4eb1-be47-6c8a8eda1bb7",
+      "width": 640,
+      "height": 704,
+      "url": "/api/assets/b34aedef-46ef-4eb1-be47-6c8a8eda1bb7",
+      "metadata": {
+        "generation_source": "external",
+        "generation_source_label": "Codex built-in imagegen",
+        "raw_candidate_asset": "3b6054af-b3d8-4cb1-8b83-3adcfca4821d",
+        "prepared_candidate_asset": "b34aedef-46ef-4eb1-be47-6c8a8eda1bb7",
+        "source_image": "60df6155-f48c-4320-a655-cac41b80245f",
+        "preparation": {
+          "type": "boundary-lock-v1",
+          "source_size": [
+            1195,
+            1316
+          ],
+          "target_size": [
+            640,
+            704
+          ],
+          "normalization": {
+            "method": "aspect-preserving-center-crop-lanczos",
+            "source_aspect_ratio": 0.9080547112462006,
+            "target_aspect_ratio": 0.9090909090909091,
+            "crop_box": [
+              0.0,
+              0.75,
+              1195.0,
+              1315.25
+            ],
+            "resampling": "LANCZOS"
+          },
+          "boundary": "binary-change-only",
+          "feather_pixels": 0,
+          "change_mask": "a81ef846-ba98-4308-9f8f-f4bb98d2297e"
+        }
+      },
+      "outside_change_identical": true
+    },
+    {
+      "id": "2badd09f-ce59-416d-a7eb-1db8229c5796",
+      "width": 640,
+      "height": 704,
+      "url": "/api/assets/2badd09f-ce59-416d-a7eb-1db8229c5796",
+      "metadata": {
+        "generation_source": "external",
+        "generation_source_label": "Codex built-in imagegen",
+        "raw_candidate_asset": "a33f6ffe-b6b0-489c-8357-2f4872b7123f",
+        "prepared_candidate_asset": "2badd09f-ce59-416d-a7eb-1db8229c5796",
+        "source_image": "60df6155-f48c-4320-a655-cac41b80245f",
+        "preparation": {
+          "type": "boundary-lock-v1",
+          "source_size": [
+            1195,
+            1316
+          ],
+          "target_size": [
+            640,
+            704
+          ],
+          "normalization": {
+            "method": "aspect-preserving-center-crop-lanczos",
+            "source_aspect_ratio": 0.9080547112462006,
+            "target_aspect_ratio": 0.9090909090909091,
+            "crop_box": [
+              0.0,
+              0.75,
+              1195.0,
+              1315.25
+            ],
+            "resampling": "LANCZOS"
+          },
+          "boundary": "binary-change-only",
+          "feather_pixels": 0,
+          "change_mask": "a81ef846-ba98-4308-9f8f-f4bb98d2297e"
+        }
+      },
+      "outside_change_identical": true
+    },
+    {
+      "id": "afb7e040-47d2-45ec-b0bf-ff2ff2765d5b",
+      "width": 640,
+      "height": 704,
+      "url": "/api/assets/afb7e040-47d2-45ec-b0bf-ff2ff2765d5b",
+      "metadata": {
+        "generation_source": "external",
+        "generation_source_label": "Codex built-in imagegen",
+        "raw_candidate_asset": "1cbfe4c0-a5f6-49b5-a139-2c3f11b15ca5",
+        "prepared_candidate_asset": "afb7e040-47d2-45ec-b0bf-ff2ff2765d5b",
+        "source_image": "60df6155-f48c-4320-a655-cac41b80245f",
+        "preparation": {
+          "type": "boundary-lock-v1",
+          "source_size": [
+            1195,
+            1316
+          ],
+          "target_size": [
+            640,
+            704
+          ],
+          "normalization": {
+            "method": "aspect-preserving-center-crop-lanczos",
+            "source_aspect_ratio": 0.9080547112462006,
+            "target_aspect_ratio": 0.9090909090909091,
+            "crop_box": [
+              0.0,
+              0.75,
+              1195.0,
+              1315.25
+            ],
+            "resampling": "LANCZOS"
+          },
+          "boundary": "binary-change-only",
+          "feather_pixels": 0,
+          "change_mask": "a81ef846-ba98-4308-9f8f-f4bb98d2297e"
+        }
+      },
+      "outside_change_identical": true
+    }
+  ],
+  "import_request": {
+    "source_image": "60df6155-f48c-4320-a655-cac41b80245f",
+    "contract": {
+      "change": {
+        "instruction": "Replace the entire orange-brown jacket with a solid dark cool navy blue color. Preserve face, hair, pants, pose, background, flat illustration and jacket structure.",
+        "mask": "a81ef846-ba98-4308-9f8f-f4bb98d2297e"
+      },
+      "keep": [
+        {
+          "type": "manual_region",
+          "label": "Outside jacket: face, hair, skin, pants, background",
+          "mask": "69830151-9e16-4d71-98ec-6b2664c221d9",
+          "threshold": 98
+        }
+      ],
+      "background_threshold": 98
+    },
+    "source_label": "Codex built-in imagegen",
+    "request_key": "0cf9a39c-dbc4-4352-a8ec-11bd72ce8c5c",
+    "candidate_images": [
+      "b34aedef-46ef-4eb1-be47-6c8a8eda1bb7",
+      "2badd09f-ce59-416d-a7eb-1db8229c5796",
+      "afb7e040-47d2-45ec-b0bf-ff2ff2765d5b"
+    ]
+  },
+  "run_id": "e5f59ad7-066d-4138-aa55-5fa9ba97b32f",
+  "raw_human_review": "A/B/C 视觉均满足，偏好 A",
+  "locked_human_review": {
+    "date": "2026-10-06",
+    "run_id": "e5f59ad7-066d-4138-aa55-5fa9ba97b32f",
+    "scope": "final derived Boundary Lock A/B/C displayed through VowEdit production UI",
+    "exact_user_reply": "A/B/C 均 PASS，偏好 A",
+    "verdicts": {
+      "A": "PASS",
+      "B": "PASS",
+      "C": "PASS"
+    },
+    "preferred": "A",
+    "review_api": "PUT /api/runs/{run_id}/candidates/{candidate_id}/review",
+    "persisted_readback": "PASS",
+    "ranking_and_images_unchanged": true,
+    "new_generation_calls": 0,
+    "new_runs": 0
+  }
+}

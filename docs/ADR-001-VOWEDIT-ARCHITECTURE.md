@@ -48,7 +48,28 @@ Real adapters use one repository-owned SD/SDXL core-node latent inpainting templ
 configuration supplies model names and, for RunningHub, a saved workflow ID and API key. No arbitrary
 browser-supplied graphs. CHANGE is inverted into source alpha for ComfyUI LoadImage's mask output.
 Inputs are padded to multiples of eight and outputs cropped back; other dimensional changes fail.
-KEEP is primarily a post-generation check. Outputs are never composited over the source to hide drift.
+KEEP is primarily a post-generation check. Provider outputs are not silently composited over the
+source to hide drift. The 2026-10-06 opt-in imported preparation below explicitly enforces boundaries
+and records that intervention separately from generation and evaluation.
+
+### Explicit imported Boundary Lock — 2026-10-06
+
+Raw imported assets remain immutable and must still match dimensions for direct evaluation.
+`POST /api/prepared-candidates` is a separate command: validate the original/CHANGE/KEEP contract,
+center-crop the raw candidate in continuous coordinates to the target aspect ratio, then Lanczos
+resize; admit generated pixels only inside binary CHANGE and original pixels everywhere else.
+The original and masks are never resampled. No feather, new model call or scoring change.
+
+Each new PNG and atomic provenance sidecar is written before an existing asset row registers kind
+`prepared_candidate`; no schema migration. Import reads server provenance and binds the derived asset
+to original, CHANGE mask and source label. Missing provenance fails closed. Concurrent preparations
+produce independent UUIDs with deterministic pixels; repeating preparation may leave an extra asset,
+but cannot mutate originals or submit a paid job. A crash before registration leaves an orphan;
+after registration both files already exist. Evaluation retries load the same prepared assets.
+
+Both exact-size direct imports and explicit prepared imports enter the unchanged evaluator/worker.
+Receipts distinguish external generation, VowEdit Boundary Lock enforcement and rgb-mae-v1 evaluation.
+Zero drift after enforcement proves the composite boundary, not the external model's preservation.
 
 `rgb-mae-v1`: let d(x,y) = mean absolute RGB difference / 255. Report:
 

@@ -1,4 +1,13 @@
-# One fixed image inpainting workflow
+# Repository-owned image inpainting workflows
+
+RunningHub uses **z-image-inpaint-api.json**, copied from the actual user-supplied API export.
+Only the previous image reference is sanitized. Backend fingerprint validation runs before upload;
+runtime replaces image 16/text 8/seed 4, selects generated output 11 and discards preview 17.
+Stack: Z-Image Turbo UNET, Qwen CLIP, AE VAE. Mask path: 16 → 13 → 7.
+This graph includes MaskBlur+, DifferentialDiffusion and FluxGuidance; it is separate from the
+core-node local graph below. See [RunningHub evidence](../docs/RUNNINGHUB_INTEGRATION.md).
+
+## Local ComfyUI graph
 
 `inpaint-api.json` is a ComfyUI API-format graph authored for VowEdit. It is HTTP-contract tested;
 real execution is NOT TESTED. It must not be called a tested model workflow yet.

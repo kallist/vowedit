@@ -17,10 +17,39 @@ import {
   label,
   metric,
   terminal,
+  sourceBadge,
   type Run,
   type Candidate,
 } from "./types";
-type View = "after" | "before" | "compare" | "ghost";
+type View = "after" | "before" | "compare" | "ghost" | "raw";
+function BoundaryDisclosure({ candidate }: { candidate: Candidate }) {
+  const metadata = candidate.generation_metadata!;
+  const preparation = metadata.preparation!;
+  return (
+    <div className="boundary-disclosure" aria-label="Boundary Lock provenance">
+      <strong>BOUNDARY LOCKED · VowEdit Boundary Lock</strong>
+      <p>
+        Generation: external · {metadata.generation_source_label}. Model/version
+        unavailable; seed not supplied.
+      </p>
+      <p>
+        Raw {preparation.source_size.join(" × ")} px → prepared{" "}
+        {preparation.target_size.join(" × ")} px. Aspect-preserving center crop
+        · Lanczos · binary CHANGE boundary.
+      </p>
+      <p>
+        The external candidate was normalized to the source canvas. Only pixels
+        permitted by the CHANGE mask were admitted into the evaluated result.
+        Pixels outside CHANGE were preserved from the original image.
+      </p>
+      <p>
+        Constraint enforcement: VowEdit Boundary Lock. Evaluation: VowEdit
+        rgb-mae-v1. Preservation reflects boundary enforcement; it does not
+        prove the external model preserved these pixels.
+      </p>
+    </div>
+  );
+}
 export default function ResultPage({ id }: { id: string }) {
   const router = useRouter(),
     [run, setRun] = useState<Run | null>(null),
@@ -122,10 +151,14 @@ export default function ResultPage({ id }: { id: string }) {
           </h1>
           <p className="muted">{run.contract.change.instruction}</p>
         </div>
-        <span className="pill">
-          {run.provider === "mock" ? "MOCK · pixel simulation" : run.provider}
-        </span>
+        <span className="pill">{sourceBadge(run)}</span>
       </div>
+      {run.provider === "imported" && (
+        <p className="field-note">
+          Candidates were generated externally and imported into VowEdit for
+          evaluation. This is not a direct model API integration.
+        </p>
+      )}
       {error && (
         <p role="alert" className="error">
           {error}
@@ -147,7 +180,10 @@ export default function ResultPage({ id }: { id: string }) {
               this page and come back.
             </p>
             <div className="stage-list">
-              {["queued", "generating", "evaluating"].map((s) => (
+              {(run.provider === "imported"
+                ? ["queued", "evaluating"]
+                : ["queued", "generating", "evaluating"]
+              ).map((s) => (
                 <span key={s} className={run.status === s ? "current" : ""}>
                   {s}
                 </span>
@@ -184,7 +220,7 @@ export default function ResultPage({ id }: { id: string }) {
                 Retry Generation
               </button>
             )}
-            {!run.generation_retry_safe && (
+            {!run.generation_retry_safe && run.provider !== "imported" && (
               <p>
                 Provider state is unknown. Check its queue before creating a new
                 edit; an automatic retry could duplicate work.
@@ -219,6 +255,9 @@ export default function ResultPage({ id }: { id: string }) {
       )}
       {candidate && (
         <>
+          {candidate.generation_metadata?.preparation && (
+            <BoundaryDisclosure candidate={candidate} />
+          )}
           <div className="result-layout">
             <section className="comparison">
               <div className="comparison-header">
@@ -233,41 +272,57 @@ export default function ResultPage({ id }: { id: string }) {
                   role="group"
                   aria-label="Comparison view"
                 >
-                  {(["before", "after", "compare", "ghost"] as View[]).map(
-                    (v) => (
-                      <button
-                        key={v}
-                        aria-pressed={view === v}
-                        disabled={v === "ghost" && !candidate.ghost}
-                        onClick={() => setView(v)}
-                      >
-                        {v === "ghost" ? (
-                          <>
-                            <ScanLine size={14} aria-hidden />
-                            Ghost View
-                          </>
-                        ) : v === "compare" ? (
-                          "Before / After"
-                        ) : v === "before" ? (
-                          "Original"
-                        ) : (
-                          "Result"
-                        )}
-                      </button>
-                    ),
-                  )}
+                  {(
+                    [
+                      "before",
+                      "after",
+                      "compare",
+                      "ghost",
+                      ...(candidate.generation_metadata?.preparation
+                        ? ["raw"]
+                        : []),
+                    ] as View[]
+                  ).map((v) => (
+                    <button
+                      key={v}
+                      aria-pressed={view === v}
+                      disabled={v === "ghost" && !candidate.ghost}
+                      onClick={() => setView(v)}
+                    >
+                      {v === "ghost" ? (
+                        <>
+                          <ScanLine size={14} aria-hidden />
+                          Ghost View
+                        </>
+                      ) : v === "compare" ? (
+                        "Before / After"
+                      ) : v === "before" ? (
+                        "Original"
+                      ) : v === "raw" ? (
+                        "Raw external"
+                      ) : (
+                        "Result"
+                      )}
+                    </button>
+                  ))}
                 </div>
               </div>
               <div className="comparison-mat">
                 <div className="compare-image" data-testid="comparison-image">
                   <img
                     src={assetUrl(
-                      view === "before" ? run.source_image : candidate.image,
+                      view === "before"
+                        ? run.source_image
+                        : view === "raw"
+                          ? candidate.generation_metadata!.raw_candidate_asset!
+                          : candidate.image,
                     )}
                     alt={
                       view === "before"
                         ? "Original image"
-                        : `Candidate ${label(candidate.index)} result`
+                        : view === "raw"
+                          ? `Candidate ${label(candidate.index)} raw external image`
+                          : `Candidate ${label(candidate.index)} result`
                     }
                   />
                   {view === "compare" && (
@@ -411,6 +466,8 @@ export default function ResultPage({ id }: { id: string }) {
                   onClick={() => {
                     setChosen(c.id);
                     setReceipt(false);
+                    if (view === "raw" && !c.generation_metadata?.preparation)
+                      setView("compare");
                   }}
                 >
                   <div className="candidate-thumbnail">
@@ -457,18 +514,33 @@ export default function ResultPage({ id }: { id: string }) {
                   <ShieldCheck size={18} aria-hidden />
                   {receipt ? "Close Edit Receipt" : "View Edit Receipt"}
                 </button>
-                <button
-                  className="button"
-                  disabled={busy || !run.generation_retry_safe}
-                  onClick={() => void retry("generation")}
-                >
-                  Retry Generation
-                </button>
+                {run.provider !== "imported" && (
+                  <button
+                    className="button"
+                    disabled={busy || !run.generation_retry_safe}
+                    onClick={() => void retry("generation")}
+                  >
+                    Retry Generation
+                  </button>
+                )}
                 <Link href="/edit/new" className="text-button">
                   New edit <ArrowRight size={15} aria-hidden />
                 </Link>
               </div>
-              {receipt && <Receipt run={run} onUpdate={setRun} />}
+              {receipt && (
+                <Receipt
+                  key={candidate.id}
+                  run={run}
+                  reviewed={
+                    run.provider === "imported"
+                      ? candidate
+                      : run.candidates.find(
+                          (c) => c.id === run.selected_candidate_id,
+                        ) || candidate
+                  }
+                  onUpdate={setRun}
+                />
+              )}
             </>
           )}
         </>
@@ -512,26 +584,27 @@ function ScoreCard({ candidate }: { candidate: Candidate }) {
 }
 function Receipt({
   run,
+  reviewed,
   onUpdate,
 }: {
   run: Run;
+  reviewed: Candidate;
   onUpdate: (run: Run) => void;
 }) {
   const selected = run.candidates.find(
     (c) => c.id === run.selected_candidate_id,
   );
-  const [notes, setNotes] = useState(selected?.manual_review.notes || ""),
+  const [notes, setNotes] = useState(reviewed.manual_review.notes || ""),
     [verdict, setVerdict] = useState(
-      selected?.manual_review.verdict || "pending",
+      reviewed.manual_review.verdict || "pending",
     );
   const [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false);
   async function save() {
-    if (!selected) return;
     setBusy(true);
     try {
       onUpdate(
-        await api<Run>(`/runs/${run.id}/candidates/${selected.id}/review`, {
+        await api<Run>(`/runs/${run.id}/candidates/${reviewed.id}/review`, {
           ...jsonPost({ verdict, notes }),
           method: "PUT",
         }),
@@ -571,9 +644,27 @@ function Receipt({
               : "No qualifying candidate"}
           </h3>
           <p>
-            {run.candidates.length} / 3 generated ·{" "}
-            {run.provider === "mock" ? "Mock simulation" : run.provider} ·{" "}
-            {run.generation_seconds ?? "—"}s
+            {run.candidates.length} / 3{" "}
+            {run.provider === "imported" ? "imported" : "generated"} ·{" "}
+            {sourceBadge(run)}
+            {run.provider !== "imported" &&
+              ` · ${run.generation_seconds ?? "—"}s`}
+          </p>
+          {run.provider === "imported" && (
+            <p className="field-note">
+              Generation source: external-import. Candidates were generated
+              externally and imported into VowEdit for evaluation.
+            </p>
+          )}
+          {reviewed.generation_metadata?.preparation && (
+            <BoundaryDisclosure candidate={reviewed} />
+          )}
+          <p className="field-note">
+            CHANGE · {run.contract.change.mask.slice(0, 8)} · Evaluation{" "}
+            {selected?.evaluation?.metric_version ||
+              run.candidates.find((c) => c.evaluation)?.evaluation
+                ?.metric_version ||
+              "pending"}
           </p>
         </div>
         <div>
@@ -589,11 +680,20 @@ function Receipt({
             Pixel preservation is not semantic correctness, identity
             preservation or subjective quality.
           </p>
+          {selected?.evaluation?.warnings.map((w) => (
+            <p className="field-note" key={w}>
+              {w}
+            </p>
+          ))}
         </div>
       </div>
-      {selected && (
+      {(run.provider === "imported" || selected) && (
         <div className="human-review">
           <span className="eyebrow">EDIT ADHERENCE / HUMAN REVIEW</span>
+          <p>
+            Reviewing Candidate {label(reviewed.index)}. System suggestion
+            remains unchanged.
+          </p>
           <p>The score does not answer whether the instruction was followed.</p>
           <label htmlFor="human-verdict">Your verdict</label>
           <select

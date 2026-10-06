@@ -1,0 +1,61 @@
+{
+  "receipt_version": "adapter-smoke-v1",
+  "provider": "runninghub",
+  "simulation": false,
+  "requested": 1,
+  "generated": 1,
+  "task_id": "2106831486408949762",
+  "seed": 671807066932685,
+  "source": "public/fixtures/original.png",
+  "contract": {
+    "change": {
+      "instruction": "Change the jacket to cool blue.",
+      "mask": "public/fixtures/change.png"
+    },
+    "keep": [
+      {
+        "label": "Face and hair",
+        "type": "manual_region",
+        "threshold": 98,
+        "mask": "public/fixtures/keep.png"
+      }
+    ],
+    "background_threshold": 98
+  },
+  "image": "0f8a9a5c-c035-469c-a103-d5c6a88b1966",
+  "ghost": "533ce769-e392-40e9-9c86-326204cf67b7",
+  "evaluation": {
+    "metric_version": "rgb-mae-v1",
+    "protected_similarity": 99.06060326099396,
+    "background_preservation": 99.1515741944313,
+    "change_difference": 2.3287174701690674,
+    "unexpected_drift": 0.8484258055686951,
+    "overall_score": 99.09699163436889,
+    "weights": {
+      "protected": 0.6,
+      "background": 0.4
+    },
+    "minimum_change": 2.0,
+    "meaningful_change": true,
+    "violations": [],
+    "eligible": true,
+    "regions": [
+      {
+        "label": "Face and hair",
+        "type": "manual_region",
+        "threshold": 98,
+        "score": 99.06060326099396
+      }
+    ],
+    "warnings": [
+      "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+      "Prompt adherence and visual quality need manual review."
+    ],
+    "edit_adherence": "manual_review"
+  },
+  "manual_review": {
+    "verdict": "pending",
+    "notes": ""
+  },
+  "disclaimer": "Adapter validation receipt; public product API requires 3 candidates."
+}

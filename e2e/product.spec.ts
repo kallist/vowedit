@@ -12,7 +12,7 @@ async function capture(page: Page, width: number, name: string) {
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  const directory = path.join("docs", "screenshots", String(width));
+  const directory = path.join("docs", "screenshots", "final", String(width));
   await fs.mkdir(directory, { recursive: true });
   await page.screenshot({
     path: path.join(directory, `${name}.png`),
@@ -44,7 +44,7 @@ async function paint(page: Page) {
     "KEEP · 0 px",
   );
 }
-for (const width of [1440, 768, 390]) {
+for (const width of [1440, 1024, 768, 430, 390]) {
   test(`full product flow and visual evidence at ${width}`, async ({
     page,
   }) => {
@@ -112,7 +112,8 @@ for (const width of [1440, 768, 390]) {
     expect(
       await page
         .getByTestId("ghost-overlay")
-        .evaluate((img: HTMLImageElement) => {
+        .evaluate(async (img: HTMLImageElement) => {
+          await img.decode();
           const canvas = document.createElement("canvas");
           canvas.width = img.naturalWidth;
           canvas.height = img.naturalHeight;
@@ -170,7 +171,7 @@ test("provider outage recovers without repainting", async ({ page }) => {
     page.getByRole("heading", { name: "Generation could not finish." }),
   ).toBeVisible();
   const failedId = page.url().split("/").pop();
-  for (const width of [1440, 768, 390]) {
+  for (const width of [1440, 1024, 768, 430, 390]) {
     await page.setViewportSize({ width, height: 1000 });
     await capture(page, width, "failure-state");
   }
@@ -306,13 +307,141 @@ test("no meaningful edit produces no selected candidate", async ({ page }) => {
   await paint(page);
   await page.getByRole("button", { name: "Review edit contract" }).click();
   await page.getByRole("button", { name: "Generate 3 candidates" }).click();
+  // Completion is a durable async boundary, not a five-second text-render deadline.
+  await expect(page).toHaveURL(/\/edit\/[0-9a-f-]+$/);
+  const id = page.url().split("/").pop()!;
+  await expect
+    .poll(
+      async () => {
+        const run = await (await page.request.get(`/api/runs/${id}`)).json();
+        return run.status;
+      },
+      {
+        timeout: 15000,
+        message:
+          "three-candidate job must complete before no-good-result assertions",
+      },
+    )
+    .toBe("completed");
   await expect(
     page.getByText("No candidate fully satisfied your constraints."),
   ).toBeVisible();
   await expect(page.locator(".candidate-card")).toHaveCount(3);
   await expect(page.locator(".suggested")).toHaveCount(0);
+  const run = await (await page.request.get(`/api/runs/${id}`)).json();
+  expect(run.selected_candidate_id).toBeNull();
+  expect(run.no_good_candidate).toBe(true);
+  expect(
+    run.candidates.every(
+      (c: { evaluation: { eligible: boolean } }) => !c.evaluation.eligible,
+    ),
+  ).toBe(true);
   await page.getByRole("button", { name: "View Edit Receipt" }).click();
   await expect(
     page.getByRole("heading", { name: "No qualifying candidate" }),
   ).toBeVisible();
+});
+
+test("one-click Mock demo stays aligned through resizing and survives double-click and active refresh", async ({
+  page,
+}) => {
+  await page.goto("/edit/new");
+  const submitted: string[] = [];
+  page.on("request", (request) => {
+    if (request.method() === "POST" && request.url().endsWith("/api/runs"))
+      submitted.push(request.postData() || "");
+  });
+  await page
+    .getByRole("button", { name: "Use Demo — image, instruction & masks" })
+    .click();
+  await expect(page.getByLabel("What would you like to change?")).toHaveValue(
+    "Change the terracotta jacket to a cool blue jacket.",
+  );
+  await expect(page.getByLabel("Generation source")).toHaveValue("mock");
+  await expect(page.locator(".change-dot").first()).toContainText("26,847");
+  await expect(page.locator(".keep-dot").first()).toContainText("37,240");
+  expect(submitted).toHaveLength(0);
+  const pixels = await page
+    .getByTestId("mask-surface")
+    .evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL());
+  for (const width of [1440, 1024, 768, 430, 390]) {
+    await page.setViewportSize({ width, height: 1000 });
+    expect(
+      await page
+        .getByTestId("mask-surface")
+        .evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL()),
+    ).toBe(pixels);
+    const aligned = await page.locator(".paint-frame").evaluate((frame) => {
+      const canvas = frame.querySelector("canvas")!,
+        image = frame.querySelector("img")!;
+      const a = canvas.getBoundingClientRect(),
+        b = image.getBoundingClientRect();
+      return (
+        Math.abs(a.width - b.width) < 1 &&
+        Math.abs(a.height - b.height) < 1 &&
+        Math.abs(a.x - b.x) < 1 &&
+        Math.abs(a.y - b.y) < 1
+      );
+    });
+    expect(aligned).toBe(true);
+  }
+  await page.getByRole("button", { name: "Review edit contract" }).click();
+  await page.getByRole("button", { name: "Edit the contract" }).click();
+  await expect(page.locator(".change-dot").first()).toContainText("26,847");
+  await page.getByRole("button", { name: "Review edit contract" }).click();
+  await page.getByRole("button", { name: "Generate 3 candidates" }).dblclick();
+  await expect(page).toHaveURL(/\/edit\/[0-9a-f-]+$/);
+  const id = page.url().split("/").pop()!;
+  await expect(
+    page.getByRole("heading", { name: "A little change, under review." }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(page).toHaveURL(new RegExp(`/edit/${id}$`));
+  await expect(
+    page.getByRole("button", { name: "Inspect Candidate B" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  expect(submitted).toHaveLength(1);
+  const run = await (await page.request.get(`/api/runs/${id}`)).json();
+  expect(run.candidates).toHaveLength(3);
+  expect(run.contract.keep[0].label).toBe("Face & hair");
+});
+
+test("evaluation failure keeps images and retry never calls generation", async ({
+  page,
+}) => {
+  await page.goto("/edit/new");
+  await page
+    .getByRole("button", { name: "Use Demo — image, instruction & masks" })
+    .click();
+  await page
+    .getByLabel("What would you like to change?")
+    .fill("Test evaluation recovery");
+  await page.getByRole("button", { name: "Review edit contract" }).click();
+  await page.getByRole("button", { name: "Generate 3 candidates" }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Images saved. Evaluation needs another try.",
+    }),
+  ).toBeVisible({ timeout: 15000 });
+  const id = page.url().split("/").pop()!;
+  const failed = await (await page.request.get(`/api/runs/${id}`)).json();
+  expect(failed.status).toBe("failed_evaluation");
+  expect(failed.candidates).toHaveLength(3);
+  for (const c of failed.candidates)
+    expect((await page.request.get(`/api/assets/${c.image}`)).ok()).toBe(true);
+  const before = await (
+    await page.request.get("/api/test/provider-calls")
+  ).json();
+  await page.getByRole("button", { name: "Retry Evaluation" }).click();
+  await expect(
+    page.getByRole("button", { name: "Inspect Candidate B" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  const recovered = await (await page.request.get(`/api/runs/${id}`)).json();
+  expect(recovered.status).toBe("completed");
+  expect(
+    recovered.candidates.map((c: { image: string }) => c.image).sort(),
+  ).toEqual(failed.candidates.map((c: { image: string }) => c.image).sort());
+  expect(
+    await (await page.request.get("/api/test/provider-calls")).json(),
+  ).toEqual(before);
 });

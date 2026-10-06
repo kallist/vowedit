@@ -1,0 +1,42 @@
+{
+  "previous_sha": "8beb5e0ea48786e1fd18a1e7400360de860a93df",
+  "branch": "feat/vowedit-v0.1-hardening",
+  "local_checks_after_both_rounds_and_user_reviews": {
+    "ruff_backend_scripts": "PASS",
+    "mypy_backend_excluding_tests": "PASS: 10 source files",
+    "pytest": "PASS: 106 tests",
+    "frontend_lint": "PASS",
+    "frontend_typecheck": "PASS",
+    "vitest": "PASS: 5 tests",
+    "production_build_webpack": "PASS",
+    "playwright_mock": "PASS: 11 tests",
+    "secret_pattern_scan": "PASS",
+    "actual_runtime_key_scan_repository_and_browser_bundles": "PASS: value withheld",
+    "git_diff_check": "PASS"
+  },
+  "real_case_checks": {
+    "round_1_engineering": "PASS: accepted B polling failure recovered from same task",
+    "round_2_engineering": "PASS",
+    "real_evaluation_ranking_ghost_receipt_persistence": "PASS: six candidates",
+    "existing_product_api_readback": "PASS: both rounds",
+    "production_browser_qa": "PASS: both rounds, widths 1440 and 390, no paid provider registered",
+    "human_review_recording": "PASS: six explicit user FAIL verdicts persisted",
+    "human_semantic_result": "FAIL: all six",
+    "successful_real_showcase": "NO",
+    "portfolio_ready": "NO"
+  },
+  "review": {
+    "type": "Self-review and deterministic evidence consistency checks",
+    "blocking_or_important_implementation_findings": "None; product source unchanged",
+    "semantic_objective": "FAILED; do not equate engineering PASS with showcase success",
+    "independent_engineering_reviewer": "NOT TESTED in this case"
+  },
+  "hosted_ci_at_local_evidence_snapshot": "Previous SHA PASS; new commit must be verified separately through Draft PR #1 checks after push",
+  "pr": "https://github.com/kallist/vowedit/pull/1",
+  "docker": "NOT TESTED",
+  "real_local_comfyui": "NOT TESTED",
+  "known_warnings": [
+    "Existing Starlette/httpx TestClient deprecation warning",
+    "Existing Vitest CommonJS/ESM future config loader warning"
+  ]
+}

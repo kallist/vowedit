@@ -1,4 +1,17 @@
 export type Asset = { id: string; width: number; height: number; url: string };
+export type PreparationMetadata = {
+  generation_source_label: string;
+  raw_candidate_asset: string;
+  prepared_candidate_asset: string;
+  preparation: {
+    type: "boundary-lock-v1";
+    source_size: [number, number];
+    target_size: [number, number];
+    normalization: { method: string; crop_box: number[]; resampling: string };
+    change_mask: string;
+  };
+};
+export type PreparedAsset = Asset & { metadata: PreparationMetadata };
 export type Contract = {
   change: { instruction: string; mask: string };
   keep: {
@@ -10,6 +23,7 @@ export type Contract = {
   background_threshold: number | null;
 };
 export type Evaluation = {
+  metric_version: string;
   protected_similarity: number | null;
   background_preservation: number;
   change_difference: number;
@@ -30,7 +44,8 @@ export type Candidate = {
   evaluation: Evaluation | null;
   error: { code: string; message: string } | null;
   rank: number | null;
-  seed: number;
+  seed: number | null;
+  generation_metadata?: Partial<PreparationMetadata>;
   manual_review: { verdict: "pending" | "pass" | "fail"; notes: string };
 };
 export type Run = {
@@ -39,6 +54,7 @@ export type Run = {
   source_image: string;
   status: string;
   provider: string;
+  source_label?: string | null;
   contract: Contract;
   candidates: Candidate[];
   selected_candidate_id: string | null;
@@ -50,6 +66,12 @@ export type Run = {
   generation_seconds?: number;
 };
 export const assetUrl = (id: string) => `/api/assets/${id}`;
+export const sourceBadge = (run: Pick<Run, "provider" | "source_label">) =>
+  run.provider === "imported"
+    ? `IMPORTED · ${run.source_label || "External candidates"}`
+    : run.provider === "mock"
+      ? "MOCK · pixel simulation"
+      : run.provider;
 export const label = (index: number) => String.fromCharCode(65 + index);
 export const terminal = (state: string) =>
   ["completed", "partial", "failed_generation", "failed_evaluation"].includes(

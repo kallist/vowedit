@@ -1,0 +1,215 @@
+{
+  "receipt_version": "v1",
+  "run_id": "6152efdd-2342-4384-affa-731be6beed6c",
+  "provider": "runninghub",
+  "simulation": false,
+  "contract": {
+    "change": {
+      "instruction": "Replace the white porcelain teapot inside the masked area with a red ceramic mug. Keep the table, background, lighting, surrounding objects, camera angle and composition unchanged. The mug should fit naturally in the same position and scale.",
+      "mask": "44c9f68b-4752-489f-a7ab-fd093b91819f"
+    },
+    "keep": [
+      {
+        "type": "manual_region",
+        "label": "Table background lighting composition outside object",
+        "mask": "3be45a55-6f2d-4573-bc50-01a21b9ae463",
+        "threshold": 98.0
+      }
+    ],
+    "background_threshold": 98.0
+  },
+  "source_image": "c8dc968c-0684-40a5-aff3-8d9201e6fefc",
+  "generated": 3,
+  "requested": 3,
+  "selected": {
+    "id": "5e27cf98-58aa-4fa7-9731-88f25c902398",
+    "index": 1,
+    "image": "5aac9862-1f7e-4c0f-93c4-0c45edfedc1e",
+    "seed": 6101,
+    "evaluation": {
+      "metric_version": "rgb-mae-v1",
+      "protected_similarity": 98.86726021766663,
+      "background_preservation": 98.86726021766663,
+      "change_difference": 14.867897033691406,
+      "unexpected_drift": 1.132739782333374,
+      "overall_score": 98.86726021766663,
+      "weights": {
+        "protected": 0.6,
+        "background": 0.4
+      },
+      "minimum_change": 2.0,
+      "meaningful_change": true,
+      "violations": [],
+      "eligible": true,
+      "regions": [
+        {
+          "label": "Table background lighting composition outside object",
+          "type": "manual_region",
+          "threshold": 98.0,
+          "score": 98.86726021766663
+        }
+      ],
+      "warnings": [
+        "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+        "Prompt adherence and visual quality need manual review."
+      ],
+      "edit_adherence": "manual_review"
+    },
+    "ghost": "94073400-fa39-4e12-8e04-e7c25c422ebd",
+    "rank": 1,
+    "error": null,
+    "manual_review": {
+      "verdict": "fail",
+      "notes": "User review: FAIL. Original teapot not replaced; no clear red ceramic mug. KEEP basically preserved; added/overlaid artifacts; no successful showcase."
+    },
+    "generation_metadata": {
+      "provider": "runninghub",
+      "simulation": false
+    }
+  },
+  "candidates": [
+    {
+      "id": "5e27cf98-58aa-4fa7-9731-88f25c902398",
+      "index": 1,
+      "image": "5aac9862-1f7e-4c0f-93c4-0c45edfedc1e",
+      "seed": 6101,
+      "evaluation": {
+        "metric_version": "rgb-mae-v1",
+        "protected_similarity": 98.86726021766663,
+        "background_preservation": 98.86726021766663,
+        "change_difference": 14.867897033691406,
+        "unexpected_drift": 1.132739782333374,
+        "overall_score": 98.86726021766663,
+        "weights": {
+          "protected": 0.6,
+          "background": 0.4
+        },
+        "minimum_change": 2.0,
+        "meaningful_change": true,
+        "violations": [],
+        "eligible": true,
+        "regions": [
+          {
+            "label": "Table background lighting composition outside object",
+            "type": "manual_region",
+            "threshold": 98.0,
+            "score": 98.86726021766663
+          }
+        ],
+        "warnings": [
+          "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+          "Prompt adherence and visual quality need manual review."
+        ],
+        "edit_adherence": "manual_review"
+      },
+      "ghost": "94073400-fa39-4e12-8e04-e7c25c422ebd",
+      "rank": 1,
+      "error": null,
+      "manual_review": {
+        "verdict": "fail",
+        "notes": "User review: FAIL. Original teapot not replaced; no clear red ceramic mug. KEEP basically preserved; added/overlaid artifacts; no successful showcase."
+      },
+      "generation_metadata": {
+        "provider": "runninghub",
+        "simulation": false
+      }
+    },
+    {
+      "id": "58a6a2bf-6b60-4082-9f12-3d2d3269b6f0",
+      "index": 2,
+      "image": "029a75cb-c8aa-4369-92c2-e1a8b025a202",
+      "seed": 6102,
+      "evaluation": {
+        "metric_version": "rgb-mae-v1",
+        "protected_similarity": 98.81421446800232,
+        "background_preservation": 98.81421446800232,
+        "change_difference": 6.964001178741455,
+        "unexpected_drift": 1.1857855319976807,
+        "overall_score": 98.81421446800232,
+        "weights": {
+          "protected": 0.6,
+          "background": 0.4
+        },
+        "minimum_change": 2.0,
+        "meaningful_change": true,
+        "violations": [],
+        "eligible": true,
+        "regions": [
+          {
+            "label": "Table background lighting composition outside object",
+            "type": "manual_region",
+            "threshold": 98.0,
+            "score": 98.81421446800232
+          }
+        ],
+        "warnings": [
+          "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+          "Prompt adherence and visual quality need manual review."
+        ],
+        "edit_adherence": "manual_review"
+      },
+      "ghost": "41727f87-d98b-4240-a28c-f9e2728f2254",
+      "rank": 2,
+      "error": null,
+      "manual_review": {
+        "verdict": "fail",
+        "notes": "User review: FAIL. Original teapot not replaced; no clear red ceramic mug. KEEP basically preserved; added/overlaid artifacts; no successful showcase."
+      },
+      "generation_metadata": {
+        "provider": "runninghub",
+        "simulation": false
+      }
+    },
+    {
+      "id": "4bbd1f23-0ea7-4e21-9d34-eeb63e819f87",
+      "index": 0,
+      "image": "b964382b-16b1-4dd0-9dc3-19ac146c3ff6",
+      "seed": 6100,
+      "evaluation": {
+        "metric_version": "rgb-mae-v1",
+        "protected_similarity": 98.80807399749756,
+        "background_preservation": 98.80807399749756,
+        "change_difference": 10.474966049194336,
+        "unexpected_drift": 1.1919260025024414,
+        "overall_score": 98.80807399749756,
+        "weights": {
+          "protected": 0.6,
+          "background": 0.4
+        },
+        "minimum_change": 2.0,
+        "meaningful_change": true,
+        "violations": [],
+        "eligible": true,
+        "regions": [
+          {
+            "label": "Table background lighting composition outside object",
+            "type": "manual_region",
+            "threshold": 98.0,
+            "score": 98.80807399749756
+          }
+        ],
+        "warnings": [
+          "Pixel drift detected outside CHANGE. Inspect Ghost View.",
+          "Prompt adherence and visual quality need manual review."
+        ],
+        "edit_adherence": "manual_review"
+      },
+      "ghost": "72896128-8610-4fed-b28c-ad58044592aa",
+      "rank": 3,
+      "error": null,
+      "manual_review": {
+        "verdict": "fail",
+        "notes": "User review: FAIL. Original teapot not replaced; no clear red ceramic mug. KEEP basically preserved; added/overlaid artifacts; no successful showcase."
+      },
+      "generation_metadata": {
+        "provider": "runninghub",
+        "simulation": false
+      }
+    }
+  ],
+  "no_good_candidate": false,
+  "failures": [],
+  "generation_seconds": 89.484,
+  "created_at": "2026-10-05T06:11:25.957770+00:00",
+  "disclaimer": "Pixel similarity is not prompt adherence, identity or image quality. Semantic adherence and artifacts require human review."
+}

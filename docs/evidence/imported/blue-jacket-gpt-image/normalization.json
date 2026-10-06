@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-06",
+  "normalization": {
+    "method": "aspect-preserving-center-crop-lanczos",
+    "source_aspect_ratio": 0.9080547112462006,
+    "target_aspect_ratio": 0.9090909090909091,
+    "crop_box": [
+      0.0,
+      0.75,
+      1195.0,
+      1315.25
+    ],
+    "resampling": "LANCZOS"
+  },
+  "raw_dimensions": [
+    1195,
+    1316
+  ],
+  "target_dimensions": [
+    640,
+    704
+  ],
+  "original_and_masks_resampled": false
+}

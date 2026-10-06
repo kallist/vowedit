@@ -1,0 +1,83 @@
+{
+  "kind": "smoke",
+  "started_at": "2026-10-04T19:38:58.082949+00:00",
+  "status": "FAIL",
+  "api_origin": "https://www.runninghub.cn",
+  "workflow_id": "2106824243966201857",
+  "model": "z_image_turbo_bf16.safetensors",
+  "clip": "qwen_3_4b.safetensors",
+  "vae": "ae.safetensors",
+  "instruction": "Change the jacket to cool blue.",
+  "source": "public/fixtures/original.png",
+  "change": "public/fixtures/change.png",
+  "keep": "public/fixtures/keep.png",
+  "seed": 671807066932685,
+  "provider_jobs": [
+    {
+      "id": "2106831486408949762"
+    }
+  ],
+  "http_evidence": [
+    {
+      "path": "/task/openapi/upload",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "path": "/task/openapi/create",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 804
+    },
+    {
+      "path": "/task/openapi/outputs",
+      "status": 200,
+      "code": 0,
+      "outputs": [
+        {
+          "node_id": "17",
+          "type": "png",
+          "host": "rh-images-tos.xiaoyaoyou.com"
+        },
+        {
+          "node_id": "11",
+          "type": "png",
+          "host": "rh-images-tos.xiaoyaoyou.com"
+        }
+      ]
+    }
+  ],
+  "human_review": "NOT TESTED",
+  "error_code": "PROVIDER_RESPONSE_INVALID",
+  "duration_seconds": 34.0,
+  "finished_at": "2026-10-04T19:39:32.077081+00:00"
+}

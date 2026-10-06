@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "source_byte_identical": true,
+  "complete_real_candidates": 6,
+  "distinct_accepted_tasks": 6,
+  "exact_authorized_seeds": true,
+  "public_images_match_persisted_assets": true,
+  "recomputed_metrics_and_ghosts_match": true,
+  "existing_ranking_matches": true,
+  "receipt_and_reviews_consistent": true,
+  "product_source_and_workflow_unchanged": true,
+  "review_type": "Self-review of evidence and scope; not independent human semantic approval"
+}

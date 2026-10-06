@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "run_id": "e5f59ad7-066d-4138-aa55-5fa9ba97b32f",
+  "actual_user_reply": "A/B/C 均 PASS，偏好 A",
+  "viewports": [
+    1440,
+    390
+  ],
+  "all_three_saved_reviews_displayed": true,
+  "refresh_pass": true,
+  "api_receipt_readback": "PASS",
+  "generation_disabled": true,
+  "new_writes": 0,
+  "new_generation_calls": 0,
+  "page_errors": [],
+  "overflow": false
+}

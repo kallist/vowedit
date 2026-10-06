@@ -1,5 +1,6 @@
 """Fixed-workflow RunningHub transport. See docs/RUNNINGHUB_INTEGRATION.md."""
 
+import hashlib
 import io
 import json
 import time
@@ -15,8 +16,40 @@ from backend.providers import GenerationRequest
 from backend.schemas import AppError
 from backend.storage import MAX_BYTES, decode_image
 
-API_ORIGIN = "https://www.runninghub.ai"
-OUTPUT_HOST = "rh-images.xiaoyaoyou.com"
+API_ORIGIN = "https://www.runninghub.cn"
+API_ORIGINS = {API_ORIGIN, "https://www.runninghub.ai"}
+OUTPUT_HOSTS = frozenset({"rh-images.xiaoyaoyou.com", "rh-images-tos.xiaoyaoyou.com"})
+WORKFLOW_PATH = Path(__file__).resolve().parent.parent / "workflows" / "z-image-inpaint-api.json"
+# Semantic JSON hash of the supplied export; only node 16's saved input reference is sanitized.
+WORKFLOW_SHA256 = "6dd44944a664e6c6ae97e83562bc50bc66dcaa9465b45dd274da034fcb074e69"
+
+
+def load_z_image_workflow() -> dict[str, Any]:
+    """Fail closed if the repository graph, model stack, links or settings change."""
+    try:
+        graph = json.loads(WORKFLOW_PATH.read_text(encoding="utf-8"))
+        digest = hashlib.sha256(
+            json.dumps(graph, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+        if digest != WORKFLOW_SHA256 or not isinstance(graph, dict):
+            raise ValueError("workflow fingerprint")
+        return graph
+    except (OSError, ValueError, TypeError) as exc:
+        raise AppError("PROVIDER_CONFIG", "The fixed Z-Image workflow failed validation.") from exc
+
+
+def encode_masked_input(source: Image.Image, change_mask: Image.Image) -> bytes:
+    """ComfyUI LoadImage returns MASK = 1 - alpha, so white CHANGE needs zero alpha."""
+    if source.size != change_mask.size:
+        raise AppError("MASK_SIZE_MISMATCH", "CHANGE must match the source dimensions.")
+    image = source.convert("RGBA")
+    image.putalpha(ImageOps.invert(change_mask.convert("L")))
+    width, height = image.size
+    padded = Image.new("RGBA", ((width + 7) // 8 * 8, (height + 7) // 8 * 8), (255, 255, 255, 255))
+    padded.paste(image, (0, 0))
+    buffer = io.BytesIO()
+    padded.save(buffer, format="PNG")
+    return buffer.getvalue()
 
 
 class RunningHubImageEditProvider:
@@ -24,19 +57,19 @@ class RunningHubImageEditProvider:
         self,
         api_key: str,
         workflow_id: str,
-        checkpoint: str,
         *,
+        api_origin: str = API_ORIGIN,
         timeout: float = 180,
         transport: httpx.BaseTransport | None = None,
         stop: Event | None = None,
         poll_interval: float = 2,
     ):
-        if not api_key or not workflow_id.isdigit() or not checkpoint:
+        if not api_key or not workflow_id.isdigit() or api_origin not in API_ORIGINS:
             raise AppError(
                 "PROVIDER_CONFIG", "Configure RunningHub credentials and a fixed workflow."
             )
         self._api_key = api_key
-        self.workflow_id, self.checkpoint = workflow_id, checkpoint
+        self.workflow_id, self.api_origin = workflow_id, api_origin
         self.timeout, self.transport = timeout, transport
         self.stop, self.poll_interval = stop or Event(), poll_interval
 
@@ -76,25 +109,16 @@ class RunningHubImageEditProvider:
 
     def generate(self, request: GenerationRequest) -> Image.Image:
         # Only the repository-owned graph is sent. No browser-provided graph or node mapping.
-        graph = json.loads(
-            (Path(__file__).resolve().parent.parent / "workflows" / "inpaint-api.json").read_text(
-                encoding="utf-8"
-            )
-        )
-        source = request.source.convert("RGBA")
-        source.putalpha(ImageOps.invert(request.change_mask.convert("L")))
-        width, height = source.size
+        graph = load_z_image_workflow()
+        width, height = request.source.size
         padded_size = ((width + 7) // 8 * 8, (height + 7) // 8 * 8)
-        padded = Image.new("RGBA", padded_size, (255, 255, 255, 255))
-        padded.paste(source, (0, 0))
-        buffer = io.BytesIO()
-        padded.save(buffer, format="PNG")
+        input_bytes = encode_masked_input(request.source, request.change_mask)
         submitted = False
         accepted = False
         deadline = time.monotonic() + self.timeout
         try:
             with httpx.Client(
-                base_url=API_ORIGIN,
+                base_url=self.api_origin,
                 headers={"Authorization": f"Bearer {self._api_key}"},
                 timeout=10,
                 follow_redirects=False,
@@ -105,16 +129,19 @@ class RunningHubImageEditProvider:
                     client.post(
                         "/task/openapi/upload",
                         data={"apiKey": self._api_key, "fileType": "input"},
-                        files={"file": ("vowedit-input.png", buffer.getvalue(), "image/png")},
+                        files={"file": ("vowedit-input.png", input_bytes, "image/png")},
                     )
                 )
                 filename = upload["fileName"]
                 if not isinstance(filename, str) or not filename.startswith("api/"):
                     raise ValueError("upload reference")
-                graph["1"]["inputs"]["image"] = filename
-                graph["2"]["inputs"]["ckpt_name"] = self.checkpoint
-                graph["3"]["inputs"]["text"] = request.instruction
-                graph["6"]["inputs"]["seed"] = request.seed
+                overrides = [
+                    ("16", "image", filename),
+                    ("8", "text", request.instruction),
+                    ("4", "seed", request.seed),
+                ]
+                for node, field, value in overrides:
+                    graph[node]["inputs"][field] = value
                 submitted = True
                 data = self._data(
                     client.post(
@@ -126,10 +153,11 @@ class RunningHubImageEditProvider:
                             "addMetadata": False,
                             "nodeInfoList": [
                                 {
-                                    "nodeId": "6",
-                                    "fieldName": "seed",
-                                    "fieldValue": str(request.seed),
+                                    "nodeId": node,
+                                    "fieldName": field,
+                                    "fieldValue": str(value),
                                 }
+                                for node, field, value in overrides
                             ],
                         },
                     ),
@@ -158,7 +186,8 @@ class RunningHubImageEditProvider:
                             (
                                 item
                                 for item in outputs
-                                if str(item.get("nodeId")) == "8"
+                                if isinstance(item, dict)
+                                and str(item.get("nodeId")) == "11"
                                 and item.get("fileType") in {"png", "jpg", "jpeg"}
                             ),
                             None,
@@ -213,11 +242,11 @@ class RunningHubImageEditProvider:
         parsed = urlparse(url)
         if (
             parsed.scheme != "https"
-            or parsed.hostname != OUTPUT_HOST
+            or parsed.hostname not in OUTPUT_HOSTS
             or parsed.port not in {None, 443}
-            or parsed.username
-            or parsed.password
-            or parsed.fragment
+            or parsed.username is not None
+            or parsed.password is not None
+            or "#" in url
         ):
             raise AppError(
                 "PROVIDER_RESPONSE_INVALID", "Output URL is outside the approved image host."
