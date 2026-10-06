@@ -141,6 +141,17 @@ test('human paint takeover, conflict and lost save acknowledgement recover', asy
   await expect(page.getByRole('combobox',{name:'Provider',exact:true})).toBeDisabled();
   await expect(page.getByRole('spinbutton',{name:'Background threshold',exact:true})).toBeDisabled();
   await expect(page.getByRole('button',{name:'Paint or refine boundaries'})).toBeDisabled();
+  const pendingSave=await page.evaluate(id=>sessionStorage.getItem('vowedit.draft-save:'+id),draft.id);
+  expect(pendingSave).toBeTruthy();
+  let failedReloads=0;
+  await page.route('**/api/agent/editing-drafts/'+draft.id,route=>{failedReloads++;return route.abort('failed');});
+  await page.getByRole('button',{name:'Reload and discard local edits',exact:true}).first().click();
+  await expect.poll(()=>failedReloads).toBeGreaterThan(0);
+  await expect(page.getByRole('button',{name:'Reload and discard local edits',exact:true}).first()).toBeEnabled();
+  await expect(page.locator('main p[role="alert"]')).toBeVisible();
+  expect(await page.evaluate(id=>sessionStorage.getItem('vowedit.draft-save:'+id),draft.id)).toBe(pendingSave);
+  await expect(page.getByRole('button',{name:'Retry pending save'})).toBeVisible();
+  await page.unroute('**/api/agent/editing-drafts/'+draft.id);
   await page.getByRole('button',{name:'Retry pending save'}).click();
   await expect(page.getByRole('button',{name:'Retry pending save'})).toHaveCount(0);
   await expect.poll(()=>tool('vowedit_get_edit',{draft_id:draft.id}).revision).toBe(4);

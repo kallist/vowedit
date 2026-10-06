@@ -98,8 +98,14 @@ export default function DraftEditor({ id }: { id: string }) {
     } catch (e) { setMessage(e instanceof Error ? e.message : t('Unable to save. Reload or try again.')); } finally { setBusy(false); }
   }
   async function reload() {
-    sessionStorage.removeItem(`vowedit.draft-save:${id}`);
-    acceptSnapshot(await api<EditingDraft>(`/agent/editing-drafts/${id}`)); setPainting(false);
+    if (pending.current) return;
+    pending.current = true; setBusy(true); setMessage('');
+    try {
+      const value = await api<EditingDraft>(`/agent/editing-drafts/${id}`);
+      sessionStorage.removeItem(`vowedit.draft-save:${id}`);
+      acceptSnapshot(value); setPainting(false);
+    } catch (e) { setMessage(e instanceof Error ? e.message : t('Unable to save. Reload or try again.')); }
+    finally { pending.current = false; setBusy(false); }
   }
   function applied(action: AgentAction) {
     if (action.result_ids.run_id) router.push(`/edit/${action.result_ids.run_id}`);
@@ -126,7 +132,7 @@ export default function DraftEditor({ id }: { id: string }) {
     {message && <p role="alert">{message}</p>}
     {retrySave && <section role="alert"><p>{t('Save acknowledgement missing. Retry the same request or reload saved state.')}</p><button className="secondary-button" disabled={busy} onClick={() => void save()}>{t('Retry pending save')}</button><button className="secondary-button" disabled={busy} onClick={() => void reload()}>{t('Reload and discard local edits')}</button></section>}
     {conflict && <section role="alert"><p>{t('Saved state changed. Local edits are preserved; reload discards them.')}</p>
-      <button className="secondary-button" onClick={() => void reload()}>{t('Reload and discard local edits')}</button></section>}
+      <button className="secondary-button" disabled={busy} onClick={() => void reload()}>{t('Reload and discard local edits')}</button></section>}
     {draft.submitted_run_id ? <Link className="primary-button" href={`/edit/${draft.submitted_run_id}`}>{t('Open submitted edit')}</Link> : <>
       <label>{asset ? t('Replace original in a new draft') : t('Attach original image')}<input type="file" accept="image/png,image/jpeg" disabled={busy || retrySave} onChange={e => { if (e.target.files?.[0]) void attach(e.target.files[0]); }} /></label>
       {asset && <figure className="draft-original"><img src={asset.url} alt={t('Original')} /><figcaption>{t('Original')} · {asset.width} × {asset.height}</figcaption></figure>}
