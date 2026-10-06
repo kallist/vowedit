@@ -411,12 +411,19 @@ for (const width of [360, 400, 480, 520]) {
       expect(pixels.pixel).toEqual([255, 255, 255, 255]);
       if (width === 400) {
         for (const letter of ["A", "B", "C"]) {
-          await panel
-            .getByLabel(`Upload Candidate ${letter}`)
-            .setInputFiles("public/fixtures/imported/mismatch.png");
+          const input = panel.getByLabel(`Upload Candidate ${letter}`, {
+            exact: true,
+          });
+          // setInputFiles can bypass disabled controls; real file picking cannot.
+          await expect(input).toBeEnabled();
+          await input.setInputFiles("public/fixtures/imported/mismatch.png");
           await expect(
             panel.getByAltText(`Candidate ${letter}`, { exact: true }),
           ).toBeVisible();
+          await expect(
+            panel.getByRole("status").filter({ hasText: /^Saved ·/ }),
+          ).toBeVisible();
+          await expect(input).toBeEnabled();
         }
         await expect(
           panel.getByRole("button", {
