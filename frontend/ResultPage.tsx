@@ -23,6 +23,7 @@ import { api, ApiError, jsonPost } from "./api";
 import { safeErrorText } from "./i18n/errors";
 import PlanDetails from "./PlanDetails";
 import Decisions from "./Decisions";
+import ActivityPanel from "./ActivityPanel";
 import { assetUrl, label, terminal, type Run, type Candidate } from "./types";
 type View = "after" | "before" | "compare" | "ghost" | "raw" | "aligned";
 function BoundaryDisclosure({ candidate }: { candidate: Candidate }) {
@@ -152,6 +153,7 @@ export default function ResultPage({ id }: { id: string }) {
   const hasReceipt = ["completed", "partial"].includes(run.status);
   return (
     <main className="studio-page result-page">
+      <ActivityPanel kind="run" id={run.id} onUpdate={() => { void api<Run>(`/runs/${run.id}`).then(setRun); }} />
       <div className="page-intro">
         <div>
           <p className="eyebrow">

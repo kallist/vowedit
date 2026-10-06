@@ -22,7 +22,7 @@ describe("locale affects presentation and safe errors", () => {
   it("preserves status and typed code without echoing provider exception content", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
+      vi.fn().mockImplementation(async (path: string) => path === "/api/browser-session" ? { ok: true, status: 200, json: async () => ({ csrf: "fixture" }) } : ({
         ok: false,
         status: 409,
         json: async () => ({
@@ -31,7 +31,7 @@ describe("locale affects presentation and safe errors", () => {
             message: "SECRET private/path",
           },
         }),
-      }),
+      })),
     );
     const error = await api("/runs/fixture/selection").catch((e) => e);
     expect(error).toBeInstanceOf(ApiError);
@@ -44,13 +44,13 @@ describe("locale affects presentation and safe errors", () => {
   it("uses a generic safe error for unknown server codes", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
+      vi.fn().mockImplementation(async (path: string) => path === "/api/browser-session" ? { ok: true, status: 200, json: async () => ({ csrf: "fixture" }) } : ({
         ok: false,
         status: 503,
         json: async () => ({
           error: { code: "NEW_SDK_ERROR", message: "signed.example/secret" },
         }),
-      }),
+      })),
     );
     await expect(api("/config")).rejects.toThrow(
       "The local service could not complete this request.",

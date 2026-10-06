@@ -362,7 +362,7 @@ def test_server_config_registers_fixed_model_without_checkpoint(tmp_path, monkey
     app = create_app()
     assert app.state.service.providers["runninghub"].api_origin == "https://www.runninghub.cn"
     # Product configuration exposes names only; no origin, model graph or credential.
-    from fastapi.testclient import TestClient
+    from backend.tests.conftest import TestClient
 
     with TestClient(app) as client:
         config = client.get("/api/config")

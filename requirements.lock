@@ -32,3 +32,17 @@ tomli==2.4.1
 typing-inspection==0.4.4
 typing_extensions==4.16.0
 uvicorn==0.54.0
+attrs==26.1.0
+cffi==2.1.1
+cryptography==50.0.2
+httpx-sse==0.4.3
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
+mcp==1.30.0
+pycparser==3.0
+pydantic-settings==2.15.0
+PyJWT==2.15.1
+pywin32==312; sys_platform == "win32"
+referencing==0.37.0
+rpds-py==0.30.0
+sse-starlette==3.5.0

@@ -52,9 +52,11 @@ for (const width of [1440, 1024, 768, 390, 360]) {
     await expect(
       page.getByText("Strategy directive", { exact: true }).first(),
     ).toBeVisible();
+    const session = await (await page.request.post("/api/browser-session", {headers: {Origin: "http://127.0.0.1:3000"}})).json();
     const plan = await (
       await page.request.post("/api/candidate-plans", {
         data: { instruction: base },
+        headers: { Origin: "http://127.0.0.1:3000", "X-Vowedit-CSRF": session.csrf },
       })
     ).json();
     await page.getByRole("button", { name: "Interface language" }).click();
@@ -125,9 +127,9 @@ for (const width of [1440, 1024, 768, 390, 360]) {
     expect(adopted.manual_review).toEqual({ verdict: "fail", notes });
     expect(saved.selected_candidate_id).toBe(original.selected_candidate_id);
     if (width === 390) {
-      await fs.mkdir("docs/screenshots/v02/390", { recursive: true });
+      await fs.mkdir(".local/v03-evidence/v02/390", { recursive: true });
       await page.screenshot({
-        path: "docs/screenshots/v02/390/mock-report-zh.png",
+        path: ".local/v03-evidence/v02/390/mock-report-zh.png",
         fullPage: true,
       });
     }
@@ -143,7 +145,7 @@ for (const width of [1440, 1024, 768, 390, 360]) {
       await page
         .getByLabel("Pixel constraints are not met", { exact: true })
         .check();
-    const dir = `docs/screenshots/v02/${width}`;
+    const dir = `.local/v03-evidence/v02/${width}`;
     await fs.mkdir(dir, { recursive: true });
     expect(
       await page.evaluate(

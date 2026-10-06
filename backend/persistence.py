@@ -2,6 +2,7 @@ import json
 import sqlite3
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
+from contextvars import ContextVar
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,9 @@ def now() -> str:
 class Repository:
     def __init__(self, path: Path):
         self.path = path
+        self._active: ContextVar[sqlite3.Connection | None] = ContextVar(
+            "vowedit_transaction", default=None
+        )
         with self.connection() as db:
             db.execute("PRAGMA journal_mode=WAL")
             db.executescript("""
@@ -32,9 +36,84 @@ class Repository:
                     kind TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL
                 );
             """)
+        # Additive, transactional migration. executescript would implicitly commit.
+        with self.transaction() as db:
+            for statement in (
+                "CREATE TABLE IF NOT EXISTS editing_drafts "
+                "(id TEXT PRIMARY KEY, data TEXT NOT NULL)",
+                "CREATE TABLE IF NOT EXISTS agent_action_requests (id TEXT PRIMARY KEY, "
+                "principal TEXT NOT NULL, request_key TEXT NOT NULL, payload_hash TEXT NOT NULL, "
+                "data TEXT NOT NULL, UNIQUE(principal, request_key))",
+                "CREATE TABLE IF NOT EXISTS activity_entries (cursor INTEGER PRIMARY KEY "
+                "AUTOINCREMENT, draft_id TEXT, run_id TEXT, action_id TEXT, actor TEXT NOT NULL, "
+                "event TEXT NOT NULL, created_at TEXT NOT NULL, facts TEXT NOT NULL)",
+                "CREATE TABLE IF NOT EXISTS agent_credentials (id TEXT PRIMARY KEY, "
+                "digest TEXT NOT NULL, revoked INTEGER NOT NULL DEFAULT 0, grants TEXT NOT NULL)",
+            ):
+                db.execute(statement)
+
+    @contextmanager
+    def transaction(self) -> Iterator[sqlite3.Connection]:
+        """One writer transaction, reused by existing connection-aware service operations."""
+        if self._active.get() is not None:
+            yield self._active.get()  # type: ignore[misc]
+            return
+        with self.connection() as db:
+            db.execute("BEGIN IMMEDIATE")
+            token = self._active.set(db)
+            try:
+                yield db
+            finally:
+                self._active.reset(token)
+
+    def begin_write(self, db: sqlite3.Connection) -> None:
+        if not db.in_transaction:
+            db.execute("BEGIN IMMEDIATE")
+
+    @staticmethod
+    def activity(
+        db: sqlite3.Connection,
+        event: str,
+        actor: str,
+        *,
+        draft_id: str | None = None,
+        run_id: str | None = None,
+        action_id: str | None = None,
+        facts: dict[str, Any] | None = None,
+    ) -> None:
+        db.execute(
+            "INSERT INTO activity_entries "
+            "(draft_id,run_id,action_id,actor,event,created_at,facts) VALUES (?,?,?,?,?,?,?)",
+            (draft_id, run_id, action_id, actor, event, now(), json.dumps(facts or {})),
+        )
+
+    @staticmethod
+    def stale_actions(
+        db: sqlite3.Connection, *, draft_id: str | None = None, run_id: str | None = None
+    ) -> None:
+        rows = db.execute(
+            "SELECT id,data FROM agent_action_requests WHERE "
+            "json_extract(data,'$.state')='pending' AND "
+            "((? IS NOT NULL AND json_extract(data,'$.draft_id')=?) OR "
+            "(? IS NOT NULL AND json_extract(data,'$.run_id')=?))",
+            (draft_id, draft_id, run_id, run_id),
+        ).fetchall()
+        for row in rows:
+            data = json.loads(row["data"])
+            data["state"] = "stale"
+            db.execute(
+                "UPDATE agent_action_requests SET data=? WHERE id=?", (json.dumps(data), row["id"])
+            )
+            Repository.activity(
+                db, "action_stale", "system", draft_id=draft_id, run_id=run_id, action_id=row["id"]
+            )
 
     @contextmanager
     def connection(self) -> Iterator[sqlite3.Connection]:
+        active = self._active.get()
+        if active is not None:
+            yield active
+            return
         db = sqlite3.connect(self.path, timeout=5)
         db.row_factory = sqlite3.Row
         db.execute("PRAGMA foreign_keys=ON")
@@ -57,8 +136,11 @@ class Repository:
 
     def submitted_run(self, request_key: str) -> dict[str, Any] | None:
         with self.connection() as db:
-            row = db.execute("SELECT runs.data FROM jobs JOIN runs ON runs.id=jobs.run_id "
-                             "WHERE jobs.request_key=?", (request_key,)).fetchone()
+            row = db.execute(
+                "SELECT runs.data FROM jobs JOIN runs ON runs.id=jobs.run_id "
+                "WHERE jobs.request_key=?",
+                (request_key,),
+            ).fetchone()
         return json.loads(row[0]) if row else None
 
     def get(self, run_id: str) -> dict[str, Any]:
@@ -70,11 +152,16 @@ class Repository:
 
     @staticmethod
     def compatible(run: dict[str, Any]) -> dict[str, Any]:
-        defaults = dict(candidate_mode="legacy-seeds-v1", candidate_plan=None,
-                        user_selected_candidate_id=None, selection_revision=0,
-                        parent_candidate_id=None, continuation_draft_id=None,
-                        root_run_id=run["id"], derivation_kind=
-                        "generation_retry" if run.get("parent_run_id") else None)
+        defaults = dict(
+            candidate_mode="legacy-seeds-v1",
+            candidate_plan=None,
+            user_selected_candidate_id=None,
+            selection_revision=0,
+            parent_candidate_id=None,
+            continuation_draft_id=None,
+            root_run_id=run["id"],
+            derivation_kind="generation_retry" if run.get("parent_run_id") else None,
+        )
         return {**defaults, **run}
 
     def history(self) -> list[dict[str, Any]]:
@@ -84,7 +171,7 @@ class Repository:
 
     def submit(self, run: dict[str, Any], job: dict[str, str], *, retry: bool = False) -> str:
         with self.connection() as db:
-            db.execute("BEGIN IMMEDIATE")
+            self.begin_write(db)
             existing = db.execute(
                 "SELECT * FROM jobs WHERE request_key=?", (job["request_key"],)
             ).fetchone()
@@ -144,11 +231,12 @@ class Repository:
         status: str | None = None,
     ) -> dict[str, Any]:
         with self.connection() as db:
-            db.execute("BEGIN IMMEDIATE")
+            self.begin_write(db)
             row = db.execute("SELECT data FROM runs WHERE id=?", (run_id,)).fetchone()
             if row is None:
                 raise AppError("RUN_NOT_FOUND", "Edit not found.", 404)
             run = json.loads(row["data"])
+            before = json.loads(row["data"])
             if job_id and run["job_id"] != job_id:
                 raise AppError("JOB_CONFLICT", "A newer attempt owns this edit.", 409)
             if status:
@@ -163,6 +251,30 @@ class Repository:
                 "UPDATE runs SET status=?, data=? WHERE id=?",
                 (run["status"], json.dumps(run), run_id),
             )
+            if before.get("user_selected_candidate_id") != run.get("user_selected_candidate_id"):
+                self.stale_actions(db, run_id=run_id)
+                self.activity(db, "adopted", "user", run_id=run_id)
+            prior_reviews = {c["id"]: c.get("manual_review") for c in before["candidates"]}
+            if any(
+                c["id"] in prior_reviews and c.get("manual_review") != prior_reviews[c["id"]]
+                for c in run["candidates"]
+            ):
+                self.stale_actions(db, run_id=run_id)
+                self.activity(db, "user_reviewed", "user", run_id=run_id)
+            if run.get("agent_binding"):
+                if len(run["candidates"]) > len(before["candidates"]):
+                    self.activity(db, "provider_response_observed", "provider", run_id=run_id)
+                    self.activity(db, "candidate_saved", "system", run_id=run_id)
+                if status:
+                    event = {
+                        "evaluating": "evaluation_started",
+                        "completed": "evaluation_completed",
+                        "partial": "evaluation_completed",
+                        "failed_evaluation": "evaluation_failed",
+                        "failed_generation": "safe_error",
+                    }.get(status)
+                    if event:
+                        self.activity(db, event, "system", run_id=run_id, facts={"status": status})
         return self.compatible(run)
 
     @staticmethod
@@ -173,7 +285,8 @@ class Repository:
         row = db.execute(
             "SELECT draft.value FROM runs, "
             "json_each(runs.data, '$.continuation_starters') AS draft "
-            "WHERE json_extract(draft.value, ?) = ? LIMIT 1", (f"$.{field}", value)
+            "WHERE json_extract(draft.value, ?) = ? LIMIT 1",
+            (f"$.{field}", value),
         ).fetchone()
         return json.loads(row[0]) if row else None
 
@@ -182,24 +295,31 @@ class Repository:
             return self._starter(db, "request_key" if request_key else "id", value)
 
     def register_starter(
-        self, run_id: str, draft: dict[str, Any],
-        validate: Callable[[dict[str, Any]], None], width: int, height: int,
+        self,
+        run_id: str,
+        draft: dict[str, Any],
+        validate: Callable[[dict[str, Any]], None],
+        width: int,
+        height: int,
     ) -> dict[str, Any]:
         with self.connection() as db:
-            db.execute("BEGIN IMMEDIATE")
+            self.begin_write(db)
             existing = self._starter(db, "request_key", draft["request_key"])
             if existing:
                 if existing["payload_hash"] != draft["payload_hash"]:
-                    raise AppError("JOB_CONFLICT", "Request key belongs to another continuation.",
-                                   409)
+                    raise AppError(
+                        "JOB_CONFLICT", "Request key belongs to another continuation.", 409
+                    )
                 return existing
             row = db.execute("SELECT data FROM runs WHERE id=?", (run_id,)).fetchone()
             if row is None:
                 raise AppError("RUN_NOT_FOUND", "Edit not found.", 404)
             run = json.loads(row[0])
             validate(run)
-            db.execute("INSERT INTO assets VALUES (?, 'original', ?, ?)",
-                       (draft["source_image"], width, height))
+            db.execute(
+                "INSERT INTO assets VALUES (?, 'original', ?, ?)",
+                (draft["source_image"], width, height),
+            )
             run.setdefault("continuation_starters", []).append(draft)
             db.execute("UPDATE runs SET data=? WHERE id=?", (json.dumps(run), run_id))
         return draft

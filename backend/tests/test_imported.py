@@ -3,7 +3,6 @@ from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
 
 import pytest
-from fastapi.testclient import TestClient
 from PIL import Image, ImageDraw, PngImagePlugin
 
 import backend.services as service_module
@@ -12,7 +11,7 @@ from backend.evaluation import evaluate, rank_candidates
 from backend.persistence import Repository
 from backend.schemas import AppError, CreateImportedRun
 from backend.services import ImageEditService
-from backend.tests.conftest import payload, png
+from backend.tests.conftest import TestClient, payload, png
 from backend.tests.test_integration import wait_run
 
 

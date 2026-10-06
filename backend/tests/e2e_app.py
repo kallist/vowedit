@@ -1,11 +1,15 @@
 """Isolated browser-test host. Fault injection is never enabled in the production app."""
 
 import os
+import secrets
 import tempfile
 import time
 from pathlib import Path
+from uuid import uuid4
 
 import backend.services as service_module
+from backend.agent_auth import register
+from backend.agent_credentials import write_private
 from backend.api import create_app
 from backend.providers import MockImageEditProvider
 from backend.schemas import AppError
@@ -63,6 +67,17 @@ class BrowserService(ImageEditService):
 
 service_module.evaluate = controlled_evaluate
 app = create_app(BrowserService(root, {"mock": BrowserMock()}))
+credential = local / "browser-agent.json"
+token, client_id = secrets.token_hex(32), str(uuid4())
+write_private(
+    credential,
+    {
+        "token": token,
+        "client_id": client_id,
+        "api_port": int(os.getenv("VOWEDIT_API_PORT", "8000")),
+    },
+)
+register(app.state.service.repo, token, client_id)
 
 
 @app.get("/api/test/provider-calls")

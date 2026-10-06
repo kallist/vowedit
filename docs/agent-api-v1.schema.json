@@ -1,0 +1,560 @@
+{
+  "api_version": "agent-api-v1",
+  "tools": {
+    "vowedit_get_capabilities": {
+      "additionalProperties": false,
+      "properties": {},
+      "title": "Empty",
+      "type": "object"
+    },
+    "vowedit_create_edit": {
+      "additionalProperties": false,
+      "properties": {
+        "request_key": {
+          "format": "uuid",
+          "title": "Request Key",
+          "type": "string"
+        },
+        "source_asset_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Asset Id"
+        }
+      },
+      "required": [
+        "request_key"
+      ],
+      "title": "CreateEdit",
+      "type": "object"
+    },
+    "vowedit_get_edit": {
+      "additionalProperties": false,
+      "properties": {
+        "draft_id": {
+          "format": "uuid",
+          "title": "Draft Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "draft_id"
+      ],
+      "title": "DraftID",
+      "type": "object"
+    },
+    "vowedit_propose_contract": {
+      "$defs": {
+        "AssetMask": {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "asset",
+              "title": "Kind",
+              "type": "string"
+            },
+            "asset_id": {
+              "format": "uuid",
+              "title": "Asset Id",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "asset_id"
+          ],
+          "title": "AssetMask",
+          "type": "object"
+        },
+        "ProtectionProposal": {
+          "additionalProperties": false,
+          "properties": {
+            "label": {
+              "maxLength": 60,
+              "minLength": 1,
+              "title": "Label",
+              "type": "string"
+            },
+            "type": {
+              "default": "manual_region",
+              "enum": [
+                "manual_region",
+                "face"
+              ],
+              "title": "Type",
+              "type": "string"
+            },
+            "threshold": {
+              "default": 98,
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Threshold",
+              "type": "number"
+            },
+            "mask": {
+              "discriminator": {
+                "mapping": {
+                  "asset": "#/$defs/AssetMask",
+                  "rectangles": "#/$defs/RectangleMask"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/AssetMask"
+                },
+                {
+                  "$ref": "#/$defs/RectangleMask"
+                }
+              ],
+              "title": "Mask"
+            }
+          },
+          "required": [
+            "label",
+            "mask"
+          ],
+          "title": "ProtectionProposal",
+          "type": "object"
+        },
+        "Rect": {
+          "additionalProperties": false,
+          "properties": {
+            "x0": {
+              "minimum": 0,
+              "title": "X0",
+              "type": "integer"
+            },
+            "y0": {
+              "minimum": 0,
+              "title": "Y0",
+              "type": "integer"
+            },
+            "x1": {
+              "exclusiveMinimum": 0,
+              "title": "X1",
+              "type": "integer"
+            },
+            "y1": {
+              "exclusiveMinimum": 0,
+              "title": "Y1",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "x0",
+            "y0",
+            "x1",
+            "y1"
+          ],
+          "title": "Rect",
+          "type": "object"
+        },
+        "RectangleMask": {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "rectangles",
+              "title": "Kind",
+              "type": "string"
+            },
+            "rectangles": {
+              "items": {
+                "$ref": "#/$defs/Rect"
+              },
+              "maxItems": 32,
+              "minItems": 1,
+              "title": "Rectangles",
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "rectangles"
+          ],
+          "title": "RectangleMask",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "draft_id": {
+          "format": "uuid",
+          "title": "Draft Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "minimum": 0,
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "request_key": {
+          "format": "uuid",
+          "title": "Request Key",
+          "type": "string"
+        },
+        "instruction": {
+          "maxLength": 1500,
+          "minLength": 3,
+          "title": "Instruction",
+          "type": "string"
+        },
+        "change": {
+          "discriminator": {
+            "mapping": {
+              "asset": "#/$defs/AssetMask",
+              "rectangles": "#/$defs/RectangleMask"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/AssetMask"
+            },
+            {
+              "$ref": "#/$defs/RectangleMask"
+            }
+          ],
+          "title": "Change"
+        },
+        "keep": {
+          "items": {
+            "$ref": "#/$defs/ProtectionProposal"
+          },
+          "maxItems": 8,
+          "title": "Keep",
+          "type": "array"
+        },
+        "background_threshold": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 98,
+          "title": "Background Threshold"
+        }
+      },
+      "required": [
+        "draft_id",
+        "expected_revision",
+        "request_key",
+        "instruction",
+        "change"
+      ],
+      "title": "ProposeContract",
+      "type": "object"
+    },
+    "vowedit_request_action": {
+      "$defs": {
+        "GenerateAction": {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "const": "generate",
+              "title": "Action",
+              "type": "string"
+            },
+            "draft_id": {
+              "format": "uuid",
+              "title": "Draft Id",
+              "type": "string"
+            },
+            "expected_revision": {
+              "minimum": 0,
+              "title": "Expected Revision",
+              "type": "integer"
+            },
+            "plan_fingerprint": {
+              "pattern": "^[a-f0-9]{64}$",
+              "title": "Plan Fingerprint",
+              "type": "string"
+            },
+            "provider": {
+              "enum": [
+                "mock",
+                "comfyui",
+                "runninghub"
+              ],
+              "title": "Provider",
+              "type": "string"
+            },
+            "request_key": {
+              "format": "uuid",
+              "title": "Request Key",
+              "type": "string"
+            }
+          },
+          "required": [
+            "action",
+            "draft_id",
+            "expected_revision",
+            "plan_fingerprint",
+            "provider",
+            "request_key"
+          ],
+          "title": "GenerateAction",
+          "type": "object"
+        },
+        "RetryAction": {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "enum": [
+                "retry_generation",
+                "retry_evaluation"
+              ],
+              "title": "Action",
+              "type": "string"
+            },
+            "run_id": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            },
+            "expected_state_fingerprint": {
+              "pattern": "^[a-f0-9]{64}$",
+              "title": "Expected State Fingerprint",
+              "type": "string"
+            },
+            "request_key": {
+              "format": "uuid",
+              "title": "Request Key",
+              "type": "string"
+            }
+          },
+          "required": [
+            "action",
+            "run_id",
+            "expected_state_fingerprint",
+            "request_key"
+          ],
+          "title": "RetryAction",
+          "type": "object"
+        },
+        "SelectionAction": {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "enum": [
+                "adopt",
+                "continue"
+              ],
+              "title": "Action",
+              "type": "string"
+            },
+            "run_id": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            },
+            "candidate_id": {
+              "format": "uuid",
+              "title": "Candidate Id",
+              "type": "string"
+            },
+            "expected_selection_revision": {
+              "minimum": 0,
+              "title": "Expected Selection Revision",
+              "type": "integer"
+            },
+            "decision_fingerprint": {
+              "pattern": "^[a-f0-9]{64}$",
+              "title": "Decision Fingerprint",
+              "type": "string"
+            },
+            "request_key": {
+              "format": "uuid",
+              "title": "Request Key",
+              "type": "string"
+            }
+          },
+          "required": [
+            "action",
+            "run_id",
+            "candidate_id",
+            "expected_selection_revision",
+            "decision_fingerprint",
+            "request_key"
+          ],
+          "title": "SelectionAction",
+          "type": "object"
+        }
+      },
+      "discriminator": {
+        "mapping": {
+          "adopt": "#/$defs/SelectionAction",
+          "continue": "#/$defs/SelectionAction",
+          "generate": "#/$defs/GenerateAction",
+          "retry_evaluation": "#/$defs/RetryAction",
+          "retry_generation": "#/$defs/RetryAction"
+        },
+        "propertyName": "action"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/GenerateAction"
+        },
+        {
+          "$ref": "#/$defs/SelectionAction"
+        },
+        {
+          "$ref": "#/$defs/RetryAction"
+        }
+      ]
+    },
+    "vowedit_get_run": {
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "format": "uuid",
+          "title": "Run Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "run_id"
+      ],
+      "title": "RunID",
+      "type": "object"
+    },
+    "vowedit_get_report": {
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "format": "uuid",
+          "title": "Run Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "run_id"
+      ],
+      "title": "RunID",
+      "type": "object"
+    },
+    "vowedit_get_activity": {
+      "$defs": {
+        "DraftLocator": {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "draft",
+              "title": "Kind",
+              "type": "string"
+            },
+            "id": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            },
+            "after_cursor": {
+              "default": 0,
+              "minimum": 0,
+              "title": "After Cursor",
+              "type": "integer"
+            },
+            "limit": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ],
+          "title": "DraftLocator",
+          "type": "object"
+        },
+        "RunLocator": {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "run",
+              "title": "Kind",
+              "type": "string"
+            },
+            "id": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            },
+            "after_cursor": {
+              "default": 0,
+              "minimum": 0,
+              "title": "After Cursor",
+              "type": "integer"
+            },
+            "limit": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ],
+          "title": "RunLocator",
+          "type": "object"
+        }
+      },
+      "discriminator": {
+        "mapping": {
+          "draft": "#/$defs/DraftLocator",
+          "run": "#/$defs/RunLocator"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/DraftLocator"
+        },
+        {
+          "$ref": "#/$defs/RunLocator"
+        }
+      ]
+    },
+    "vowedit_open_ui": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "draft",
+            "run"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ],
+      "title": "OpenUI",
+      "type": "object"
+    }
+  }
+}

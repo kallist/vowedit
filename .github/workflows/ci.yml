@@ -11,7 +11,8 @@ jobs:
     env:
       NEXT_TELEMETRY_DISABLED: '1'
       VOWEDIT_PROVIDER: mock
-      VOWEDIT_DATA_DIR: ${{ github.workspace }}/.local/v02-ci-data
+      PYTHON_DOTENV_DISABLED: '1'
+      VOWEDIT_DATA_DIR: ${{ github.workspace }}/.local/v03-ci-data
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -53,5 +54,6 @@ jobs:
           name: browser-evidence
           path: |
             test-results/
+            .local/v03-evidence/
             docs/screenshots/
           retention-days: 7
