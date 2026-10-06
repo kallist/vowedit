@@ -3,7 +3,8 @@ import { localText } from "@/frontend/i18n/format";
 import { useLocale } from "@/frontend/i18n/LocaleProvider";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Brush, Eraser, RotateCcw, Undo2, Trash2 } from "lucide-react";
-import { assetUrl, type Asset } from "./types";
+import { type Asset } from "./types";
+import { useBridge } from "./Bridge";
 import {
   maskBlob,
   maskStats,
@@ -25,13 +26,18 @@ export default function MaskEditor({
   onContinue,
   initialStrokes = [],
   initialMasks = {},
+  sourceUrl,
+  onSnapshot,
 }: {
   asset: Asset;
   onContinue: (value: MaskValue) => void;
   initialStrokes?: Stroke[];
   initialMasks?: SeedMasks;
+  sourceUrl?: string;
+  onSnapshot?: (strokes: Stroke[], seedMasks: SeedMasks) => void;
 }) {
   const { t } = useLocale();
+  const bridge = useBridge();
 
   const [seedMasks, setSeedMasks] = useState<SeedMasks>(initialMasks);
   const [seedImages, setSeedImages] = useState<
@@ -88,6 +94,9 @@ export default function MaskEditor({
     overlap: 0,
   });
   const [error, setError] = useState("");
+  useEffect(() => {
+    onSnapshot?.(strokes, seedMasks);
+  }, [strokes, seedMasks, onSnapshot]);
   const changeRef = useRef<HTMLCanvasElement>(null),
     keepRef = useRef<HTMLCanvasElement>(null),
     surfaceRef = useRef<HTMLCanvasElement>(null);
@@ -261,7 +270,7 @@ export default function MaskEditor({
           style={{ aspectRatio: `${asset.width} / ${asset.height}` }}
         >
           <img
-            src={assetUrl(asset.id)}
+            src={sourceUrl || bridge.assetUrl(asset.id)}
             alt={t("Your original image for defining CHANGE and KEEP")}
             draggable={false}
           />

@@ -19,6 +19,7 @@ class Repository:
         with self.connection() as db:
             db.execute("PRAGMA journal_mode=WAL")
             db.executescript("""
+                BEGIN IMMEDIATE;
                 CREATE TABLE IF NOT EXISTS assets (
                     id TEXT PRIMARY KEY, kind TEXT NOT NULL, width INTEGER, height INTEGER
                 );
@@ -31,6 +32,15 @@ class Repository:
                     request_key TEXT NOT NULL UNIQUE, payload_hash TEXT NOT NULL,
                     kind TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS editing_drafts (
+                    id TEXT PRIMARY KEY, source_image TEXT NOT NULL REFERENCES assets(id),
+                    data TEXT NOT NULL, revision INTEGER NOT NULL,
+                    creation_key TEXT NOT NULL UNIQUE, creation_hash TEXT NOT NULL,
+                    mutation_key TEXT, mutation_hash TEXT,
+                    created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+                    submitted_run_id TEXT REFERENCES runs(id)
+                );
+                COMMIT;
             """)
 
     @contextmanager
@@ -57,8 +67,11 @@ class Repository:
 
     def submitted_run(self, request_key: str) -> dict[str, Any] | None:
         with self.connection() as db:
-            row = db.execute("SELECT runs.data FROM jobs JOIN runs ON runs.id=jobs.run_id "
-                             "WHERE jobs.request_key=?", (request_key,)).fetchone()
+            row = db.execute(
+                "SELECT runs.data FROM jobs JOIN runs ON runs.id=jobs.run_id "
+                "WHERE jobs.request_key=?",
+                (request_key,),
+            ).fetchone()
         return json.loads(row[0]) if row else None
 
     def get(self, run_id: str) -> dict[str, Any]:
@@ -70,11 +83,16 @@ class Repository:
 
     @staticmethod
     def compatible(run: dict[str, Any]) -> dict[str, Any]:
-        defaults = dict(candidate_mode="legacy-seeds-v1", candidate_plan=None,
-                        user_selected_candidate_id=None, selection_revision=0,
-                        parent_candidate_id=None, continuation_draft_id=None,
-                        root_run_id=run["id"], derivation_kind=
-                        "generation_retry" if run.get("parent_run_id") else None)
+        defaults = dict(
+            candidate_mode="legacy-seeds-v1",
+            candidate_plan=None,
+            user_selected_candidate_id=None,
+            selection_revision=0,
+            parent_candidate_id=None,
+            continuation_draft_id=None,
+            root_run_id=run["id"],
+            derivation_kind="generation_retry" if run.get("parent_run_id") else None,
+        )
         return {**defaults, **run}
 
     def history(self) -> list[dict[str, Any]]:
@@ -82,7 +100,14 @@ class Repository:
             rows = db.execute("SELECT data FROM runs ORDER BY created_at DESC LIMIT 50").fetchall()
         return [self.compatible(json.loads(row["data"])) for row in rows]
 
-    def submit(self, run: dict[str, Any], job: dict[str, str], *, retry: bool = False) -> str:
+    def submit(
+        self,
+        run: dict[str, Any],
+        job: dict[str, str],
+        *,
+        retry: bool = False,
+        draft_binding: tuple[str, int, Callable[[dict[str, Any]], None]] | None = None,
+    ) -> str:
         with self.connection() as db:
             db.execute("BEGIN IMMEDIATE")
             existing = db.execute(
@@ -94,6 +119,12 @@ class Repository:
                         "JOB_CONFLICT", "Request key was already used for another edit.", 409
                     )
                 return str(existing["run_id"])
+            if draft_binding:
+                draft_id, revision, validate = draft_binding
+                draft = self._editing_draft(db, draft_id)
+                if draft["submitted_run_id"] or draft["revision"] != revision:
+                    raise AppError("DRAFT_CONFLICT", "Draft changed or was already submitted.", 409)
+                validate(draft)
             active = db.execute(
                 "SELECT COUNT(*) FROM jobs WHERE status IN ('queued','generating','evaluating')"
             ).fetchone()[0]
@@ -133,7 +164,88 @@ class Repository:
                     now(),
                 ),
             )
+            if draft_binding:
+                db.execute(
+                    "UPDATE editing_drafts SET submitted_run_id=?, updated_at=? WHERE id=?",
+                    (run["id"], now(), draft_binding[0]),
+                )
         return str(run["id"])
+
+    @staticmethod
+    def _editing_draft(db: sqlite3.Connection, draft_id: str) -> dict[str, Any]:
+        row = db.execute("SELECT * FROM editing_drafts WHERE id=?", (draft_id,)).fetchone()
+        if row is None:
+            raise AppError("DRAFT_NOT_FOUND", "Editing draft not found.", 404)
+        result = dict(row)
+        result["data"] = json.loads(result["data"])
+        asset = db.execute("SELECT width, height FROM assets WHERE id=?",
+                           (result["source_image"],)).fetchone()
+        result["source_size"] = [asset[0], asset[1]]
+        return {
+            k: v
+            for k, v in result.items()
+            if k not in {"creation_key", "creation_hash", "mutation_key", "mutation_hash"}
+        }
+
+    def editing_draft(self, draft_id: str) -> dict[str, Any]:
+        with self.connection() as db:
+            return self._editing_draft(db, draft_id)
+
+    def create_editing_draft(
+        self,
+        draft_id: str,
+        source: str,
+        data: dict[str, Any],
+        key: str,
+        hashed: str,
+        validate: Callable[[], None],
+    ) -> dict[str, Any]:
+        with self.connection() as db:
+            db.execute("BEGIN IMMEDIATE")
+            existing = db.execute(
+                "SELECT id, creation_hash FROM editing_drafts WHERE creation_key=?", (key,)
+            ).fetchone()
+            if existing:
+                if existing["creation_hash"] != hashed:
+                    raise AppError("DRAFT_CONFLICT", "Creation key belongs to another draft.", 409)
+                return self._editing_draft(db, existing["id"])
+            validate()
+            db.execute(
+                "INSERT INTO editing_drafts VALUES (?, ?, ?, 0, ?, ?, NULL, NULL, ?, ?, NULL)",
+                (draft_id, source, json.dumps(data), key, hashed, now(), now()),
+            )
+            return self._editing_draft(db, draft_id)
+
+    def update_editing_draft(
+        self,
+        draft_id: str,
+        revision: int,
+        key: str,
+        hashed: str,
+        data: dict[str, Any],
+        validate: Callable[[dict[str, Any]], None],
+    ) -> dict[str, Any]:
+        with self.connection() as db:
+            db.execute("BEGIN IMMEDIATE")
+            draft = self._editing_draft(db, draft_id)
+            row = db.execute(
+                "SELECT mutation_key, mutation_hash FROM editing_drafts WHERE id=?", (draft_id,)
+            ).fetchone()
+            if draft["submitted_run_id"]:
+                raise AppError("DRAFT_CONFLICT", "Submitted draft is read-only.", 409)
+            if row["mutation_key"] == key:
+                if row["mutation_hash"] != hashed or draft["revision"] != revision + 1:
+                    raise AppError("DRAFT_CONFLICT", "Mutation key conflicts.", 409)
+                return draft
+            if draft["revision"] != revision:
+                raise AppError("DRAFT_CONFLICT", "Draft changed in another view. Reload.", 409)
+            validate(draft)
+            db.execute(
+                "UPDATE editing_drafts SET data=?, revision=revision+1, mutation_key=?, "
+                "mutation_hash=?, updated_at=? WHERE id=?",
+                (json.dumps(data), key, hashed, now(), draft_id),
+            )
+            return self._editing_draft(db, draft_id)
 
     def mutate(
         self,
@@ -173,7 +285,8 @@ class Repository:
         row = db.execute(
             "SELECT draft.value FROM runs, "
             "json_each(runs.data, '$.continuation_starters') AS draft "
-            "WHERE json_extract(draft.value, ?) = ? LIMIT 1", (f"$.{field}", value)
+            "WHERE json_extract(draft.value, ?) = ? LIMIT 1",
+            (f"$.{field}", value),
         ).fetchone()
         return json.loads(row[0]) if row else None
 
@@ -182,24 +295,31 @@ class Repository:
             return self._starter(db, "request_key" if request_key else "id", value)
 
     def register_starter(
-        self, run_id: str, draft: dict[str, Any],
-        validate: Callable[[dict[str, Any]], None], width: int, height: int,
+        self,
+        run_id: str,
+        draft: dict[str, Any],
+        validate: Callable[[dict[str, Any]], None],
+        width: int,
+        height: int,
     ) -> dict[str, Any]:
         with self.connection() as db:
             db.execute("BEGIN IMMEDIATE")
             existing = self._starter(db, "request_key", draft["request_key"])
             if existing:
                 if existing["payload_hash"] != draft["payload_hash"]:
-                    raise AppError("JOB_CONFLICT", "Request key belongs to another continuation.",
-                                   409)
+                    raise AppError(
+                        "JOB_CONFLICT", "Request key belongs to another continuation.", 409
+                    )
                 return existing
             row = db.execute("SELECT data FROM runs WHERE id=?", (run_id,)).fetchone()
             if row is None:
                 raise AppError("RUN_NOT_FOUND", "Edit not found.", 404)
             run = json.loads(row[0])
             validate(run)
-            db.execute("INSERT INTO assets VALUES (?, 'original', ?, ?)",
-                       (draft["source_image"], width, height))
+            db.execute(
+                "INSERT INTO assets VALUES (?, 'original', ?, ?)",
+                (draft["source_image"], width, height),
+            )
             run.setdefault("continuation_starters", []).append(draft)
             db.execute("UPDATE runs SET data=? WHERE id=?", (json.dumps(run), run_id))
         return draft

@@ -166,7 +166,7 @@ for (const width of [1440, 768, 390]) {
         .getByRole("button", { name: "Before / After", exact: true })
         .click();
       await page.screenshot({
-        path: "docs/screenshots/v02/locked-human-fail.png",
+        path: ".local/v021-desktop-evidence/locked-human-fail.png",
         fullPage: true,
       });
       // The UI must never overlay mismatched raw coordinates when the recipe is unavailable.

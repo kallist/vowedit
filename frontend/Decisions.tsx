@@ -2,8 +2,8 @@
 import { localText } from "@/frontend/i18n/format";
 import { useLocale } from "@/frontend/i18n/LocaleProvider";
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { api, ApiError, jsonPost } from "./api";
+import { useBridge } from "./Bridge";
+import { ApiError, jsonPost } from "./api";
 import { label, type Candidate, type Run, type Starter } from "./types";
 
 export function candidateIssues(candidate: Candidate) {
@@ -32,14 +32,20 @@ export default function Decisions({
 }) {
   const { t } = useLocale();
 
-  const router = useRouter();
+  const { api, commands, navigate } = useBridge();
   const [confirmed, setConfirmed] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [recovering, setRecovering] = useState(false);
   useEffect(() => {
-    setRecovering(!!sessionStorage.getItem(`vowedit.continuation:${run.id}`));
-  }, [run.id]);
+    let live = true;
+    commands.get(`vowedit.continuation:${run.id}`).then((value) => {
+      if (live) setRecovering(!!value);
+    });
+    return () => {
+      live = false;
+    };
+  }, [run.id, commands]);
   const pending = useRef(false);
   const issues = candidateIssues(candidate);
   const ready = issues.every((issue) => confirmed[`${candidate.id}:${issue}`]);
@@ -57,18 +63,18 @@ export default function Decisions({
         confirmations: issues,
       };
       if (continuing) {
-        const saved = sessionStorage.getItem(storageKey);
+        const saved = await commands.get(storageKey);
         body = saved
           ? JSON.parse(saved)
           : ({ ...body, request_key: crypto.randomUUID() } as typeof body);
-        sessionStorage.setItem(storageKey, JSON.stringify(body));
+        await commands.set(storageKey, JSON.stringify(body));
         const draft = await api<Starter>(
           `/runs/${run.id}/continuations`,
           jsonPost(body),
         );
-        sessionStorage.removeItem(storageKey);
+        await commands.remove(storageKey);
         setRecovering(false);
-        router.push(`/edit/new?draft=${draft.id}`);
+        navigate(`/edit/new?draft=${draft.id}`);
       } else {
         onUpdate(
           await api<Run>(`/runs/${run.id}/selection`, {
@@ -87,7 +93,7 @@ export default function Decisions({
         error.status < 500
       ) {
         if (continuing) {
-          sessionStorage.removeItem(storageKey);
+          await commands.remove(storageKey);
           setRecovering(false);
         }
         const current = await api<Run>(`/runs/${run.id}`).catch(() => null);

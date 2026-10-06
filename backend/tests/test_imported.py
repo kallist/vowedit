@@ -193,7 +193,7 @@ def test_import_failure_retry_retains_assets_and_never_reimports(
 
 def test_queued_import_restart_skips_generating(tmp_path, images):
     service = ImageEditService(tmp_path)
-    client = TestClient(create_app(service))
+    client = TestClient(create_app(service), headers={"Origin": "http://127.0.0.1:3000"})
     request = imported_payload(client, images)
     run = service.create_imported(CreateImportedRun.model_validate(request))
     assert run["status"] == "queued"
@@ -209,7 +209,7 @@ def test_queued_import_restart_skips_generating(tmp_path, images):
         return mutate(*args, **kwargs)
 
     restarted.repo.mutate = recording
-    with TestClient(create_app(restarted)) as client:
+    with TestClient(create_app(restarted), headers={"Origin": "http://127.0.0.1:3000"}) as client:
         assert wait_run(client, run["id"])["status"] == "completed"
     assert states == ["evaluating", "completed"]
 

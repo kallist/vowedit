@@ -11,6 +11,7 @@ jobs:
     env:
       NEXT_TELEMETRY_DISABLED: '1'
       VOWEDIT_PROVIDER: mock
+      PYTHON_DOTENV_DISABLED: '1'
       VOWEDIT_DATA_DIR: ${{ github.workspace }}/.local/v02-ci-data
     steps:
       - uses: actions/checkout@v4
@@ -36,17 +37,21 @@ jobs:
           .venv/bin/python scripts/check_secrets.py
           npm run lint
           npm run typecheck
+          npm run extension:typecheck
           npm audit --audit-level=high
       - name: Unit and integration tests
         run: |
           .venv/bin/python -m pytest -q
           npm test
+          npm run extension:build
+          npm run extension:test
       - name: Build
         run: npm run build -- --webpack
       - name: Browser acceptance (Mock only)
         run: |
           npx playwright install --with-deps chromium
           npm run e2e
+          npm run extension:e2e
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -54,4 +59,5 @@ jobs:
           path: |
             test-results/
             docs/screenshots/
+            .local/v021-evidence/
           retention-days: 7

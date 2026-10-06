@@ -1,6 +1,7 @@
 import type { MessageKey } from "./en";
 import { en } from "./en";
 const codes: Record<string, MessageKey> = {
+  CONNECTION_FAILED: "Connection failed. Reconnect to local VowEdit.",
   INVALID_INPUT: "Check required fields, identifiers and thresholds.",
   INVALID_IMAGE: "This file could not be decoded safely.",
   ASSET_NOT_FOUND: "A saved image is missing or unreadable.",

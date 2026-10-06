@@ -1,0 +1,127 @@
+@import "../app/globals.css";
+body {
+  min-width: 0;
+  font-size: 15px;
+}
+#root {
+  padding: 16px;
+  max-width: 100%;
+}
+.panel-header {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.panel-header strong {
+  font: 26px var(--serif);
+  margin-right: auto;
+}
+.panel-header span {
+  flex-basis: 100%;
+}
+section,
+details,
+.draft-editor {
+  margin: 16px 0;
+}
+fieldset {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+label {
+  display: block;
+  margin: 12px 0;
+}
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  max-width: 100%;
+  width: 100%;
+  min-height: 44px;
+}
+button {
+  min-width: 44px;
+  min-height: 44px;
+  white-space: normal;
+}
+img {
+  max-width: 100%;
+}
+code,
+p,
+dd {
+  overflow-wrap: anywhere;
+}
+.studio-page {
+  padding: 0;
+  width: 100%;
+}
+.page-intro,
+.comparison-header,
+.brush-row,
+.toolbar,
+.mask-legend,
+.export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.page-intro h1 {
+  font-size: 28px;
+}
+.result-layout,
+.receipt-grid,
+.candidate-grid,
+.summary-content {
+  display: block;
+}
+.result-layout > *,
+.comparison,
+.report-panel {
+  min-width: 0;
+  width: 100%;
+}
+.candidate-card {
+  margin: 8px 0;
+}
+.view-tabs,
+.result-actions,
+.tool-buttons,
+.mode-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.comparison-mat {
+  padding: 8px;
+}
+.editor-mat {
+  padding: 8px;
+}
+.coordinate-controls {
+  display: flex;
+  flex-wrap: wrap;
+}
+.receipt {
+  padding: 16px;
+}
+.handoff {
+  border: 1px dashed var(--line);
+  padding: 16px;
+}
+.draft-editor img {
+  max-height: 480px;
+  object-fit: contain;
+}
+.decisions button {
+  margin: 8px 8px 0 0;
+}
+.processing-state,
+.failure-state {
+  padding: 12px;
+}

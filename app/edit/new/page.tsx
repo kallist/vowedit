@@ -12,6 +12,7 @@ import { api, ApiError, jsonPost, upload } from "@/frontend/api";
 import type { Stroke } from "@/frontend/masks";
 import { importReady, submissionPath } from "@/frontend/imports";
 import PlanDetails from "@/frontend/PlanDetails";
+import DraftEditor from "@/frontend/DraftEditor";
 import {
   assetUrl,
   type Asset,
@@ -21,6 +22,23 @@ import {
   type Starter,
 } from "@/frontend/types";
 export default function NewEdit() {
+  const { t } = useLocale();
+  const [editing, setEditing] = useState<string | null>(null);
+  const [invalid, setInvalid] = useState(false);
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("editing_draft");
+    if (
+      id &&
+      id.length === 36 &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+    )
+      setEditing(id);
+    else if (id) setInvalid(true);
+  }, []);
+  if (invalid) return <p role="alert">{t("Invalid editing draft ID.")}</p>;
+  return editing ? <DraftEditor id={editing} /> : <LegacyNewEdit />;
+}
+function LegacyNewEdit() {
   const { t } = useLocale();
 
   const router = useRouter(),

@@ -1,12 +1,25 @@
 import io
+import os
+from pathlib import Path
 from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
 from PIL import Image, ImageDraw
 
-from backend.api import create_app
-from backend.services import ImageEditService
+# Set isolation before backend.api's module-level dotenv import, including plain pytest runs.
+os.environ["PYTHON_DOTENV_DISABLED"] = "1"
+os.environ["VOWEDIT_DATA_DIR"] = str(Path(".local/v021-test-startup").resolve())
+for variable in (
+    "RUNNINGHUB_API_KEY",
+    "RUNNINGHUB_WORKFLOW_ID",
+    "COMFYUI_BASE_URL",
+    "COMFYUI_CHECKPOINT",
+):
+    os.environ.pop(variable, None)
+
+from backend.api import create_app  # noqa: E402
+from backend.services import ImageEditService  # noqa: E402
 
 
 def png(image):
@@ -32,7 +45,7 @@ def service(tmp_path):
 
 @pytest.fixture
 def client(service):
-    with TestClient(create_app(service)) as client:
+    with TestClient(create_app(service), headers={"Origin": "http://127.0.0.1:3000"}) as client:
         yield client
 
 

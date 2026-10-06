@@ -8,8 +8,8 @@ import {
 } from "@/frontend/i18n/format";
 import { useLocale } from "@/frontend/i18n/LocaleProvider";
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+
+import { useBridge, LocalLink as Link } from "./Bridge";
 import {
   ArrowRight,
   Download,
@@ -19,11 +19,12 @@ import {
   Check,
   LoaderCircle,
 } from "lucide-react";
-import { api, ApiError, jsonPost } from "./api";
+import { ApiError, jsonPost } from "./api";
 import { safeErrorText } from "./i18n/errors";
 import PlanDetails from "./PlanDetails";
 import Decisions from "./Decisions";
-import { assetUrl, label, terminal, type Run, type Candidate } from "./types";
+import CompactReport from "./CompactReport";
+import { label, terminal, type Run, type Candidate } from "./types";
 type View = "after" | "before" | "compare" | "ghost" | "raw" | "aligned";
 function BoundaryDisclosure({ candidate }: { candidate: Candidate }) {
   const { t } = useLocale();
@@ -63,7 +64,8 @@ function BoundaryDisclosure({ candidate }: { candidate: Candidate }) {
 export default function ResultPage({ id }: { id: string }) {
   const { t, locale } = useLocale();
 
-  const router = useRouter(),
+  const { api, assetUrl, commands, navigate } = useBridge();
+  const router = { push: navigate },
     [run, setRun] = useState<Run | null>(null),
     [error, setError] = useState("");
   const [chosen, setChosen] = useState<string | null>(null),
@@ -77,6 +79,10 @@ export default function ResultPage({ id }: { id: string }) {
     let live = true;
     let timer: ReturnType<typeof setTimeout>;
     async function refresh() {
+      if (document.hidden) {
+        timer = setTimeout(refresh, 1000);
+        return;
+      }
       try {
         const next = await api<Run>(`/runs/${id}`);
         if (!live) return;
@@ -101,7 +107,7 @@ export default function ResultPage({ id }: { id: string }) {
       live = false;
       clearTimeout(timer);
     };
-  }, [id, pollVersion]);
+  }, [id, pollVersion, api]);
   async function retry(kind: "generation" | "evaluation") {
     if (pending.current) return;
     pending.current = true;
@@ -109,13 +115,13 @@ export default function ResultPage({ id }: { id: string }) {
     setError("");
     const keyName = `vowedit.retry:${id}:${kind}`;
     try {
-      const requestKey = sessionStorage.getItem(keyName) || crypto.randomUUID();
-      sessionStorage.setItem(keyName, requestKey);
+      const requestKey = (await commands.get(keyName)) || crypto.randomUUID();
+      await commands.set(keyName, requestKey);
       const next = await api<Run>(
         `/runs/${id}/retry-${kind}`,
         jsonPost({ request_key: requestKey }),
       );
-      sessionStorage.removeItem(keyName);
+      await commands.remove(keyName);
       if (next.id !== id) router.push(`/edit/${next.id}`);
       else {
         setRun(next);
@@ -123,7 +129,7 @@ export default function ResultPage({ id }: { id: string }) {
       }
     } catch (e) {
       if (e instanceof ApiError && e.status >= 400 && e.status < 500) {
-        sessionStorage.removeItem(keyName);
+        await commands.remove(keyName);
       }
       setError((e as Error).message);
     } finally {
@@ -151,7 +157,7 @@ export default function ResultPage({ id }: { id: string }) {
     failed = run.status.startsWith("failed");
   const hasReceipt = ["completed", "partial"].includes(run.status);
   return (
-    <main className="studio-page result-page">
+    <main id="report" className="studio-page result-page">
       <div className="page-intro">
         <div>
           <p className="eyebrow">
@@ -361,7 +367,7 @@ export default function ResultPage({ id }: { id: string }) {
                         className="before-layer"
                         src={
                           view === "aligned"
-                            ? `/api/prepared-candidates/${candidate.image}/normalized-raw`
+                            ? assetUrl(candidate.image, "normalized-raw")
                             : assetUrl(run.source_image)
                         }
                         alt={
@@ -651,6 +657,9 @@ export default function ResultPage({ id }: { id: string }) {
                 </p>
               )}
               {hasReceipt && (
+                <CompactReport runId={run.id} candidate={candidate} />
+              )}
+              {hasReceipt && (
                 <Decisions run={run} candidate={candidate} onUpdate={setRun} />
               )}
             </aside>
@@ -763,6 +772,7 @@ function Receipt({
 }) {
   const { t, locale } = useLocale();
 
+  const { api } = useBridge();
   const selected = run.candidates.find(
     (c) => c.id === run.selected_candidate_id,
   );
@@ -901,7 +911,32 @@ function Receipt({
           {run.id.slice(0, 8).toUpperCase()} ·{" "}
           {new Date(run.created_at).toLocaleDateString(locale)}
         </span>
-        <a href={`/api/runs/${run.id}/receipt`} className="button" download>
+        <a
+          href="#export-receipt"
+          className="button"
+          download
+          onClick={(event) => {
+            event.preventDefault();
+            void api(`/runs/${run.id}/receipt`)
+              .then((data) => {
+                const url = URL.createObjectURL(
+                  new Blob([JSON.stringify(data, null, 2)], {
+                    type: "application/json",
+                  }),
+                );
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `vowedit-${run.id}.json`;
+                link.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+              })
+              .catch(() =>
+                setMessage(
+                  "The local service could not complete this request. Try again.",
+                ),
+              );
+          }}
+        >
           <Download size={16} aria-hidden />
           {t("Export JSON")}
         </a>

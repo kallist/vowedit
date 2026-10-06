@@ -5,11 +5,27 @@ import tempfile
 import time
 from pathlib import Path
 
-import backend.services as service_module
-from backend.api import create_app
-from backend.providers import MockImageEditProvider
-from backend.schemas import AppError
-from backend.services import ImageEditService
+# Validate isolation before backend.api's module-level dotenv initialization.
+local = Path(os.environ["VOWEDIT_DATA_DIR"])
+if not local.is_absolute():
+    raise RuntimeError("Browser validation requires an absolute isolated data root.")
+local = local.resolve()
+if local == Path("data").resolve() or Path("data").resolve() in local.parents:
+    raise RuntimeError("Browser validation requires isolated data.")
+os.environ["PYTHON_DOTENV_DISABLED"] = "1"
+for variable in (
+    "RUNNINGHUB_API_KEY",
+    "RUNNINGHUB_WORKFLOW_ID",
+    "COMFYUI_BASE_URL",
+    "COMFYUI_CHECKPOINT",
+):
+    os.environ.pop(variable, None)
+
+import backend.services as service_module  # noqa: E402
+from backend.api import create_app  # noqa: E402
+from backend.providers import MockImageEditProvider  # noqa: E402
+from backend.schemas import AppError  # noqa: E402
+from backend.services import ImageEditService  # noqa: E402
 
 
 class BrowserMock(MockImageEditProvider):
@@ -29,9 +45,6 @@ class BrowserMock(MockImageEditProvider):
         return super().generate(request)
 
 
-local = Path(os.environ["VOWEDIT_DATA_DIR"]).resolve()
-if local == Path("data").resolve() or Path("data").resolve() in local.parents:
-    raise RuntimeError("Browser validation requires isolated data.")
 local.mkdir(parents=True, exist_ok=True)
 root = Path(tempfile.mkdtemp(prefix="browser-test-", dir=local)).resolve()
 original_evaluate = service_module.evaluate

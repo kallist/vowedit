@@ -1,4 +1,5 @@
 export const en = {
+  "Invalid editing draft ID.": "Invalid editing draft ID.",
   CANDIDATE_SIZE_MISMATCH:
     "CANDIDATE_SIZE_MISMATCH: Candidate dimensions must match the original. Use the explicit Boundary Lock preparation below.",
   Eligible: "Eligible",
@@ -478,5 +479,86 @@ export const en = {
   "Local access only.": "Local access only.",
   "The local service could not complete this request. Try again.":
     "The local service could not complete this request. Try again.",
+  Saved: "Saved",
+  Saving: "Saving",
+  "Not saved": "Not saved",
+  Conflict: "Conflict",
+  "Loading saved edit…": "Loading saved edit…",
+  "Only server-acknowledged changes are restored.":
+    "Only server-acknowledged changes are restored.",
+  "Another view changed this draft. Local edits are retained. Reload to discard them and read the saved state.":
+    "Another view changed this draft. Local edits are retained. Reload to discard them and read the saved state.",
+  "Reload saved state": "Reload saved state",
+  "Material → Define → Re-edit → Inspect":
+    "Material → Define → Re-edit → Inspect",
+  "Connection failed. Reconnect to local VowEdit.":
+    "Connection failed. Reconnect to local VowEdit.",
+  "Action failed. Your saved state remains available.":
+    "Action failed. Your saved state remains available.",
+  "Fine editing in full workbench": "Fine editing in full workbench",
+  "Preservation reflects boundary enforcement, not model quality.":
+    "Preservation reflects boundary enforcement, not model quality.",
+  "Connecting…": "Connecting…",
+  "Update local VowEdit": "Update local VowEdit",
+  "Pairing required": "Pairing required",
+  Connected: "Connected",
+  "Local API offline or blocked": "Local API offline or blocked",
+  "Trusted storage unavailable": "Trusted storage unavailable",
+  Reconnect: "Reconnect",
+  "Re-edit beside your AI.": "Re-edit beside your AI.",
+  "Extension ID": "Extension ID",
+  "Approve access to local VowEdit history and editing commands. Real generation uses your configured provider.":
+    "Approve access to local VowEdit history and editing commands. Real generation uses your configured provider.",
+  "Open VowEdit Pairing Page": "Open VowEdit Pairing Page",
+  "One-time pairing code": "One-time pairing code",
+  "Pair extension": "Pair extension",
+  "Copy adopted final PNG": "Copy adopted final PNG",
+  "Download adopted final PNG": "Download adopted final PNG",
+  "Open full report": "Open full report",
+  "Paste, drop, or upload a PNG/JPEG image.":
+    "Paste, drop, or upload a PNG/JPEG image.",
+  "No page collection. File handoff only.":
+    "No page collection. File handoff only.",
+  Unpair: "Unpair",
+  "Advanced connection settings": "Advanced connection settings",
+  "Local API port": "Local API port",
+  "Change port and pair again": "Change port and pair again",
+  "Full workbench offline. Start Next on port 3000.":
+    "Full workbench offline. Start Next on port 3000.",
+  "Pairing refused or expired. Approve a new code in the full workbench.":
+    "Pairing refused or expired. Approve a new code in the full workbench.",
+  "Pairing revoked.": "Pairing revoked.",
+  "Removed locally. Server authorization remains; revoke it in the full workbench.":
+    "Removed locally. Server authorization remains; revoke it in the full workbench.",
+  "Adopted final PNG copied.": "Adopted final PNG copied.",
+  "Adopted final PNG download started.": "Adopted final PNG download started.",
+  "Copy failed. Download the adopted final PNG instead.":
+    "Copy failed. Download the adopted final PNG instead.",
+  "Copy an image, then paste or upload. URLs and HTML are not fetched.":
+    "Copy an image, then paste or upload. URLs and HTML are not fetched.",
+  "Upload PNG or JPEG bytes, up to 10 MB and 1536 pixels per side.":
+    "Upload PNG or JPEG bytes, up to 10 MB and 1536 pixels per side.",
+  "Enter a port from 1024 to 65535.": "Enter a port from 1024 to 65535.",
+  "Browser pairing": "Browser pairing",
+  "Invalid extension ID. Open the pairing page from the extension.":
+    "Invalid extension ID. Open the pairing page from the extension.",
+  "Requested extension": "Requested extension",
+  "Prefilling an ID does not approve access. Verify it against the side panel.":
+    "Prefilling an ID does not approve access. Verify it against the side panel.",
+  "Approve extension": "Approve extension",
+  "One-time pairing code — expires in 5 minutes. Copy it manually into the side panel.":
+    "One-time pairing code — expires in 5 minutes. Copy it manually into the side panel.",
+  "Hide code": "Hide code",
+  "Authorized extensions": "Authorized extensions",
+  Revoke: "Revoke",
+  Refresh: "Refresh",
+  "Compact preservation report": "Compact preservation report",
+  "KEEP is undefined.": "KEEP is undefined.",
+  "Human FAIL remains FAIL after adoption.":
+    "Human FAIL remains FAIL after adoption.",
+  "Boundary Lock preservation comes from compositing.":
+    "Boundary Lock preservation comes from compositing.",
+  "Outside CHANGE stays exactly original.": "Outside CHANGE stays exactly original.",
+  "Upload another source": "Upload another source",
 } as const;
 export type MessageKey = keyof typeof en;

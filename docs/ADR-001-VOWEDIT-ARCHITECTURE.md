@@ -121,7 +121,7 @@ and fixed output-host rules bound input risks. Responses and logs contain safe e
 Provider keys stay in environment memory, never in browser, DB, assets or receipts. Cloud downloads
 use a separate unauthenticated client, HTTPS allowlisted host and no redirects. See integration notes.
 
-No authentication: trusted single-user machine only. Other local processes with filesystem access
+Original V0.1/V0.2 boundary: no authentication, trusted single-user machine only. Other local processes with filesystem access
 are outside this trust boundary. No cloud storage service, Redis, distributed workers, accounts,
 mobile app, training, video or GPU containers. Docker adds little to this local prototype and is omitted.
 
@@ -159,3 +159,37 @@ Normalized raw previews validate server provenance against the existing center-c
 return only PNG bytes and write nothing. Raw and historical experimental evidence stay immutable.
 The local browser host and hosted CI explicitly set isolated data roots before application import.
 No real user database was upgraded during validation. There is no schema change or migration in V0.2.
+
+## V0.2.1 Browser Side Panel — 2026-10-06
+
+The packaged extension reuses React editors, masks, results, decisions, catalogs and design tokens.
+Typed API, asset, navigation and command-storage adapters separate Next's same-origin Web surface
+from the extension's authenticated loopback client. Shared components import neither Chrome APIs
+nor Next navigation. Extension images use scoped authenticated Blob URLs with abort/revoke cleanup.
+Reconnect recreates that scope; there is no persistent image cache.
+
+Browser pairing is infrastructure authority, not domain data. Explicit full-UI approval issues a
+five-minute, extension-origin-bound code. Exchange consumes it under an RLock only after atomic
+flush/fsync/replace of a digest-only registry. A 256-bit bearer has a thirty-day absolute expiry;
+extension trusted-context storage is its only persistent raw-token location. Preflight is a separate
+exact-origin, method/route/header gate; CORS never substitutes for authentication. Any declared
+extension authority takes the bearer path, including empty/invalid declarations. The existing local
+Web surface keeps exact-origin/Host/Fetch Metadata checks, with the anonymous no-Origin bypass removed.
+
+Only one additive domain table, `editing_drafts`, is introduced. Its source is fixed; schema-versioned
+snapshots contain source-coordinate strokes and asset references, never locale, URLs, tokens or reports.
+Creation is request-key/hash idempotent. Updates serialize revision/CAS, latest-mutation replay and
+reference validation in `BEGIN IMMEDIATE`. Each UI has one in-flight writer and coalesces newer input.
+Conflicts retain local edits and require an explicit reload; browser close only promises the last ack.
+
+Run submission preserves legacy hash shape when the optional draft binding is absent. In the same
+SQLite transaction, existing job replay takes priority, then draft revision/snapshot/source are checked,
+the Run/job is inserted and the draft becomes read-only with `submitted_run_id`. No second transaction
+marks submission. Immutable continuation starters and existing selection/review/lineage behavior remain.
+Schema initialization is atomic and tested on controlled old-schema fixtures; rollback is stop services
+and restore the previous DB/WAL/assets backup, never destructive down-migration. No real data was upgraded.
+
+Provider transport, seeds, strategies, evaluator, Boundary Lock pixels and worker architecture are
+unchanged. No context capture, native host, MCP, automatic process launch, distributed services or
+browser-store publishing is part of this version. Actual Chrome/Edge toolbar Side Panel evidence
+remains a separate acceptance gate from packaged bundled-Chromium page automation.

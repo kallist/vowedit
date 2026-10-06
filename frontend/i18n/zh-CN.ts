@@ -1,5 +1,6 @@
 import type { MessageKey } from "./en";
 export const zhCN = {
+  "Invalid editing draft ID.": "编辑草稿 ID 无效。",
   CANDIDATE_SIZE_MISMATCH:
     "CANDIDATE_SIZE_MISMATCH：候选尺寸必须与原图一致。请使用下方显式 Boundary Lock 预处理。",
   Eligible: "像素合格",
@@ -454,4 +455,83 @@ export const zhCN = {
   "Local access only.": "仅允许本地访问。",
   "The local service could not complete this request. Try again.":
     "本地服务无法完成请求，请重试。",
+  Saved: "已保存",
+  Saving: "保存中",
+  "Not saved": "未保存",
+  Conflict: "保存冲突",
+  "Loading saved edit…": "正在加载已保存编辑…",
+  "Only server-acknowledged changes are restored.":
+    "仅恢复服务器已确认保存的修改。",
+  "Another view changed this draft. Local edits are retained. Reload to discard them and read the saved state.":
+    "另一个窗口修改了草稿。本地未保存内容仍保留，重新加载将放弃本地修改并读取服务器快照。",
+  "Reload saved state": "重新加载已保存状态",
+  "Material → Define → Re-edit → Inspect": "素材 → 定义修改 → 返工 → 检查",
+  "Connection failed. Reconnect to local VowEdit.":
+    "连接失败，请重新连接本地 VowEdit。",
+  "Action failed. Your saved state remains available.":
+    "操作失败，已保存状态仍可恢复。",
+  "Fine editing in full workbench": "保存并在完整工作台精细编辑",
+  "Preservation reflects boundary enforcement, not model quality.":
+    "保留率来自边界合成，不代表模型质量。",
+  "Connecting…": "连接中…",
+  "Update local VowEdit": "请更新本地 VowEdit",
+  "Pairing required": "需要配对",
+  Connected: "已连接",
+  "Local API offline or blocked": "本地 API 离线或连接被阻止",
+  "Trusted storage unavailable": "受信任存储不可用",
+  Reconnect: "重新连接",
+  "Re-edit beside your AI.": "在你的 AI 旁返工。",
+  "Extension ID": "扩展 ID",
+  "Approve access to local VowEdit history and editing commands. Real generation uses your configured provider.":
+    "批准后扩展可以读取本地 VowEdit 图片历史并执行编辑命令；真实生成会调用你已配置的服务。",
+  "Open VowEdit Pairing Page": "打开 VowEdit 配对页面",
+  "One-time pairing code": "一次性配对码",
+  "Pair extension": "配对扩展",
+  "Copy adopted final PNG": "复制已采用的最终 PNG",
+  "Download adopted final PNG": "下载已采用的最终 PNG",
+  "Open full report": "打开完整报告",
+  "Paste, drop, or upload a PNG/JPEG image.":
+    "粘贴、拖入或上传 PNG/JPEG 图片。",
+  "No page collection. File handoff only.":
+    "不收集网页内容，只接收用户移交的图片文件。",
+  Unpair: "解除配对",
+  "Advanced connection settings": "高级连接设置",
+  "Local API port": "本地 API 端口",
+  "Change port and pair again": "更换端口并重新配对",
+  "Full workbench offline. Start Next on port 3000.":
+    "完整工作台离线，请在 3000 端口启动 Next。",
+  "Pairing refused or expired. Approve a new code in the full workbench.":
+    "配对被拒绝或已过期，请在完整工作台批准新的配对码。",
+  "Pairing revoked.": "服务器授权已撤销。",
+  "Removed locally. Server authorization remains; revoke it in the full workbench.":
+    "本地凭据已移除，服务器授权仍存在，请在完整工作台撤销。",
+  "Adopted final PNG copied.": "已复制采用的最终 PNG。",
+  "Adopted final PNG download started.": "已开始下载采用的最终 PNG。",
+  "Copy failed. Download the adopted final PNG instead.":
+    "复制失败，请下载采用的最终 PNG。",
+  "Copy an image, then paste or upload. URLs and HTML are not fetched.":
+    "请复制图片后粘贴或上传，不会获取网址或 HTML 中的图片。",
+  "Upload PNG or JPEG bytes, up to 10 MB and 1536 pixels per side.":
+    "请上传 PNG/JPEG 图片，大小不超过 10 MB，每边不超过 1536 像素。",
+  "Enter a port from 1024 to 65535.": "请输入 1024–65535 的端口。",
+  "Browser pairing": "浏览器配对",
+  "Invalid extension ID. Open the pairing page from the extension.":
+    "扩展 ID 无效，请从扩展打开配对页面。",
+  "Requested extension": "请求配对的扩展",
+  "Prefilling an ID does not approve access. Verify it against the side panel.":
+    "预填 ID 不代表批准访问，请与侧栏中的 ID 核对。",
+  "Approve extension": "批准扩展",
+  "One-time pairing code — expires in 5 minutes. Copy it manually into the side panel.":
+    "一次性配对码将在 5 分钟后失效，请手动复制到侧栏。",
+  "Hide code": "隐藏配对码",
+  "Authorized extensions": "已授权扩展",
+  Revoke: "撤销",
+  Refresh: "刷新",
+  "Compact preservation report": "保留情况简报",
+  "KEEP is undefined.": "KEEP 未定义。",
+  "Human FAIL remains FAIL after adoption.": "人工 FAIL 在采用后仍保持 FAIL。",
+  "Boundary Lock preservation comes from compositing.":
+    "Boundary Lock 的保留率来自合成。",
+  "Outside CHANGE stays exactly original.": "CHANGE 外保持原图像素不变。",
+  "Upload another source": "保存并上传新素材",
 } satisfies Record<MessageKey, string>;

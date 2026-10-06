@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": { "incremental": false, "types": ["chrome", "node"] },
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx",
+    "../frontend/**/*.ts",
+    "../frontend/**/*.tsx"
+  ],
+  "exclude": ["dist", "../node_modules"]
+}
