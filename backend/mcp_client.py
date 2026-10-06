@@ -79,7 +79,10 @@ class AgentClient:
             }
         try:
             if os.name == "nt":
-                os.startfile(url)
+                opener = getattr(os, "startfile", None)
+                if not callable(opener):
+                    raise OSError("Local Windows opener is unavailable")
+                opener(url)
             else:
                 subprocess.run(
                     ["xdg-open", url],

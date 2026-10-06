@@ -28,6 +28,15 @@ export default function ActivityPanel({ kind, id, onUpdate }: { kind: 'draft' | 
     void reload(); const timer = setInterval(() => void reload(), 1500);
     return () => { live = false; clearInterval(timer); };
   }, [kind, id]);
+  async function loadMore() {
+    try {
+      const result = await api<{entries:Entry[];next_cursor:number}>(
+        `/agent/${kind}/${id}/activity?limit=100&after_cursor=${cursor.current}`);
+      setEntries(current => [...current, ...result.entries.filter(e => !current.some(old => old.cursor === e.cursor))]);
+      cursor.current = Math.max(cursor.current, result.next_cursor);
+      setMore(result.entries.length === 100);
+    } catch (e) { setMessage(e instanceof Error ? e.message : t('Unable to save. Reload or try again.')); }
+  }
   async function share() {
     try {
       await api('/agent-grants', jsonPost({ client_id: client, kind, id }));
@@ -49,7 +58,7 @@ export default function ActivityPanel({ kind, id, onUpdate }: { kind: 'draft' | 
       <ol>{entries.map(entry => <li key={entry.cursor}>
         <time>{new Date(entry.created_at).toLocaleTimeString()}</time> · {entry.actor} · {entry.event}
       </li>)}</ol>
-      {more && <button className="secondary-button" onClick={async () => {const result=await api<{entries:Entry[];next_cursor:number}>(`/agent/${kind}/${id}/activity?limit=100&after_cursor=${cursor.current}`);setEntries(current=>[...current,...result.entries.filter(e=>!current.some(old=>old.cursor===e.cursor))]);cursor.current=Math.max(cursor.current,result.next_cursor);setMore(result.entries.length===100);}}>{t('Load more activity')}</button>}
+      {more && <button className="secondary-button" onClick={() => void loadMore()}>{t('Load more activity')}</button>}
     </details>
   </>;
 }

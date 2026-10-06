@@ -40,7 +40,9 @@ export default function DraftEditor({ id }: { id: string }) {
       } catch (e) { if (live) setMessage(e instanceof Error ? e.message : t('Unable to save. Reload or try again.')); }
     }
     setRetrySave(Boolean(sessionStorage.getItem(`vowedit.draft-save:${id}`)));
-    void load(); void api<{providers: string[]}>('/config').then(c => setProviders(c.providers));
+    void load(); void api<{providers: string[]}>('/config')
+      .then(c => { if (live) setProviders(c.providers); })
+      .catch(e => { if (live) setMessage(e instanceof Error ? e.message : t('Unable to save. Reload or try again.')); });
     const timer = setInterval(() => void load(), 1500);
     return () => { live = false; clearInterval(timer); };
   }, [id, acceptSnapshot, t]);
@@ -83,6 +85,7 @@ export default function DraftEditor({ id }: { id: string }) {
     setBusy(true);
     try { const asset = await upload(file, 'original'); await save(null, asset.id); }
     catch (e) { setMessage(e instanceof Error ? e.message : t('Unable to save. Reload or try again.')); }
+    finally { setBusy(false); }
   }
   async function paint(value: MaskValue) {
     if (!draft || busy || pending.current) return;
@@ -128,11 +131,11 @@ export default function DraftEditor({ id }: { id: string }) {
       <label>{asset ? t('Replace original in a new draft') : t('Attach original image')}<input type="file" accept="image/png,image/jpeg" disabled={busy || retrySave} onChange={e => { if (e.target.files?.[0]) void attach(e.target.files[0]); }} /></label>
       {asset && <figure className="draft-original"><img src={asset.url} alt={t('Original')} /><figcaption>{t('Original')} · {asset.width} × {asset.height}</figcaption></figure>}
       <label>{t('Original instruction')}<textarea value={instruction} maxLength={1500} onChange={e => {setInstruction(e.target.value); changeLocal();}} disabled={busy || retrySave} /></label>
-      <label>{t('Provider')}<select value={provider} disabled={busy} onChange={e => {setProvider(e.target.value); changeLocal();}}>{providers.map(p => <option key={p}>{p}</option>)}</select></label>
-      {contractDraft && <><label>{t('Background threshold')}<input type="number" min="0" max="100" value={contractDraft.background_threshold ?? 98} onChange={e => { setContractDraft({...contractDraft,background_threshold:Number(e.target.value)}); changeLocal(); }} /></label>{contractDraft.keep.map((rule,index) => <label key={rule.mask}>KEEP · {rule.label}<input type="number" min="0" max="100" value={rule.threshold} onChange={e => {setContractDraft({...contractDraft, keep:contractDraft.keep.map((r,i) => i === index ? {...r, threshold:Number(e.target.value)} : r)}); changeLocal();}} /></label>)}</>}
+      <label>{t('Provider')}<select value={provider} disabled={busy || retrySave} onChange={e => {setProvider(e.target.value); changeLocal();}}>{providers.map(p => <option key={p}>{p}</option>)}</select></label>
+      {contractDraft && <><label>{t('Background threshold')}<input type="number" min="0" max="100" value={contractDraft.background_threshold ?? 98} disabled={busy || retrySave} onChange={e => { setContractDraft({...contractDraft,background_threshold:Number(e.target.value)}); changeLocal(); }} /></label>{contractDraft.keep.map((rule,index) => <label key={rule.mask}>KEEP · {rule.label}<input type="number" min="0" max="100" value={rule.threshold} disabled={busy || retrySave} onChange={e => {setContractDraft({...contractDraft, keep:contractDraft.keep.map((r,i) => i === index ? {...r, threshold:Number(e.target.value)} : r)}); changeLocal();}} /></label>)}</>}
       <button className="primary-button" disabled={busy || conflict || retrySave || (contractDraft !== null && instruction.trim().length < 3)} onClick={() => void save(contractDraft ? {...contractDraft, change: {...contractDraft.change, instruction}} : null)}>{t('Save contract')}</button>
-      {asset && <button className="secondary-button" disabled={busy} onClick={() => {setPainting(true); changeLocal();}}>{t('Paint or refine boundaries')}</button>}
-      {contractDraft && contractDraft.keep.length > 1 && <label>{t('KEEP region to refine')}<select value={keepIndex} onChange={e => {setKeepIndex(Number(e.target.value)); setPainting(false);}}>{contractDraft.keep.map((k,i)=><option key={k.mask} value={i}>{k.label}</option>)}</select></label>}
+      {asset && <button className="secondary-button" disabled={busy || retrySave} onClick={() => {setPainting(true); changeLocal();}}>{t('Paint or refine boundaries')}</button>}
+      {contractDraft && contractDraft.keep.length > 1 && <label>{t('KEEP region to refine')}<select value={keepIndex} disabled={busy || retrySave} onChange={e => {setKeepIndex(Number(e.target.value)); setPainting(false);}}>{contractDraft.keep.map((k,i)=><option key={k.mask} value={i}>{k.label}</option>)}</select></label>}
       {painting && asset && <MaskEditor key={`${id}:${draft.revision}:${keepIndex}`} asset={asset} initialStrokes={[]}
         initialMasks={{change: draft.contract ? `/api/assets/${draft.contract.change.mask}` : undefined,
           keep: contractDraft?.keep[keepIndex] ? `/api/assets/${contractDraft.keep[keepIndex].mask}` : undefined}}

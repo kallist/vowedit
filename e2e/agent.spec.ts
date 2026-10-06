@@ -100,9 +100,21 @@ test('rejected Agent proposal has no batch', async ({page}) => {
 
 
 test('human paint takeover, conflict and lost save acknowledgement recover', async ({page, context}) => {
+  const pageErrors:string[]=[]; page.on('pageerror',error=>pageErrors.push(error.message));
+  await page.route('**/api/config',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{code:'SERVICE_UNAVAILABLE'}})}));
   const draft=tool('vowedit_create_edit',{request_key:crypto.randomUUID()});
   await page.goto(draft.ui_url);
   const png=await (await page.request.get('/fixtures/original.png')).body();
+  await expect(page.locator('main p[role="alert"]')).toBeVisible();
+  await page.unroute('**/api/config');
+  let failedUploads=0;
+  await page.route('**/api/assets?kind=original',route=>{failedUploads++;return route.abort('failed');});
+  await page.getByLabel('Attach original image').setInputFiles({name:'failed-upload.png',mimeType:'image/png',buffer:png});
+  await expect.poll(()=>failedUploads).toBe(1);
+  await expect(page.locator('main p[role="alert"]')).toBeVisible();
+  await expect(page.getByLabel('Attach original image')).toBeEnabled();
+  expect(tool('vowedit_get_edit',{draft_id:draft.id}).source_asset_id).toBeNull();
+  await page.unroute('**/api/assets?kind=original');
   await page.getByLabel('Attach original image').setInputFiles({name:'original.png',mimeType:'image/png',buffer:png});
   await expect.poll(()=>tool('vowedit_get_edit',{draft_id:draft.id}).revision).toBe(1);
   tool('vowedit_propose_contract',{draft_id:draft.id,expected_revision:1,request_key:crypto.randomUUID(),instruction:'Paint center blue',change:{kind:'rectangles',rectangles:[{x0:100,y0:100,x1:160,y1:160}]}});
@@ -123,6 +135,9 @@ test('human paint takeover, conflict and lost save acknowledgement recover', asy
   await page.route('**/api/editing-drafts/'+draft.id,async route=>{if(route.request().method()==='PUT'){await route.fetch();await route.abort('failed');await page.unroute('**/api/editing-drafts/'+draft.id);}else await route.continue();});
   await page.getByRole('button',{name:'Save contract',exact:true}).click();
   await expect(page.getByRole('button',{name:'Retry pending save'})).toBeVisible();
+  await expect(page.getByRole('combobox',{name:'Provider',exact:true})).toBeDisabled();
+  await expect(page.getByRole('spinbutton',{name:'Background threshold',exact:true})).toBeDisabled();
+  await expect(page.getByRole('button',{name:'Paint or refine boundaries'})).toBeDisabled();
   await page.getByRole('button',{name:'Retry pending save'}).click();
   await expect(page.getByRole('button',{name:'Retry pending save'})).toHaveCount(0);
   await expect.poll(()=>tool('vowedit_get_edit',{draft_id:draft.id}).revision).toBe(4);
@@ -135,4 +150,5 @@ test('human paint takeover, conflict and lost save acknowledgement recover', asy
   await expect(page.getByText('Your request: generate')).toBeVisible();
   await page.getByRole('button',{name:'Reject request',exact:true}).click();
   expect(tool('vowedit_get_edit',{draft_id:draft.id}).submitted_run_id).toBeNull();
+  expect(pageErrors).toEqual([]);
 });
