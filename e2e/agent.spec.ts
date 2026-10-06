@@ -3,6 +3,10 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 
+// Each fixture tool initializes real stdio SDK processes and verifies the Windows owner ACL.
+// Keep this chain bounded while allowing its measured startup overhead.
+test.describe.configure({ timeout: 120000 });
+
 function tool(name: string, args: unknown) {
   const credential = path.resolve('.local/v03-validation-data/browser/browser-agent.json');
   const python = process.env.VOWEDIT_PYTHON || path.resolve(process.platform === 'win32' ? '.venv/Scripts/python.exe' : '.venv/bin/python');
@@ -18,7 +22,6 @@ function tool(name: string, args: unknown) {
 
 for (const width of [1440, 768, 390, 360]) {
   test(`MCP same draft proposal approval and report at ${width}`, async ({ page, context }) => {
-    if (width === 1440) test.setTimeout(120000);
     await page.setViewportSize({width, height: 1000});
     const draft = tool('vowedit_create_edit', {request_key: crypto.randomUUID()});
     expect(draft.status).toBe('awaiting_image');

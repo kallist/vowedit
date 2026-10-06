@@ -7,6 +7,9 @@ import subprocess
 import sys
 import time
 from datetime import timedelta
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from textwrap import dedent
 from uuid import uuid4
 
 import httpx
@@ -210,3 +213,37 @@ def test_actual_owner_permission_rejection(tmp_path):
         credential.chmod(0o644)
     with pytest.raises(PermissionError):
         AgentClient(credential)
+
+
+def test_inherited_owner_data_directory_is_ignored_before_app_import():
+    # A controlled sentinel folder, deliberately outside the allowed validation-root names.
+    fixture_parent = Path(__file__).resolve().parents[2] / ".local"
+    fixture_parent.mkdir(exist_ok=True)
+    with TemporaryDirectory(prefix="owner-config-fixture-", dir=fixture_parent) as directory:
+        owner_fixture = Path(directory)
+        sentinel = owner_fixture / "preserved.txt"
+        sentinel.write_text("untouched owner fixture", encoding="utf-8")
+        script = dedent("""
+    import os
+    from pathlib import Path
+    import backend.tests
+    assert Path(os.environ['VOWEDIT_DATA_DIR']).is_absolute()
+    assert 'v03-validation-data' in Path(os.environ['VOWEDIT_DATA_DIR']).parts
+    assert os.environ['VOWEDIT_DATA_DIR'] != os.environ['VOWEDIT_OWNER_FIXTURE']
+    assert not any(k.startswith(('COMFYUI_', 'RUNNINGHUB_')) for k in os.environ)
+    assert os.environ['PYTHON_DOTENV_DISABLED'] == '1'
+    from backend.api import create_app
+    app = create_app()
+    assert app.state.service.repo.path.parent == Path(os.environ['VOWEDIT_DATA_DIR'])
+    """)
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            env={**os.environ, "VOWEDIT_DATA_DIR": str(owner_fixture),
+                 "VOWEDIT_OWNER_FIXTURE": str(owner_fixture),
+                 "COMFYUI_BASE_URL": "fixture-provider-value",
+                 "RUNNINGHUB_API_KEY": "fixture-not-a-real-key"},
+            capture_output=True, timeout=15,
+        )
+        assert result.returncode == 0, "Test imports must ignore inherited owner configuration"
+        assert list(owner_fixture.iterdir()) == [sentinel]
+        assert sentinel.read_text(encoding="utf-8") == "untouched owner fixture"
