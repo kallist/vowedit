@@ -77,10 +77,17 @@ for (const width of [1440, 1024, 768, 390, 360]) {
     const body = (await submitted).postDataJSON();
     expect(body.contract.change.instruction).toBe(base);
     expect(body.preview_fingerprint).toBe(plan.fingerprint);
+    // The completed title follows asynchronous generation/evaluation, not the submit response.
+    await expect(page).toHaveURL(/\/edit\/[0-9a-f-]+$/);
+    const id = page.url().split("/").pop()!;
+    await expect.poll(async () => {
+      const response = await page.request.get(`/api/runs/${id}`);
+      expect(response.ok()).toBe(true);
+      return (await response.json()).status;
+    }, { timeout: 20000 }).toBe("completed");
     await expect(
       page.getByRole("heading", { name: "编辑结果与证据。" }),
     ).toBeVisible();
-    const id = page.url().split("/").pop()!;
     const original = await (await page.request.get(`/api/runs/${id}`)).json();
     expect(original.candidate_plan).toEqual(plan);
     expect(original.user_selected_candidate_id).toBeNull();

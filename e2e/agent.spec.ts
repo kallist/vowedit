@@ -40,6 +40,8 @@ for (const width of [1440, 768, 390, 360]) {
     expect(proposal.state).toBe('pending');
     expect(tool('vowedit_get_edit', {draft_id: draft.id}).contract).toBeNull();
     await expect(page.getByText('Proposed instruction: Change center to blue')).toBeVisible();
+    await fs.mkdir(`.local/ui-evidence/${width}`, {recursive:true});
+    await page.screenshot({path:`.local/ui-evidence/${width}/agent-proposal.png`,fullPage:true});
     await page.getByRole('button', {name:'Accept request', exact:true}).click();
     await expect.poll(() => tool('vowedit_get_edit', {draft_id:draft.id}).revision).toBe(2);
     // Fresh browser deep-link restores server-acked contract without relying on sessionStorage.
@@ -51,10 +53,12 @@ for (const width of [1440, 768, 390, 360]) {
     tool('vowedit_request_action', {action:'generate',draft_id:draft.id, expected_revision:plan.revision,
       plan_fingerprint:plan.plan.fingerprint,provider:'mock',request_key:crypto.randomUUID()});
     await expect(page.getByRole('button',{name:'Confirm saved contract and generate three candidates'})).toBeEnabled();
+    await page.screenshot({path:`.local/ui-evidence/${width}/agent-pending-generation.png`,fullPage:true});
     await page.getByRole('button',{name:'Confirm saved contract and generate three candidates'}).click();
     await expect(page).toHaveURL(/\/edit\/[0-9a-f-]+$/);
     const runId = page.url().split('/').pop()!;
-    await expect.poll(() => tool('vowedit_get_run',{run_id:runId}).status).toBe('completed');
+    // Completion includes three Mock generations and evaluation; stdio startup also costs time.
+    await expect.poll(() => tool('vowedit_get_run',{run_id:runId}).status, {timeout: 20000}).toBe('completed');
     const report = tool('vowedit_get_report',{run_id:runId});
     expect(report.candidates).toHaveLength(3); expect(report.report).toBeTruthy();
     await expect(page.getByLabel('Before after slider')).toBeVisible();
