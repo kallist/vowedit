@@ -2040,6 +2040,8 @@ figcaption {
   .story-strip, .steps { grid-template-columns: 1fr; }
 }
 @container (max-width: 320px) {
+  .processing, .failure-state { flex-direction: column; align-items: flex-start; padding: 16px; gap: 12px; }
+  .processing > div, .failure-state > div { min-width: 0; width: 100%; }
   .tool-buttons { flex-wrap: wrap; justify-content: flex-start; }
   .mode-buttons { width: 100%; }
   .candidate-strip, .history-grid, .import-slots { grid-template-columns: 1fr; }

@@ -31,6 +31,7 @@ API/schema、数据库、后端、auth/CSRF、MCP 工具、provider transport、
 | [结果页 before](screenshots/ui-polish/result-before.png)／[after](screenshots/ui-polish/result-after.png) | 1440px，项目同一素材、同一待人工评审状态；独立 run 的时间与 ID 会不同 |
 | [中文编辑页](screenshots/ui-polish/editor-zh.png) | 真实 CHANGE／KEEP 预览与 Mock 来源 |
 | [390px／200% Ghost](screenshots/ui-polish/mobile-ghost-200.png) | 浏览器 CSS zoom=2，重要控制重排；不是设备像素比放大截图 |
+| [360px／200% 长风险警告](screenshots/ui-polish/narrow-failure-200.png) | 浏览器拦截的受控 `PROVIDER_STATE_UNKNOWN` fixture；无持久化或 provider 调用，窄容器纵向组织图标与正文 |
 | [模式切换三帧](screenshots/ui-polish/motion-mode.png) | CHANGE→KEEP，260ms 过渡 |
 | [主按钮三帧](screenshots/ui-polish/motion-primary.png) | hover 检查契约按钮，600ms 扫光 |
 | [标题入场三帧](screenshots/ui-polish/motion-entry.png) | 220ms 标题入场 |
@@ -49,13 +50,15 @@ API/schema、数据库、后端、auth/CSRF、MCP 工具、provider transport、
 | TypeScript／Next route typegen | PASS |
 | Frontend Vitest | PASS，3 files／11 tests |
 | Production build | PASS |
-| 完整 Chromium E2E | PASS，38 tests；含本轮新增 5 tests。异步同步修复后另通过 2 项 Agent 与 2 项 workbench 定向回归 |
+| Chromium E2E | 初版本地完整 38 项通过；异步同步修复后 2 项 Agent＋2 项 workbench 通过；窄警告修复后 7 项画笔／失败路径定向回归通过。最终完整套件 39 项，由最终 SHA 的 Hosted CI 验证 |
 | npm audit（high 门槛） | PASS，0 vulnerabilities |
 | Repository secret patterns／git diff --check | PASS |
 
 完整 E2E 覆盖画笔→契约→三候选→slider／Ghost／报告→人工 FAIL／采用→继续、刷新与 lineage；Agent stdio fixture 的保存／冲突／提案／批准／拒绝／恢复；导入、Boundary Lock、错误重试和 lost-response 幂等性。后端与 MCP 无改动，本地未重新开展宿主配置验收；现有 Hosted CI 的完整门禁继续保留。
 
 第一次 Hosted push／PR 各有 37／38 项通过：workbench 1440 在默认 5 秒内仍显示真实生成中（截图已有 1／3 候选），尚未进入完成标题。另一次原基线运行也在 Agent 等待 `completed` 时超时、返回 `evaluating`。修复限于测试同步：这两处异步生成现在有界等待 canonical `completed`，最长 20 秒，再保留全部三候选、标题、报告和恢复断言；失败状态不会被当成通过，没有增加重试或改动产品执行逻辑。最终 SHA 的 CI 必须重新完整通过。
+
+长警告补验发现 360px／200% 的横排图标挤压正文，修正为窄容器中的纵向处理／失败卡。新增第 6 项 UI 回归检查正文获得足够宽度、无横向溢出、未知来源状态下重试仍禁用；原横排会失败。最长来源状态警告另在中英文×五宽度×两缩放下实际检查，20 组无溢出和 pageerror；补充独立看图复核无 BLOCKING／IMPORTANT。本地一次补验构建使用了默认 rewrite 端口而 Mock 服务使用隔离端口，归类为环境失败，统一构建与服务端口后重跑受影响路径。
 
 新增行为测试在 1440、1024、768、390、360px 与 CSS zoom=1／2 下验证画布与原图几何、pointer-to-source 像素、键盘绘制／undo、横向溢出、中文长指令、reduced-motion，以及最终提交的 640×704 CHANGE PNG 中已画／撤销像素。另实际操作中文结果，在相同五档与两种缩放下检查横向溢出，10 组通过。人工查看代表性编辑、审批待确认、生成、失败、三候选、slider、Ghost、收据／FAIL、采用／继续、活动与历史页面；这不是每页×语言×尺寸的穷举视觉验收。
 

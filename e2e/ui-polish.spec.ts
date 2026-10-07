@@ -65,3 +65,34 @@ for (const width of [1440, 1024, 768, 390, 360]) {
     expect(exported).toEqual({ width: 640, height: 704, painted: 255, undone: 0 });
   });
 }
+
+test("unknown-provider warning remains readable at narrow zoom and cannot retry", async ({ page }) => {
+  const id = "11111111-1111-4111-8111-111111111111";
+  await page.addInitScript(() => localStorage.setItem("vowedit.locale", "zh-CN"));
+  // Only browser responses are controlled here; no provider call or persisted run is created.
+  await page.route("**/api/**", async route => {
+    const path = new URL(route.request().url()).pathname;
+    const body = path.endsWith("/browser-session") ? { csrf: "controlled-fixture" }
+      : path === `/api/runs/${id}` ? {
+        id, job_id: id, source_image: id, status: "failed_generation", provider: "mock",
+        contract: { change: { mask: id, instruction: "受控错误布局 fixture" }, keep: [] },
+        candidates: [], selected_candidate_id: null, no_good_candidate: false,
+        generation_retry_safe: false, error: { code: "PROVIDER_STATE_UNKNOWN", message: "Fixture" },
+        failures: [], created_at: "2026-10-07T00:00:00Z",
+      } : path.endsWith("/actions") ? [] : { entries: [], next_cursor: 0 };
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+  });
+  await page.goto(`/edit/${id}`);
+  await expect(page.getByRole("heading", { name: "生成未能完成。" })).toBeVisible();
+  for (const width of [390, 360]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
+    const card = (await page.locator(".failure-state").boundingBox())!;
+    const content = (await page.locator(".failure-state > div").boundingBox())!;
+    // The icon must not consume the text column at 200%; this failed with the old flex row.
+    expect(content.width).toBeGreaterThan(card.width * .7);
+    await expect(page.getByRole("button", { name: "重试生成" })).toBeDisabled();
+    const dimensions = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+    expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client + 1);
+  }
+});
