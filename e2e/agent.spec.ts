@@ -57,7 +57,8 @@ for (const width of [1440, 768, 390, 360]) {
     await page.getByRole('button',{name:'Confirm saved contract and generate three candidates'}).click();
     await expect(page).toHaveURL(/\/edit\/[0-9a-f-]+$/);
     const runId = page.url().split('/').pop()!;
-    await expect.poll(() => tool('vowedit_get_run',{run_id:runId}).status).toBe('completed');
+    // Completion includes three Mock generations and evaluation; stdio startup also costs time.
+    await expect.poll(() => tool('vowedit_get_run',{run_id:runId}).status, {timeout: 20000}).toBe('completed');
     const report = tool('vowedit_get_report',{run_id:runId});
     expect(report.candidates).toHaveLength(3); expect(report.report).toBeTruthy();
     await expect(page.getByLabel('Before after slider')).toBeVisible();

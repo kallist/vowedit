@@ -18,7 +18,7 @@
 - 草稿将原图／已保存蒙版与契约编辑并排组织；人工审批完整显示，保留素材加载、presentation、未保存、冲突和风险确认门槛。
 - 新增模式滑动底板、工具按压与 hover、主按钮扫光、候选浮起与选中线、Ghost 外框扫描、标题和展开内容入场。动效位于控件或画布外围，不滤镜、裁切或变换证据像素，不增加虚构进度；`prefers-reduced-motion` 关闭动画与过渡。
 
-重要实现文件：`app/globals.css`、`frontend/SiteChrome.tsx`、`MaskEditor.tsx`、`DraftEditor.tsx`、`AgentActions.tsx`、`ResultPage.tsx`。新增布局风险行为测试在 `e2e/ui-polish.spec.ts`；`e2e/agent.spec.ts` 仅增加审批截图，原断言保留。
+重要实现文件：`app/globals.css`、`frontend/SiteChrome.tsx`、`MaskEditor.tsx`、`DraftEditor.tsx`、`AgentActions.tsx`、`ResultPage.tsx`。新增布局风险行为测试在 `e2e/ui-polish.spec.ts`；`e2e/agent.spec.ts` 增加审批截图。Agent 与 workbench 的异步生成使用有界 canonical `completed` 等待，原结果和界面断言保留。
 
 API/schema、数据库、后端、auth/CSRF、MCP 工具、provider transport、评估和排名无改动。没有新依赖或 lockfile 变更；没有直接读取或修改真实用户 data、`.env`、凭据或工作流。发现 Next 默认会加载环境文件后，构建与浏览器验证使用不含 `.env` 的受控源代码副本。
 
@@ -49,11 +49,13 @@ API/schema、数据库、后端、auth/CSRF、MCP 工具、provider transport、
 | TypeScript／Next route typegen | PASS |
 | Frontend Vitest | PASS，3 files／11 tests |
 | Production build | PASS |
-| 完整 Chromium E2E | PASS，38 tests；含本轮新增 5 tests |
+| 完整 Chromium E2E | PASS，38 tests；含本轮新增 5 tests。异步同步修复后另通过 2 项 Agent 与 2 项 workbench 定向回归 |
 | npm audit（high 门槛） | PASS，0 vulnerabilities |
 | Repository secret patterns／git diff --check | PASS |
 
 完整 E2E 覆盖画笔→契约→三候选→slider／Ghost／报告→人工 FAIL／采用→继续、刷新与 lineage；Agent stdio fixture 的保存／冲突／提案／批准／拒绝／恢复；导入、Boundary Lock、错误重试和 lost-response 幂等性。后端与 MCP 无改动，本地未重新开展宿主配置验收；现有 Hosted CI 的完整门禁继续保留。
+
+第一次 Hosted push／PR 各有 37／38 项通过：workbench 1440 在默认 5 秒内仍显示真实生成中（截图已有 1／3 候选），尚未进入完成标题。另一次原基线运行也在 Agent 等待 `completed` 时超时、返回 `evaluating`。修复限于测试同步：这两处异步生成现在有界等待 canonical `completed`，最长 20 秒，再保留全部三候选、标题、报告和恢复断言；失败状态不会被当成通过，没有增加重试或改动产品执行逻辑。最终 SHA 的 CI 必须重新完整通过。
 
 新增行为测试在 1440、1024、768、390、360px 与 CSS zoom=1／2 下验证画布与原图几何、pointer-to-source 像素、键盘绘制／undo、横向溢出、中文长指令、reduced-motion，以及最终提交的 640×704 CHANGE PNG 中已画／撤销像素。另实际操作中文结果，在相同五档与两种缩放下检查横向溢出，10 组通过。人工查看代表性编辑、审批待确认、生成、失败、三候选、slider、Ghost、收据／FAIL、采用／继续、活动与历史页面；这不是每页×语言×尺寸的穷举视觉验收。
 

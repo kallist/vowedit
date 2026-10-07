@@ -50,7 +50,7 @@ for (const width of [1440, 1024, 768, 390, 360]) {
     await expect(page.getByRole("button", { name: "检查编辑契约" })).toBeVisible();
     await page.getByLabel("你想修改什么？").fill("只改变外套颜色，保留边界。".repeat(50));
     await page.screenshot({ path: `${directory}/editor-zh-long.png`, fullPage: true });
-    // Restore CHANGE selection before export; masks are independent of UI language and effects.
+    // Exported masks are independent of the selected tool, UI language and effects.
     await page.getByRole("button", { name: "检查编辑契约" }).click();
     await expect(page.getByRole("heading", { name: "像素生成前，先约定边界。" })).toBeVisible();
     await page.getByRole("button", { name: "生成 3 张候选", exact: true }).click();
