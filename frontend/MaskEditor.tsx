@@ -3,7 +3,16 @@ import { localText } from "@/frontend/i18n/format";
 import { useLocale } from "@/frontend/i18n/LocaleProvider";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { Brush, Eraser, RotateCcw, Undo2, Trash2 } from "lucide-react";
+import {
+  Brush,
+  Eraser,
+  RotateCcw,
+  Undo2,
+  Trash2,
+  ImageIcon,
+  Scan,
+  ShieldCheck,
+} from "lucide-react";
 import { assetUrl, type Asset } from "./types";
 import {
   maskBlob,
@@ -170,6 +179,15 @@ export default function MaskEditor({
   }
   return (
     <div className="mask-editor" data-mode={mode}>
+      <div className="document-bar">
+        <span>
+          <ImageIcon size={16} aria-hidden />
+          {t("Original")}
+        </span>
+        <span>
+          {asset.width} × {asset.height}
+        </span>
+      </div>
       <div className="toolbar">
         <div className="mode-buttons" data-mode={mode}>
           <button
@@ -189,6 +207,27 @@ export default function MaskEditor({
             {t("02 / KEEP")}
           </button>
         </div>
+      </div>
+      <div className="brush-row">
+        <label htmlFor="brush-size">
+          {t("Brush size")}
+          <strong>{size}px</strong>
+        </label>
+        <input
+          id="brush-size"
+          type="range"
+          min="5"
+          max="180"
+          value={size}
+          onChange={(e) => setSize(+e.target.value)}
+        />
+        <span>
+          {mode === "change"
+            ? t("Paint what may change.")
+            : t("Paint what must stay.")}
+        </span>
+      </div>
+      <div className="canvas-workspace">
         <div className="tool-buttons">
           <button
             type="button"
@@ -236,87 +275,76 @@ export default function MaskEditor({
             <RotateCcw size={18} />
           </button>
         </div>
-      </div>
-      <div className="brush-row">
-        <label htmlFor="brush-size">
-          {t("Brush size")}
-          <strong>{size}px</strong>
-        </label>
-        <input
-          id="brush-size"
-          type="range"
-          min="5"
-          max="180"
-          value={size}
-          onChange={(e) => setSize(+e.target.value)}
-        />
-        <span>
-          {mode === "change"
-            ? t("Paint what may change.")
-            : t("Paint what must stay.")}
-        </span>
-      </div>
-      <div className="editor-mat">
-        <div
-          className="paint-frame"
-          style={
-            {
-              aspectRatio: `${asset.width} / ${asset.height}`,
-              "--image-ratio": asset.width / asset.height,
-            } as CSSProperties
-          }
-        >
-          <img
-            src={assetUrl(asset.id)}
-            alt={t("Your original image for defining CHANGE and KEEP")}
-            draggable={false}
-          />
-          <canvas
-            ref={surfaceRef}
-            data-testid="mask-surface"
-            aria-label={t(
-              "Mask painting surface. Use coordinate controls below for keyboard painting.",
-            )}
-            onPointerDown={(e) => {
-              e.currentTarget.setPointerCapture(e.pointerId);
-              const p = pointInImage(
-                e.clientX,
-                e.clientY,
-                e.currentTarget.getBoundingClientRect(),
-                asset.width,
-                asset.height,
-              );
-              setDrawing({ mode, erase, size, points: [p] });
-            }}
-            onPointerMove={(e) => {
-              if (!drawing) return;
-              const p = pointInImage(
-                e.clientX,
-                e.clientY,
-                e.currentTarget.getBoundingClientRect(),
-                asset.width,
-                asset.height,
-              );
-              setDrawing((d) =>
-                d ? { ...d, points: [...d.points, p] } : null,
-              );
-            }}
-            onPointerUp={() => {
-              if (drawing) setStrokes((s) => [...s, drawing]);
-              setDrawing(null);
-            }}
-            onPointerCancel={() => setDrawing(null)}
-          />
+        <div className="editor-mat">
+          <div
+            className="paint-frame"
+            style={
+              {
+                aspectRatio: `${asset.width} / ${asset.height}`,
+                "--image-ratio": asset.width / asset.height,
+              } as CSSProperties
+            }
+          >
+            <img
+              src={assetUrl(asset.id)}
+              alt={t("Your original image for defining CHANGE and KEEP")}
+              draggable={false}
+            />
+            <canvas
+              ref={surfaceRef}
+              data-testid="mask-surface"
+              aria-label={t(
+                "Mask painting surface. Use coordinate controls below for keyboard painting.",
+              )}
+              onPointerDown={(e) => {
+                e.currentTarget.setPointerCapture(e.pointerId);
+                const p = pointInImage(
+                  e.clientX,
+                  e.clientY,
+                  e.currentTarget.getBoundingClientRect(),
+                  asset.width,
+                  asset.height,
+                );
+                setDrawing({ mode, erase, size, points: [p] });
+              }}
+              onPointerMove={(e) => {
+                if (!drawing) return;
+                const p = pointInImage(
+                  e.clientX,
+                  e.clientY,
+                  e.currentTarget.getBoundingClientRect(),
+                  asset.width,
+                  asset.height,
+                );
+                setDrawing((d) =>
+                  d ? { ...d, points: [...d.points, p] } : null,
+                );
+              }}
+              onPointerUp={() => {
+                if (drawing) setStrokes((s) => [...s, drawing]);
+                setDrawing(null);
+              }}
+              onPointerCancel={() => setDrawing(null)}
+            />
+          </div>
         </div>
       </div>
       <canvas ref={changeRef} hidden />
       <canvas ref={keepRef} hidden />
       <div className="mask-legend">
         <span className="change-dot">
-          {t("CHANGE ·")} {stats.changePixels.toLocaleString()} px
+          <Scan size={18} aria-hidden />
+          <span>
+            {t("CHANGE ·")}{" "}
+            <strong>{stats.changePixels.toLocaleString()} px</strong>
+          </span>
         </span>
         <span className="keep-dot">
-          {t("KEEP ·")} {stats.keepPixels.toLocaleString()} px
+          <ShieldCheck size={18} aria-hidden />
+          <span>
+            {t("KEEP ·")}{" "}
+            <strong>{stats.keepPixels.toLocaleString()} px</strong>
+          </span>
         </span>
         <span>
           {asset.width} {t("×")} {asset.height}

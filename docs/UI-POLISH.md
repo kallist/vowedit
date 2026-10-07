@@ -1,75 +1,64 @@
 # VowEdit UI polish
 
-## 方向与范围
+## 视觉方向
 
-选定「暗房校样台」：深色工作区承托真实图片，薄荷色标识主动作，暖色 CHANGE 与蓝色 KEEP 保持边界区分。比较图、三张候选和右侧判断栏形成一个工作台；小屏依次展开，保留完整的审批、错误和人工判断。
+采用「紫罗兰创作室」：石墨灰画布、紫罗兰控件、暖纸色作品画框与疏密分明的字体。编辑页使用独立画笔工具轨道、文档栏和右侧意图检查面板；结果沿用画布与判断面板结构。CHANGE 暖色与 KEEP 蓝色继续表达不同边界。
 
-实施前查看了隔离 Mock 的真实页面。用同一原图、同一三候选和待人工评审状态制作了三种布局：暗房校样台、白色校对页、接触印样。暗房方向能同时容纳大图和邻近的评审信息，因此用于正式产品。下面是探索小样，**不是运行产品或新增路由**。
+参考 [Photoshop 的上下文工具栏](https://helpx.adobe.com/photoshop/desktop/get-started/learn-the-basics/boost-workflows-with-the-contextual-task-bar.html)将相关操作靠近任务，参考 [Pixelmator Pro 的画布与工具面板](https://support.apple.com/en-ca/guide/pixelmator-pro/pix96e754af4/mac)组织工作区。本站颜色、画框与构图是自己的设计取舍，不声称具有这些工具的功能。
 
-![三种不同布局的探索小样](screenshots/ui-polish/directions.jpg)
+实际应用用户指定的 `ui-ux-pro-max`：运行设计系统查询（variance 7 / motion 5 / density 8）及 Next.js 查询，读取布局、字体、交互和可访问性规范。采用编辑器紫罗兰方向；未套用通用营销布局，也未采用会裁切编辑源图的 object-cover 建议。字体使用本机字体栈，没有加入在线字体、脚本或依赖。
 
-实际使用 [oil-ui 0.16.5](https://github.com/oil-oil/oil-ui/tree/e4c8f60be407a4f1ec28459eb782e8eb94447888)，安装来源 SHA 为 `e4c8f60be407a4f1ec28459eb782e8eb94447888`。已读取设计方向、视觉语言、布局与视口、风格比较、动效、工具和评审指导，并实际运行比较页生成器和截图工具。Skill 与完整静态探索保存在 Git ignored 的任务产物中，没有加入产品运行时。更新检查按受控目录要求跳过。
+原任务的 [oil-ui 0.16.5](https://github.com/oil-oil/oil-ui/tree/e4c8f60be407a4f1ec28459eb782e8eb94447888)继续用于布局比较与独立评审。安装 SHA 为 `e4c8f60be407a4f1ec28459eb782e8eb94447888`。本轮实际运行 `build_explorer.py`，比较紫罗兰创作室、暖白艺术画廊和青灰摄影台；使用相同原图、指令、边界像素与 Mock 来源。选择创作室以容纳画布、工具和完整说明。Skill、工具、静态探索与大录屏为忽略的任务产物。
 
-## 实现
+![三种工作区构图，静态探索，非产品页面](screenshots/ui-polish/directions.jpg)
 
-- 共享 CSS tokens、中文字体层级、表面、控件、焦点、禁用状态、响应式布局用于首页、编辑、结果、草稿、审批、活动与历史。
-- 编辑画布根据素材比例和视口高度显示；绘制坐标仍由原有 source geometry 决定。
-- 结果页标题置于活动入口之前；图片与所有比较层使用同一自然比例，缩略图完整显示。像素推荐、当前预览、人工判断与采用仍独立显示。
-- 草稿将原图／已保存蒙版与契约编辑并排组织；人工审批完整显示，保留素材加载、presentation、未保存、冲突和风险确认门槛。
-- 新增模式滑动底板、工具按压与 hover、主按钮扫光、候选浮起与选中线、Ghost 外框扫描、标题和展开内容入场。动效位于控件或画布外围，不滤镜、裁切或变换证据像素，不增加虚构进度；`prefers-reduced-motion` 关闭动画与过渡。
+## 实现与范围
 
-重要实现文件：`app/globals.css`、`frontend/SiteChrome.tsx`、`MaskEditor.tsx`、`DraftEditor.tsx`、`AgentActions.tsx`、`ResultPage.tsx`。新增布局风险行为测试在 `e2e/ui-polish.spec.ts`；`e2e/agent.spec.ts` 增加审批截图。Agent 与 workbench 的异步生成使用有界 canonical `completed` 等待，原结果和界面断言保留。
+- 共享 tokens、导航品牌、控件、状态、焦点与响应式样式覆盖首页、编辑、草稿、审批、结果、活动和历史。
+- 意图输入仍先于画布操作进入键盘顺序；检查面板桌面显示在右侧，窄屏按原逻辑顺序展开。没有虚构图层、滤镜或缩放按钮。
+- `MaskEditor` 增加原图尺寸栏，重组现有画笔／橡皮／撤销／清除／重置工具，显示 CHANGE / KEEP 状态卡。原坐标、绘制、导出、事件与禁用条件不变。
+- 比较图保持自然比例，各比较层共享几何。窄屏减少画布留白，装饰性 Ghost 扫描位于图片外。没有对证据图像施加滤镜、裁切或调色。
+- 保留模式滑动底板、按压反馈、主按钮扫光、候选浮起与选中线、Ghost 外框扫描、标题与内容入场。没有虚构进度；reduced-motion 关闭动画和过渡。
+- 原图、raw / locked 来源、独立审核、像素推荐、当前候选、人工 verdict、用户采用与继续编辑仍独立。审批、素材加载、presentation、未保存、冲突与风险确认门槛未放宽；风险选框没有默认勾选。
 
-API/schema、数据库、后端、auth/CSRF、MCP 工具、provider transport、评估和排名无改动。没有新依赖或 lockfile 变更；没有直接读取或修改真实用户 data、`.env`、凭据或工作流。发现 Next 默认会加载环境文件后，构建与浏览器验证使用不含 `.env` 的受控源代码副本。
+重要文件：`app/globals.css`、`app/page.tsx`、`frontend/SiteChrome.tsx`、`frontend/MaskEditor.tsx`。上一轮结果／草稿／Agent 呈现变更保留。行为回归在 `e2e/ui-polish.spec.ts`；没有删除断言或禁用 CI 门禁。
 
-## 前后与动效证据
+API/schema、DB、后端、auth/CSRF、MCP、provider、评估与排名、部署架构均无本轮改动。没有新依赖或 lockfile 变化。未直接读取或修改真实 data、`.env`、凭据与工作流。构建和浏览器测试使用不含 `.env` 的代码副本，API 使用绝对隔离目录、Mock、`PYTHON_DOTENV_DISABLED=1`，清理继承的真实 provider 配置。
 
-截图来自本轮独立 Mock 数据与项目自有 fixture，在 Chromium 中实际操作后保存并查看。Mock 像素变化不证明语义意图、真实模型质量或 native Chrome 验收。
+## 证据
+
+截图为项目自有素材与隔离 Mock 的实际 Chromium 页面。Mock 像素变化不证明语义意图或模型质量。
 
 | 证据 | 内容 |
 | --- | --- |
-| [结果页 before](screenshots/ui-polish/result-before.png)／[after](screenshots/ui-polish/result-after.png) | 1440px，项目同一素材、同一待人工评审状态；独立 run 的时间与 ID 会不同 |
-| [中文编辑页](screenshots/ui-polish/editor-zh.png) | 真实 CHANGE／KEEP 预览与 Mock 来源 |
-| [390px／200% Ghost](screenshots/ui-polish/mobile-ghost-200.png) | 浏览器 CSS zoom=2，重要控制重排；不是设备像素比放大截图 |
-| [360px／200% 长风险警告](screenshots/ui-polish/narrow-failure-200.png) | 浏览器拦截的受控 `PROVIDER_STATE_UNKNOWN` fixture；无持久化或 provider 调用，窄容器纵向组织图标与正文 |
-| [模式切换三帧](screenshots/ui-polish/motion-mode.png) | CHANGE→KEEP，260ms 过渡 |
-| [主按钮三帧](screenshots/ui-polish/motion-primary.png) | hover 检查契约按钮，600ms 扫光 |
-| [标题入场三帧](screenshots/ui-polish/motion-entry.png) | 220ms 标题入场 |
+| [编辑页 before](screenshots/ui-polish/editor-before.png) / [after](screenshots/ui-polish/editor-zh.png) | 1440px、同一项目原图、演示意图与 CHANGE / KEEP 状态，上一轮和本轮界面 |
+| [艺术首页](screenshots/ui-polish/landing-zh.png) | 暖纸色画框、字体对比与作品构图，素材标为 illustrative fixture |
+| [结果 before](screenshots/ui-polish/result-before.png) / [after](screenshots/ui-polish/result-after.png) | 原产品与本轮实际 Mock 结果，独立 run 的 ID 与时间会不同 |
+| [390px / 200% Ghost](screenshots/ui-polish/mobile-ghost-200.png) / [前后比较](screenshots/ui-polish/mobile-compare-200.png) | 修复后真实回归 run，另一次受控绘画；不是上述演示候选的语义对比 |
+| [360px / 200% 长风险警告](screenshots/ui-polish/narrow-failure-200.png) | 浏览器拦截的受控错误 fixture，无 provider 调用，未知状态下重试禁用 |
+| [模式](screenshots/ui-polish/motion-mode.png) / [主按钮](screenshots/ui-polish/motion-primary.png) / [入场](screenshots/ui-polish/motion-entry.png) | 浏览器实际动画三帧的局部裁取 |
 
-动效帧为真实浏览器截图的局部裁取。为避免短过渡被截图耗时错过，中间帧暂停浏览器已有动画到对应时刻；没有重建模拟动画。另做实时测量：模式底板 transform 从无变换经过中间位移到最终位移；主按钮 `action-sweep`、Ghost `ghost-scan` 实际触发。减少动态效果时，Ghost 为 `animation-name: none`，模式过渡为 `0s`。
+短动画的中间帧通过暂停浏览器已有动画取得，没有重建模拟动画。实际测量验证模式 260ms 位移、按钮 action-sweep 600ms、标题 220ms、Ghost ghost-scan 420ms；减少动态效果时模式过渡为 0s、Ghost 动画为 none。oil-ui 自动 motion 探测对伪元素和短动画报告过 0，未把保存截图误报为该工具动效通过。
 
-完整比较页在本地任务产物 `.local/ui-polish/exploration/style-explorer.html`，包含基线与三个小样；完整截图、录屏与报告在 `.local/ui-polish/`，不纳入生产代码。oil-ui 自动 motion 探测曾报告 0；补充实际帧与浏览器测量核验了伪元素滑动、背景扫光和短入场，未把截图保存成功当成动效通过。工具还报告既有缺失 `/favicon.ico` 的 404，不影响产品请求。
+完整比较页 `.local/ui-polish-v2/exploration/style-explorer.html`；新版探索、双语首页矩阵、完整截图与录屏在忽略的 `.local` 任务目录。公共文档不写私人绝对路径。
 
-## 本轮验证
+## 验证与评审
 
-本地验证在不含 `.env` 或真实用户数据的受控源代码副本运行；API 使用绝对隔离数据目录、`PYTHON_DOTENV_DISABLED=1`、Mock，并清理继承的真实 provider 配置。
+本地执行 ESLint、TypeScript / route typegen、11 项 frontend Vitest、webpack production build、npm audit（0 vulnerabilities）和 6 项 UI 定向回归；最终完整 Chromium 和后端门禁以 Draft PR 当前 HEAD 的 Hosted CI 为准，不以历史 SHA 的成功替代。
 
-| Gate | 本轮结果 |
-| --- | --- |
-| ESLint | PASS |
-| TypeScript／Next route typegen | PASS |
-| Frontend Vitest | PASS，3 files／11 tests |
-| Production build | PASS |
-| Chromium E2E | 初版本地完整 38 项通过；异步同步修复后 2 项 Agent＋2 项 workbench 通过；窄警告修复后 7 项画笔／失败路径定向回归通过。最终完整套件 39 项，由最终 SHA 的 Hosted CI 验证 |
-| npm audit（high 门槛） | PASS，0 vulnerabilities |
-| Repository secret patterns／git diff --check | PASS |
+UI 回归在 1440、1024、768、390、360px 与 CSS zoom 1 / 2 下验证原图／overlay 几何、pointer-to-source 像素、键盘绘制／undo、中文长指令、无横向溢出、reduced motion，以及导出的 640×704 CHANGE PNG 已画／撤销像素。新增窄屏断言检查前后比较与 Ghost 图片宽度超过画布的 75%，自然比例不变；原过大内边距会违反此条件。
 
-完整 E2E 覆盖画笔→契约→三候选→slider／Ghost／报告→人工 FAIL／采用→继续、刷新与 lineage；Agent stdio fixture 的保存／冲突／提案／批准／拒绝／恢复；导入、Boundary Lock、错误重试和 lost-response 幂等性。后端与 MCP 无改动，本地未重新开展宿主配置验收；现有 Hosted CI 的完整门禁继续保留。
+另实际操作生成、候选切换、slider、Ghost、人工 FAIL、采用、继续、刷新、焦点、活动与历史。双语首页五宽度×两缩放 20 组、双语最长来源警告 20 组、中文结果 10 组检查无溢出与 pageerror。这不是所有页面×语言×尺寸的穷举视觉验收。
 
-第一次 Hosted push／PR 各有 37／38 项通过：workbench 1440 在默认 5 秒内仍显示真实生成中（截图已有 1／3 候选），尚未进入完成标题。另一次原基线运行也在 Agent 等待 `completed` 时超时、返回 `evaluating`。修复限于测试同步：这两处异步生成现在有界等待 canonical `completed`，最长 20 秒，再保留全部三候选、标题、报告和恢复断言；失败状态不会被当成通过，没有增加重试或改动产品执行逻辑。最终 SHA 的 CI 必须重新完整通过。
+工程 self-review 以 TypeScript AST 比较事件、disabled、checked 和选中语义，确认重组未改变这些条件。关键颜色对（正文、辅助文字、主按钮、CHANGE、KEEP）对比度为 7.38:1–16.02:1；并人工检查图像几何、数据来源、失败恢复和审核门槛。
 
-长警告补验发现 360px／200% 的横排图标挤压正文，修正为窄容器中的纵向处理／失败卡。新增第 6 项 UI 回归检查正文获得足够宽度、无横向溢出、未知来源状态下重试仍禁用；原横排会失败。最长来源状态警告另在中英文×五宽度×两缩放下实际检查，20 组无溢出和 pageerror；补充独立看图复核无 BLOCKING／IMPORTANT。本地一次补验构建使用了默认 rewrite 端口而 Mock 服务使用隔离端口，归类为环境失败，统一构建与服务端口后重跑受影响路径。
+独立只读评审发现 200% 手机比较图被留白压小的 IMPORTANT，已修复并增加回归；360 / 390px 的 Ghost 和前后比较四张补验截图确认问题解除，未发现新的 BLOCKING / IMPORTANT。独立评审未操作浏览器、未测试真实 provider，未把 CSS zoom 等同原生菜单缩放。
 
-新增行为测试在 1440、1024、768、390、360px 与 CSS zoom=1／2 下验证画布与原图几何、pointer-to-source 像素、键盘绘制／undo、横向溢出、中文长指令、reduced-motion，以及最终提交的 640×704 CHANGE PNG 中已画／撤销像素。另实际操作中文结果，在相同五档与两种缩放下检查横向溢出，10 组通过。人工查看代表性编辑、审批待确认、生成、失败、三候选、slider、Ghost、收据／FAIL、采用／继续、活动与历史页面；这不是每页×语言×尺寸的穷举视觉验收。
+## 限制与交付
 
-独立只读截图评审未发现 BLOCKING／IMPORTANT；工程 self-review 检查了共享 CSS、自然比例、坐标、焦点／禁用、审批条件、风险确认、异步恢复与 i18n。未删除安全说明或放宽原有断言。
+- 200% 使用 CSS zoom 和独立视口重排。原生 Chrome / Edge 人工验收、原生菜单缩放：NOT TESTED。
+- Real provider、Docker（无 Docker 配置）、生产部署、真实宿主 MCP：NOT TESTED。
+- Mock 与自动 Chromium 不证明 provider 或语义质量。原生 select 极窄放大时可能截短选中名称；来源标识和说明仍保留。
+- 用户已有 planning 文档与工作流不纳入提交。没有 merge、tag、release 或 deploy。
 
-## 限制与交付边界
-
-- 360px／200% 的原生 provider select 会截短完整选中名称；Mock 标识与“不调用模型”的说明保留。独立评审记录为 NIT。
-- 200% 验证采用浏览器 CSS zoom 与独立视口重排，未宣称通过原生 Chrome 浏览器菜单缩放或 native Chrome／Edge 人工验收。
-- 独立评审仅看图与动效帧，未独立操作浏览器或播放录屏；全部动画的 reduced-motion 未逐项独立复现。
-- Real provider：NOT TESTED。Docker：NOT TESTED（仓库无 Docker 配置）。生产部署／真实宿主 MCP：NOT TESTED。
-- 完整探索和大录屏为忽略的任务产物。仅提交少量无凭据的 fixture 图片。没有 merge、tag、release 或 deploy。
-
-交付分支 `codex/vowedit-ui-polish`，基于已合入 V0.3 的 `feat/vowedit-v0.1-hardening`，base／merge-base 为 `8bb5c722bd8270b102f51cda9fa7f17b0bd991e4`。最终 HEAD、Draft PR 与同 SHA 的 Hosted CI 以 PR 和交付报告为准；本文件不以历史 CI 代替本轮结果。
+分支 `codex/vowedit-ui-polish`，base / merge-base `8bb5c722bd8270b102f51cda9fa7f17b0bd991e4`。继续更新 [Draft PR #5](https://github.com/kallist/vowedit/pull/5)；最终 HEAD 与同 SHA 的 CI 状态见 PR 和交付报告。

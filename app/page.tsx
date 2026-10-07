@@ -43,17 +43,23 @@ export default function Landing() {
           </span>
         </div>
         <div className="hero-art">
+          <div className="art-orbit" aria-hidden="true" />
+          <div className="art-edition" aria-hidden="true">
+            V / 01
+          </div>
           <div className="art-heading">
             <span>{t("01 / THE EDIT CONTRACT")}</span>
             <span className="pill">{t("Illustrative fixture")}</span>
           </div>
           <div className="art-image">
-            <img
-              src="/fixtures/illustration.svg"
-              alt={t(
-                "Original geometric illustration of a person in a terracotta jacket",
-              )}
-            />
+            <div className="art-mount">
+              <img
+                src="/fixtures/illustration.svg"
+                alt={t(
+                  "Original geometric illustration of a person in a terracotta jacket",
+                )}
+              />
+            </div>
             <div className="keep-callout">
               <ShieldCheck size={15} aria-hidden />
               {t("KEEP / face & hair")}

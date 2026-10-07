@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Aperture, ArrowUpRight } from "lucide-react";
+import { Aperture, ArrowUpRight, History, PanelTop } from "lucide-react";
 import { useLocale } from "./i18n/LocaleProvider";
 export function SiteHeader() {
   const { locale, setLocale, t } = useLocale();
@@ -9,7 +9,9 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <Link href="/" className="wordmark">
-        <Aperture aria-hidden size={26} />
+        <span className="brand-mark">
+          <Aperture aria-hidden size={23} />
+        </span>
         VowEdit<span className="version">/ 0.3</span>
       </Link>
       <nav aria-label={t("Main navigation")}>
@@ -17,6 +19,7 @@ export function SiteHeader() {
           href="/history"
           aria-current={pathname === "/history" ? "page" : undefined}
         >
+          <History aria-hidden size={16} />
           {t("Your edits")}
         </Link>
         <Link
@@ -27,6 +30,7 @@ export function SiteHeader() {
               : undefined
           }
         >
+          <PanelTop aria-hidden size={16} />
           {t("Open studio")} <ArrowUpRight aria-hidden size={16} />
         </Link>
         <button

@@ -63,6 +63,22 @@ for (const width of [1440, 1024, 768, 390, 360]) {
       return { width: canvas.width, height: canvas.height, painted: ctx.getImageData(160, 528, 1, 1).data[0], undone: ctx.getImageData(480, 176, 1, 1).data[0] };
     }, run.contract.change.mask);
     expect(exported).toEqual({ width: 640, height: 704, painted: 255, undone: 0 });
+    if (width <= 390) {
+      await expect.poll(async () => (await (await page.request.get(`/api/runs/${run.id}`)).json()).status, { timeout: 20000 }).toBe("completed");
+      await expect(page.getByTestId("comparison-image")).toBeVisible();
+      await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
+      for (const view of ["修改前 / 后", "Ghost 视图"]) {
+        await page.getByRole("button", { name: view, exact: true }).click();
+        const image = page.getByTestId("comparison-image");
+        await image.scrollIntoViewIfNeeded();
+        const picture = (await image.boundingBox())!;
+        const mat = (await page.locator(".comparison-mat").boundingBox())!;
+        // Excessive desktop padding made a 200% mobile picture smaller than its usable canvas.
+        expect(picture.width).toBeGreaterThan(mat.width * .75);
+        expect(Math.abs(picture.width / picture.height - 640 / 704)).toBeLessThan(.002);
+        await page.screenshot({ path: `${directory}/${view.includes("Ghost") ? "ghost" : "compare"}-200.png` });
+      }
+    }
   });
 }
 
