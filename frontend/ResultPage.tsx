@@ -153,7 +153,6 @@ export default function ResultPage({ id }: { id: string }) {
   const hasReceipt = ["completed", "partial"].includes(run.status);
   return (
     <main className="studio-page result-page">
-      <ActivityPanel kind="run" id={run.id} onUpdate={() => { void api<Run>(`/runs/${run.id}`).then(setRun); }} />
       <div className="page-intro">
         <div>
           <p className="eyebrow">
@@ -172,6 +171,13 @@ export default function ResultPage({ id }: { id: string }) {
         </div>
         <span className="pill">{sourceText(run, t)}</span>
       </div>
+      <ActivityPanel
+        kind="run"
+        id={run.id}
+        onUpdate={() => {
+          void api<Run>(`/runs/${run.id}`).then(setRun);
+        }}
+      />
       {run.provider === "imported" && (
         <p className="field-note">
           {t(
@@ -339,9 +345,16 @@ export default function ResultPage({ id }: { id: string }) {
                   </button>
                 )}
               </div>
-              <div className="comparison-mat">
+              <div className="comparison-mat" data-view={view}>
                 <div className="compare-image" data-testid="comparison-image">
                   <img
+                    onLoad={(event) => {
+                      const image = event.currentTarget;
+                      image.parentElement?.style.setProperty(
+                        "--image-ratio",
+                        String(image.naturalWidth / image.naturalHeight),
+                      );
+                    }}
                     src={assetUrl(
                       view === "before"
                         ? run.source_image

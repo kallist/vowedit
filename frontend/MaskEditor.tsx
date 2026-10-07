@@ -2,6 +2,7 @@
 import { localText } from "@/frontend/i18n/format";
 import { useLocale } from "@/frontend/i18n/LocaleProvider";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { Brush, Eraser, RotateCcw, Undo2, Trash2 } from "lucide-react";
 import { assetUrl, type Asset } from "./types";
 import {
@@ -168,9 +169,9 @@ export default function MaskEditor({
     }
   }
   return (
-    <div className="mask-editor">
+    <div className="mask-editor" data-mode={mode}>
       <div className="toolbar">
-        <div className="mode-buttons">
+        <div className="mode-buttons" data-mode={mode}>
           <button
             type="button"
             aria-pressed={mode === "change"}
@@ -258,7 +259,12 @@ export default function MaskEditor({
       <div className="editor-mat">
         <div
           className="paint-frame"
-          style={{ aspectRatio: `${asset.width} / ${asset.height}` }}
+          style={
+            {
+              aspectRatio: `${asset.width} / ${asset.height}`,
+              "--image-ratio": asset.width / asset.height,
+            } as CSSProperties
+          }
         >
           <img
             src={assetUrl(asset.id)}
